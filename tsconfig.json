@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "types/*"
+      ]
+    },
     "target": "es2017",
     "outDir": "build/main",
     "rootDir": "src",
@@ -44,11 +50,9 @@
       "src/types"
     ]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
   "exclude": [
-    "node_modules/**"
+    "node_modules/**",
+    "build"
   ],
   "compileOnSave": false
 }
