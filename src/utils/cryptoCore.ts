@@ -1,10 +1,13 @@
+import fs from 'fs'
 import client from '@neon-exchange/crypto-core-ts'
-import wasm from '@neon-exchange/crypto-core-ts/bin/nash.wasm'
 import * as loader from './loader.js'
 
 const initializeApiClient = async () => {
     const go = new loader.Go()
-    const module = await WebAssembly.instantiate(wasm, go.importObject)
+    // This is just a temporary location for the wasm file till the imports and 
+    // setup is cleaned up and optimized.
+    const buffer = fs.readFileSync('nash.wasm')
+    const module = await WebAssembly.instantiate(buffer, go.importObject)
     go.run(module)
     return client
 }
