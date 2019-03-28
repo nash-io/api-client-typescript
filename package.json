@@ -46,6 +46,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "@neon-exchange/crypto-core-ts": "^2.0.0",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/jest": "^24.0.11",
     "apollo-cache-inmemory": "^1.5.1",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@graphql-codegen/cli": "^1.0.4",
     "@graphql-codegen/typescript": "^1.0.4",
+    "@types/webassembly-js-api": "^0.0.2",
     "ava": "1.0.0-beta.7",
     "codecov": "^3.1.0",
     "cz-conventional-changelog": "^2.1.0",

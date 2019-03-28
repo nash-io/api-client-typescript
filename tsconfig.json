@@ -36,6 +36,7 @@
     "types": [
       "node",
       "jest",
+      "webassembly-js-api",
       "isomorphic-fetch"
     ],
     "typeRoots": [
