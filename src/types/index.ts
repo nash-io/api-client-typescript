@@ -17,18 +17,23 @@ export type PaginationCursor = string
   Common types
  */
 export interface Signature {
-    publicKey: string
-    signedDigest: string
+  publicKey: string
+  signedDigest: string
 }
 
 export type Payload = Record<string, any>
 
 export interface PayloadWithTimestamp extends Payload {
-    timestamp: number
+  timestamp: number
 }
 
 export enum TransactionType {
-    DEPOSIT = 'deposit',
-    WITHDRAWAL = 'withdrawal'
+  DEPOSIT = 'deposit',
+  WITHDRAWAL = 'withdrawal'
 }
 export type InputPayload = Record<string, any>
+
+export enum Blockchain {
+  NEO = 'neo',
+  ETH = 'eth'
+}
