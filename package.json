@@ -49,6 +49,7 @@
     "@neon-exchange/crypto-core-ts": "^2.0.0",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/jest": "^24.0.11",
+    "@types/request": "^2.48.1",
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
     "apollo-link-http": "^1.5.14",
@@ -57,8 +58,10 @@
     "jest": "^24.5.0",
     "lodash": "^4.17.11",
     "node-fetch": "^2.3.0",
+    "request": "^2.88.0",
     "sha.js": "^2.4.11",
-    "ts-jest": "^24.0.0"
+    "ts-jest": "^24.0.0",
+    "web-request": "^1.0.7"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^1.0.4",

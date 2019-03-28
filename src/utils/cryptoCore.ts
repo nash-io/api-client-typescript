@@ -8,7 +8,7 @@ const initializeApiClient = async () => {
     // setup is cleaned up and optimized.
     const buffer = fs.readFileSync('nash.wasm')
     const module = await WebAssembly.instantiate(buffer, go.importObject)
-    go.run(module)
+    go.run(module.instance)
     return client
 }
 
