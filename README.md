@@ -1,3 +1,3 @@
 # nash-api-client-ts
 
-Official typescript client for interacting with the Nash exchange
+Official TypeScript client for interacting with the Nash exchange
