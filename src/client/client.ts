@@ -4,6 +4,8 @@ import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
 import { LIST_ORDERS } from '../queries/order/listOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
+import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
+import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
 import { Order } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
@@ -13,9 +15,10 @@ import fetch from 'node-fetch'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import {
+    createListMovementsParams,
     createListAccountBalanceParams,
     createListAccountTransactionsParams,
-    createListOrdersParams, Config
+    createListOrdersParams, Config, CryptoCurrency
 } from '@neon-exchange/crypto-core-ts'
 
 export class Client {
@@ -35,8 +38,8 @@ export class Client {
     }
 
     /**
-    * listMarkets 
-    */
+     * login 
+     */
     public async login(email: string, password: string): Promise<void> {
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
         const loginUrl = CAS_HOST_LOCAL + '/user_login'
@@ -87,8 +90,8 @@ export class Client {
     }
 
     /**
-    * listMarkets 
-    */
+     * listMarkets 
+     */
     public async listMarkets(): Promise<Market[]> {
         const result = await client.query({ query: LIST_MARKETS_QUERY })
         const markets = result.data.listMarkets as Market[]
@@ -97,8 +100,8 @@ export class Client {
     }
 
     /**
-    * getMarket 
-    */
+     * getMarket 
+     */
     public async getMarket(marketName: string): Promise<Market> {
         const result = await client.query(
             { query: GET_MARKET_QUERY, variables: { marketName } })
@@ -108,8 +111,8 @@ export class Client {
     }
 
     /**
-    * listOrders 
-    */
+     * listOrders 
+     */
     public async listOrders(marketName?: string, status?: MarketStatus): Promise<Order[]> {
         const listOrdersParams = createListOrdersParams(marketName, status)
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listOrdersParams)
@@ -120,12 +123,13 @@ export class Client {
         const result = await client.query({ query: LIST_ORDERS, variables: { payload: signedPayload.payload, signature } })
         const orders = result.data.listOrders as Order[]
 
+        console.log(signedPayload.payload)
         return orders
     }
 
     /**
-    * listAccountTransactions 
-    */
+     * listAccountTransactions 
+     */
     public async listAccountTransactions(cursor: string, fiatSymbol: string, limit: number): Promise<AccountTransaction[]> {
         const listAccountTransactionsParams = createListAccountTransactionsParams(cursor, fiatSymbol, limit)
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountTransactionsParams)
@@ -141,8 +145,8 @@ export class Client {
     }
 
     /**
-    * listAccountBalances 
-    */
+     * listAccountBalances 
+     */
     public async listAccountBalances(ignoreLowBalance?: boolean): Promise<AccountBalance[]> {
         const listAccountBalanceParams = createListAccountBalanceParams(ignoreLowBalance)
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountBalanceParams)
@@ -155,6 +159,24 @@ export class Client {
         const accountBalances = result.data.listAccountBalances as AccountBalance[]
 
         return accountBalances
+    }
+
+    /**
+     * listMovements 
+     */
+    public async listMovements(currency?: CryptoCurrency, status?: MovementStatus, type?: MovementType): Promise<Movement[]> {
+        const listMovementParams = createListMovementsParams(currency, status, type)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listMovementParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+        console.log(signedPayload.payload)
+
+        const result = await client.query({ query: LIST_MOVEMENTS, variables: { payload: signedPayload.payload, signature } })
+        const movements = result.data.listMovements as Movement[]
+
+        return movements
     }
 
     private async createAndUploadKeys(encryptionKey: string): Promise<void> {
@@ -170,6 +192,7 @@ export class Client {
 // listOrders                   V
 // listAccountTransactions      V
 // listAccountBalances          V
+// listMovements                V
 
 
 // listAccountOrders => needs creatListAccountOrdersParams from the crypto core
