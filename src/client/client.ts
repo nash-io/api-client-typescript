@@ -3,15 +3,20 @@ import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
 import { LIST_ORDERS } from '../queries/order/listOrders'
+import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
-import { Order } from '../queries/order/fragments/order'
-import { AccountTransaction } from '../queries/account/fragments'
+import { Order } from '../queries/order/fragments/orderFragment'
+import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
 import fetch from 'node-fetch'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
-import { createListAccountTransactionsParams, createListOrdersParams, Config } from '@neon-exchange/crypto-core-ts'
+import {
+    createListAccountBalanceParams,
+    createListAccountTransactionsParams,
+    createListOrdersParams, Config
+} from '@neon-exchange/crypto-core-ts'
 
 export class Client {
     private cryptoCore: any
@@ -29,6 +34,9 @@ export class Client {
         this.cryptoCore = await cryptoCorePromise
     }
 
+    /**
+    * listMarkets 
+    */
     public async login(email: string, password: string): Promise<void> {
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
         const loginUrl = CAS_HOST_LOCAL + '/user_login'
@@ -78,6 +86,9 @@ export class Client {
         }
     }
 
+    /**
+    * listMarkets 
+    */
     public async listMarkets(): Promise<Market[]> {
         const result = await client.query({ query: LIST_MARKETS_QUERY })
         const markets = result.data.listMarkets as Market[]
@@ -85,6 +96,9 @@ export class Client {
         return markets
     }
 
+    /**
+    * getMarket 
+    */
     public async getMarket(marketName: string): Promise<Market> {
         const result = await client.query(
             { query: GET_MARKET_QUERY, variables: { marketName } })
@@ -93,6 +107,9 @@ export class Client {
         return market
     }
 
+    /**
+    * listOrders 
+    */
     public async listOrders(marketName?: string, status?: MarketStatus): Promise<Order[]> {
         const listOrdersParams = createListOrdersParams(marketName, status)
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listOrdersParams)
@@ -106,6 +123,9 @@ export class Client {
         return orders
     }
 
+    /**
+    * listAccountTransactions 
+    */
     public async listAccountTransactions(cursor: string, fiatSymbol: string, limit: number): Promise<AccountTransaction[]> {
         const listAccountTransactionsParams = createListAccountTransactionsParams(cursor, fiatSymbol, limit)
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountTransactionsParams)
@@ -120,6 +140,23 @@ export class Client {
         return accountTransactions
     }
 
+    /**
+    * listAccountBalances 
+    */
+    public async listAccountBalances(ignoreLowBalance?: boolean): Promise<AccountBalance[]> {
+        const listAccountBalanceParams = createListAccountBalanceParams(ignoreLowBalance)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountBalanceParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+
+        const result = await client.query({ query: LIST_ACCOUNT_BALANCES, variables: { payload: signedPayload.payload, signature } })
+        const accountBalances = result.data.listAccountBalances as AccountBalance[]
+
+        return accountBalances
+    }
+
     private async createAndUploadKeys(encryptionKey: string): Promise<void> {
         const res = encryptSecretKey(Buffer.from(encryptionKey, 'hex'), getSecretKey())
         this.initParams.secretKey = toHex(res.encryptedSecretKey)
@@ -128,7 +165,15 @@ export class Client {
     }
 }
 
-// listMarkets
-// getMarket
-// listOrders
-// listAccountTransactions
+// listMarkets                  V 
+// getMarket                    V 
+// listOrders                   V
+// listAccountTransactions      V
+// listAccountBalances          V
+
+
+// listAccountOrders => needs creatListAccountOrdersParams from the crypto core
+// listAccountVolumes
+// listMovements
+// cancelOrder
+// cancelAllOrders
