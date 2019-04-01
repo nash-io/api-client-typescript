@@ -1,6 +1,6 @@
 {
   "name": "@neon-exchange/crypto-core-ts",
-  "version": "2.1.1-62a4a22b",
+  "version": "2.1.1-0dc6f312",
   "description": "WASM interface for Go cryptographic functions",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",

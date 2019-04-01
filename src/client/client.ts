@@ -7,6 +7,7 @@ import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
+import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
@@ -15,11 +16,12 @@ import { Order } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
-import fetch from 'node-fetch'
 import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
+import fetch from 'node-fetch'
 import {
+    createGetDepositAddressParams,
     createGetAccountOrderParams,
     createGetAccountBalanceParams,
     createListAccountVolumesParams,
@@ -182,6 +184,25 @@ export class Client {
         const accountBalances = result.data.listAccountBalances as AccountBalance[]
 
         return accountBalances
+    }
+
+    /**
+     * get the deposit address for the given crypto currency.
+     * 
+     * @param currency 
+     */
+    public async getDepositAddress(currency: CryptoCurrency): Promise<AccountDepositAddress> {
+        const getDepositAddressParams = createGetDepositAddressParams(currency)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getDepositAddressParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+
+        const result = await client.query({ query: GET_DEPOSIT_ADDRESS, variables: { payload: signedPayload.payload, signature } })
+        const depositAddress = result.data.getDepositAddress as AccountDepositAddress
+
+        return depositAddress
     }
 
     /**
