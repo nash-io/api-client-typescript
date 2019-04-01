@@ -9,7 +9,7 @@ Official TypeScript client for interacting with the Nash exchange
 ## Queries
 - [x] getMarket 
 - [x] getAccountPortfolio
-- [ ] getAcountBalance
+- [x] getAccountBalance
 - [ ] getAccountOrder 
 - [ ] getDepositAddress
 - [ ] getMovement 

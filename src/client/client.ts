@@ -5,6 +5,7 @@ import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransac
 import { LIST_ORDERS } from '../queries/order/listOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
+import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
@@ -18,6 +19,7 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import {
+    createGetAccountBalanceParams,
     createListAccountVolumesParams,
     createAccountPortfolioParams,
     createListMovementsParams,
@@ -183,6 +185,23 @@ export class Client {
         const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
 
         return accountPortfolio
+    }
+
+    /** 
+     * getAccountBalance
+     */
+    public async getAccountBalance(currency: CryptoCurrency): Promise<AccountBalance> {
+        const getAccountBalanceParams = createGetAccountBalanceParams(currency)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountBalanceParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+
+        const result = await client.query({ query: GET_ACCOUNT_BALANCE, variables: { payload: signedPayload.payload, signature } })
+        const accountBalance = result.data.getAccountBalance as AccountBalance
+
+        return accountBalance
     }
 
     /** 
