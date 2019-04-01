@@ -20,6 +20,7 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
+import { PayloadAndSignature } from '../types'
 import {
     createGetDepositAddressParams,
     createGetAccountOrderParams,
@@ -29,7 +30,7 @@ import {
     createListMovementsParams,
     createListAccountBalanceParams,
     createListAccountTransactionsParams,
-    createListOrdersParams, Config, CryptoCurrency
+    createListOrdersParams, Config, CryptoCurrency, WrappedPayload
 } from '@neon-exchange/crypto-core-ts'
 
 export class Client {
@@ -135,12 +136,13 @@ export class Client {
      */
     public async listOrders(marketName?: string, status?: MarketStatus): Promise<Order[]> {
         const listOrdersParams = createListOrdersParams(marketName, status)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listOrdersParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
-        const result = await client.query({ query: LIST_ORDERS, variables: { payload: signedPayload.payload, signature } })
+        const signedPayload = await this.signPayload(listOrdersParams)
+
+        const result = await client.query(
+            {
+                query: LIST_ORDERS,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const orders = result.data.listOrders as Order[]
 
         return orders
@@ -155,13 +157,13 @@ export class Client {
      */
     public async listAccountTransactions(cursor: string, fiatSymbol: string, limit: number): Promise<AccountTransaction[]> {
         const listAccountTransactionsParams = createListAccountTransactionsParams(cursor, fiatSymbol, limit)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountTransactionsParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(listAccountTransactionsParams)
 
-        const result = await client.query({ query: LIST_ACCOUNT_TRANSACTIONS, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: LIST_ACCOUNT_TRANSACTIONS,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const accountTransactions = result.data.listAccountTransactions as AccountTransaction[]
 
         return accountTransactions
@@ -174,13 +176,13 @@ export class Client {
      */
     public async listAccountBalances(ignoreLowBalance?: boolean): Promise<AccountBalance[]> {
         const listAccountBalanceParams = createListAccountBalanceParams(ignoreLowBalance)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountBalanceParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(listAccountBalanceParams)
 
-        const result = await client.query({ query: LIST_ACCOUNT_BALANCES, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: LIST_ACCOUNT_BALANCES,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const accountBalances = result.data.listAccountBalances as AccountBalance[]
 
         return accountBalances
@@ -193,13 +195,13 @@ export class Client {
      */
     public async getDepositAddress(currency: CryptoCurrency): Promise<AccountDepositAddress> {
         const getDepositAddressParams = createGetDepositAddressParams(currency)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getDepositAddressParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(getDepositAddressParams)
 
-        const result = await client.query({ query: GET_DEPOSIT_ADDRESS, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: GET_DEPOSIT_ADDRESS,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const depositAddress = result.data.getDepositAddress as AccountDepositAddress
 
         return depositAddress
@@ -213,13 +215,13 @@ export class Client {
      */
     public async getAccountPortfolio(fiatSymbol?: FiatCurrency, period?: Period): Promise<AccountPortfolio> {
         const getAccountPortfolioParams = createAccountPortfolioParams(fiatSymbol, period)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountPortfolioParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(getAccountPortfolioParams)
 
-        const result = await client.query({ query: GET_ACCOUNT_PORTFOLIO, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: GET_ACCOUNT_PORTFOLIO,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
 
         return accountPortfolio
@@ -232,13 +234,13 @@ export class Client {
      */
     public async getAccountBalance(currency: CryptoCurrency): Promise<AccountBalance> {
         const getAccountBalanceParams = createGetAccountBalanceParams(currency)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountBalanceParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(getAccountBalanceParams)
 
-        const result = await client.query({ query: GET_ACCOUNT_BALANCE, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: GET_ACCOUNT_BALANCE,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const accountBalance = result.data.getAccountBalance as AccountBalance
 
         return accountBalance
@@ -251,13 +253,13 @@ export class Client {
      */
     public async getAccountOrder(orderID: string): Promise<Order> {
         const getAccountOrderParams = createGetAccountOrderParams(orderID)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountOrderParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(getAccountOrderParams)
 
-        const result = await client.query({ query: GET_ACCOUNT_ORDER, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: GET_ACCOUNT_ORDER,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const order = result.data.getAccountOrder as Order
 
         return order
@@ -268,13 +270,13 @@ export class Client {
      */
     public async listAccountVolumes(): Promise<AccountVolume> {
         const listAccountVolumesParams = createListAccountVolumesParams()
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountVolumesParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(listAccountVolumesParams)
 
-        const result = await client.query({ query: LIST_ACCOUNT_VOLUMES, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: LIST_ACCOUNT_VOLUMES,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const accountVolumes = result.data.listAccountVolumes as AccountVolume
 
         return accountVolumes
@@ -289,13 +291,13 @@ export class Client {
      */
     public async listMovements(currency?: CryptoCurrency, status?: MovementStatus, type?: MovementType): Promise<Movement[]> {
         const listMovementParams = createListMovementsParams(currency, status, type)
-        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listMovementParams)
-        const signature = {
-            publicKey: this.publicKey,
-            signedDigest: signedPayload.signature
-        }
+        const signedPayload = await this.signPayload(listMovementParams)
 
-        const result = await client.query({ query: LIST_MOVEMENTS, variables: { payload: signedPayload.payload, signature } })
+        const result = await client.query(
+            {
+                query: LIST_MOVEMENTS,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
         const movements = result.data.listMovements as Movement[]
 
         return movements
@@ -369,5 +371,22 @@ export class Client {
         }
 
         console.log('successfully uploaded wallet keys to the CAS')
+    }
+
+    /**
+     * helper function that returns the correct types for the needed GQL queries
+     * and mutations.
+     * 
+     * @param payload 
+     */
+    private async signPayload(payload: WrappedPayload): Promise<PayloadAndSignature> {
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, payload)
+        return {
+            payload: signedPayload.payload,
+            signature: {
+                publicKey: this.publicKey,
+                signedDigest: signedPayload.signature
+            }
+        }
     }
 }
