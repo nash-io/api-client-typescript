@@ -12,7 +12,7 @@ Official TypeScript client for interacting with the Nash exchange
 - [x] getAccountBalance
 - [x] getAccountOrder 
 - [x] getDepositAddress
-- [ ] getMovement 
+- [x] getMovement 
 - [x] listMarkets 
 - [x] listMovements 
 - [x] listAccountOrders

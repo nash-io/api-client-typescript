@@ -7,6 +7,7 @@ import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
+import { GET_MOVEMENT } from '../queries/movement/getMovement';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
@@ -22,6 +23,7 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { PayloadAndSignature } from '../types'
 import {
+    createGetMovementParams,
     createGetDepositAddressParams,
     createGetAccountOrderParams,
     createGetAccountBalanceParams,
@@ -225,6 +227,25 @@ export class Client {
         const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
 
         return accountPortfolio
+    }
+
+    /**
+     * get a movement by the given movement id.
+     * 
+     * @param movementID 
+     */
+    public async getMovement(movementID: number): Promise<Movement> {
+        const getMovemementParams = createGetMovementParams(movementID)
+        const signedPayload = await this.signPayload(getMovemementParams)
+
+        const result = await client.query(
+            {
+                query: GET_MOVEMENT,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const movement = result.data.getMovement as Movement
+
+        return movement
     }
 
     /**
