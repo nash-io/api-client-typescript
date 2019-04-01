@@ -684,10 +684,10 @@
     "@types/istanbul-lib-coverage" "^1.1.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/crypto-core-ts@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/crypto-core-ts/-/crypto-core-ts-2.0.0.tgz#2ce58ad1bac85fb8f6aee68dd4955626727e9edd"
-  integrity sha512-6wrurMll4VsF7JHTfDszg/QdOu0/RCVxjaIUMRxK8vcNrOU+YyrEpIdC6G1wmZludvmVKOG1NQT5EH1eJVFTgQ==
+"@neon-exchange/crypto-core-ts@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/crypto-core-ts/-/crypto-core-ts-2.1.1.tgz#d744290af228b254b0afa5e77b2106c85da3f447"
+  integrity sha512-5eenZ0OCrtptH/0FwuxERVni/mMdlQ5Vw4grUuziwDKqLYIVOUoFyX6Hzm6Wpno68fiPISEs/5NYwmRq/2TyyA==
 
 "@neon-exchange/nex-auth-protocol@^1.7.1":
   version "1.7.1"

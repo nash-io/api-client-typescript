@@ -38,7 +38,7 @@ export class Client {
     }
 
     /**
-     * login 
+     * login to the CAS to fetch initial user information and API cookie. 
      */
     public async login(email: string, password: string): Promise<void> {
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
@@ -53,8 +53,11 @@ export class Client {
             headers: { 'Content-Type': 'application/json' },
             method: 'POST'
         })
-
+        const casCookie = response.headers.get('set-cookie')
         const result = await response.json()
+        if (result.error) {
+            throw new Error(result.message);
+        }
         this.account = result.account
 
         const encryptedSecretKey = this.account.encrypted_secret_key
@@ -71,15 +74,14 @@ export class Client {
             secretTag: encryptedSecretKeyTag,
         }
 
-        // TODO: create and upload the wallet keys if not returned from the CAS.
         if (encryptedSecretKey === null) {
             if (this.debug) {
                 console.log("creating and uploading keys to CAS")
             }
             this.initParams.chainIndices = { neo: 1, eth: 1 }
-            this.createAndUploadKeys(keys.encryptionKey)
+            await this.createAndUploadKeys(keys.encryptionKey, casCookie)
+            return
         }
-
 
         this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams)
         this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey
@@ -171,7 +173,6 @@ export class Client {
             publicKey: this.publicKey,
             signedDigest: signedPayload.signature
         }
-        console.log(signedPayload.payload)
 
         const result = await client.query({ query: LIST_MOVEMENTS, variables: { payload: signedPayload.payload, signature } })
         const movements = result.data.listMovements as Movement[]
@@ -179,11 +180,75 @@ export class Client {
         return movements
     }
 
-    private async createAndUploadKeys(encryptionKey: string): Promise<void> {
+
+    /** 
+     * creates and uploads wallet and encryption keys to the CAS.
+     * 
+     * expects something like the following
+     * {
+     *   "signature_public_key": "024b14170f0166ff85882356295f5aa0cf4a9a5d29725b5a9e410ec193d20ee98f",
+     *   "encrypted_secret_key": "eb13bb0e89102d64700906c7082f9472",
+     *   "encrypted_secret_key_nonce": "f6783fe349320f71acc2ca79",
+     *   "encrypted_secret_key_tag": "7c8dc1020de77cd42dbbbb850f4335e8",
+     *   "wallets": [
+     *     {
+     *       "blockchain": "neo",
+     *       "address": "Aet6eGnQMvZ2xozG3A3SvWrMFdWMvZj1cU",
+     *       "public_key": "039fcee26c1f54024d19c0affcf6be8187467c9ba4749106a4b897a08b9e8fed23"
+     *     },
+     *     {
+     *       "blockchain": "ethereum",
+     *       "address": "5f8b6d9d487c8136cc1ad87d6e176742af625de8",
+     *       "public_key": "04d37f1a8612353ffbf20b0a68263b7aae235bd3af8d60877ed8135c27630d895894885f220a39acab4e70b025b1aca95fab1cd9368bf3dc912ef32dc65aecfa02"
+     *     }
+     *   ]
+     * } 
+     */
+    private async createAndUploadKeys(encryptionKey: string, casCookie: string): Promise<void> {
         const res = encryptSecretKey(Buffer.from(encryptionKey, 'hex'), getSecretKey())
-        this.initParams.secretKey = toHex(res.encryptedSecretKey)
-        this.initParams.secretNonce = toHex(res.nonce)
-        this.initParams.secretTag = toHex(res.tag)
+        const initParams = {
+            chainIndices: { neo: 1, eth: 1 },
+            encryptionKey,
+            enginePubkey: "dummy",
+            passphrase: '',
+            secretKey: toHex(res.encryptedSecretKey),
+            secretNonce: toHex(res.nonce),
+            secretTag: toHex(res.tag),
+        }
+        this.nashCoreConfig = await this.cryptoCore.initialize(initParams)
+        this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey
+
+        const url = CAS_HOST_LOCAL + "/auth/add_initial_wallets_and_client_keys"
+        const body = {
+            encrypted_secret_key: this.initParams.secretKey,
+            encrypted_secret_key_nonce: this.initParams.secretNonce,
+            encrypted_secret_key_tag: this.initParams.secretTag,
+            signature_public_key: this.nashCoreConfig.PayloadSigning.PublicKey,
+            wallets: [
+                {
+                    address: this.nashCoreConfig.Wallets.neo.Address,
+                    blockchain: 'neo',
+                    public_key: this.nashCoreConfig.Wallets.neo.PublicKey
+                },
+                {
+                    address: this.nashCoreConfig.Wallets.eth.Address,
+                    blockchain: 'eth',
+                    public_key: this.nashCoreConfig.Wallets.eth.PublicKey
+                }
+            ],
+        }
+
+        const response = await fetch(url, {
+            body: JSON.stringify(body),
+            headers: { 'Content-Type': 'application/json', cookie: casCookie },
+            method: 'POST'
+        })
+        const result = await response.json()
+        if (result.error) {
+            throw new Error(result.message);
+        }
+
+        console.log('successfully uploaded wallet keys to the CAS')
     }
 }
 
@@ -200,3 +265,29 @@ export class Client {
 // listMovements
 // cancelOrder
 // cancelAllOrders
+
+// ListAccountOrdersPayload
+// CancelOrderPayload
+// ListAccountBalancePayload
+// ListAccountVolumesPayload
+// ListMovementsPayload
+//
+// GetAccountBalancePayload
+// GetDepositAddressPayload
+// GetMovementParamsPayload
+// GetOrderParamsPayload
+//
+// PlaceLimitOrderPayload
+// PlaceStopLimitOrderPayload
+// PlaceStopMarketOrderPayload
+// PlaceMarketOrderPayload
+//
+// SignMovementPayload
+// SyncStatePayload
+//
+// DepositRequestPayload
+// WithdrawRequestPayload
+//
+// CancelAllOrdersPayload
+// ListAccountTransactionsPayload
+// GetAccountPortfolioPayload
