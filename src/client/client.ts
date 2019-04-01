@@ -5,6 +5,7 @@ import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransac
 import { LIST_ORDERS } from '../queries/order/listOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
+import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
 import { Order } from '../queries/order/fragments/orderFragment'
@@ -12,9 +13,11 @@ import { AccountBalance, AccountTransaction } from '../queries/account/fragments
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
 import fetch from 'node-fetch'
+import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import {
+    createAccountPortfolioParams,
     createListMovementsParams,
     createListAccountBalanceParams,
     createListAccountTransactionsParams,
@@ -125,7 +128,6 @@ export class Client {
         const result = await client.query({ query: LIST_ORDERS, variables: { payload: signedPayload.payload, signature } })
         const orders = result.data.listOrders as Order[]
 
-        console.log(signedPayload.payload)
         return orders
     }
 
@@ -163,6 +165,25 @@ export class Client {
         return accountBalances
     }
 
+    /** 
+     * getAccountPortfolio
+     * TODO: GraphQL error: Signature is invalid - server generated canonical payload: `get_account_portfolio,{"timestamp":1554105342596}`
+     */
+    public async getAccountPortfolio(fiatSymbol?: FiatCurrency, period?: Period): Promise<AccountPortfolio> {
+        const getAccountPortfolioParams = createAccountPortfolioParams(fiatSymbol, period)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountPortfolioParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+        console.log(signedPayload.payload)
+
+        const result = await client.query({ query: GET_ACCOUNT_PORTFOLIO, variables: { payload: signedPayload.payload, signature } })
+        const accountPortfolio = result.data.getAcountPortfolio as AccountPortfolio
+
+        return accountPortfolio
+    }
+
     /**
      * listMovements 
      */
@@ -179,7 +200,6 @@ export class Client {
 
         return movements
     }
-
 
     /** 
      * creates and uploads wallet and encryption keys to the CAS.
