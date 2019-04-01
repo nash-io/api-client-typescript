@@ -6,6 +6,7 @@ import { LIST_ORDERS } from '../queries/order/listOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
+import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
@@ -19,6 +20,7 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import {
+    createGetAccountOrderParams,
     createGetAccountBalanceParams,
     createListAccountVolumesParams,
     createAccountPortfolioParams,
@@ -45,7 +47,9 @@ export class Client {
     }
 
     /**
-     * login to the CAS to fetch initial user information and API cookie. 
+     * 
+     * @param email 
+     * @param password 
      */
     public async login(email: string, password: string): Promise<void> {
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
@@ -99,7 +103,7 @@ export class Client {
     }
 
     /**
-     * listMarkets 
+     * list available markets. 
      */
     public async listMarkets(): Promise<Market[]> {
         const result = await client.query({ query: LIST_MARKETS_QUERY })
@@ -109,7 +113,9 @@ export class Client {
     }
 
     /**
-     * getMarket 
+     * get a specific market by its market name. 
+     * 
+     * @param marketName 
      */
     public async getMarket(marketName: string): Promise<Market> {
         const result = await client.query(
@@ -120,7 +126,10 @@ export class Client {
     }
 
     /**
-     * listOrders 
+     * list available orders.
+     * 
+     * @param marketName 
+     * @param status 
      */
     public async listOrders(marketName?: string, status?: MarketStatus): Promise<Order[]> {
         const listOrdersParams = createListOrdersParams(marketName, status)
@@ -136,7 +145,11 @@ export class Client {
     }
 
     /**
-     * listAccountTransactions 
+     * list available account transactions.
+     * 
+     * @param cursor 
+     * @param fiatSymbol 
+     * @param limit 
      */
     public async listAccountTransactions(cursor: string, fiatSymbol: string, limit: number): Promise<AccountTransaction[]> {
         const listAccountTransactionsParams = createListAccountTransactionsParams(cursor, fiatSymbol, limit)
@@ -153,7 +166,9 @@ export class Client {
     }
 
     /**
-     * listAccountBalances 
+     * list all balances for current authenticated account.
+     * 
+     * @param ignoreLowBalance 
      */
     public async listAccountBalances(ignoreLowBalance?: boolean): Promise<AccountBalance[]> {
         const listAccountBalanceParams = createListAccountBalanceParams(ignoreLowBalance)
@@ -169,9 +184,11 @@ export class Client {
         return accountBalances
     }
 
-    /** 
-     * getAccountPortfolio
-     * TODO: GraphQL error: Signature is invalid - server generated canonical payload: `get_account_portfolio,{"timestamp":1554105342596}`
+    /**
+     * get the portfolio for the current authenticated account.
+     * 
+     * @param fiatSymbol 
+     * @param period 
      */
     public async getAccountPortfolio(fiatSymbol?: FiatCurrency, period?: Period): Promise<AccountPortfolio> {
         const getAccountPortfolioParams = createAccountPortfolioParams(fiatSymbol, period)
@@ -187,8 +204,10 @@ export class Client {
         return accountPortfolio
     }
 
-    /** 
-     * getAccountBalance
+    /**
+     * get balance for the given crypto currency.
+     * 
+     * @param currency 
      */
     public async getAccountBalance(currency: CryptoCurrency): Promise<AccountBalance> {
         const getAccountBalanceParams = createGetAccountBalanceParams(currency)
@@ -204,8 +223,27 @@ export class Client {
         return accountBalance
     }
 
+    /**
+     * get a specific order by it's ID.
+     * 
+     * @param orderID 
+     */
+    public async getAccountOrder(orderID: string): Promise<Order> {
+        const getAccountOrderParams = createGetAccountOrderParams(orderID)
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, getAccountOrderParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+
+        const result = await client.query({ query: GET_ACCOUNT_ORDER, variables: { payload: signedPayload.payload, signature } })
+        const order = result.data.getAccountOrder as Order
+
+        return order
+    }
+
     /** 
-     * listAccountVolumes
+     * list all volumes for the current authenticated account.
      */
     public async listAccountVolumes(): Promise<AccountVolume> {
         const listAccountVolumesParams = createListAccountVolumesParams()
@@ -222,7 +260,11 @@ export class Client {
     }
 
     /**
-     * listMovements 
+     * list all movements for the current authenticated account.
+     * 
+     * @param currency 
+     * @param status 
+     * @param type 
      */
     public async listMovements(currency?: CryptoCurrency, status?: MovementStatus, type?: MovementType): Promise<Movement[]> {
         const listMovementParams = createListMovementsParams(currency, status, type)

@@ -684,7 +684,7 @@
     "@types/istanbul-lib-coverage" "^1.1.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/crypto-core-ts@^2.1.1":
+"@neon-exchange/crypto-core-ts@2.1.1":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@neon-exchange/crypto-core-ts/-/crypto-core-ts-2.1.1.tgz#d744290af228b254b0afa5e77b2106c85da3f447"
   integrity sha512-5eenZ0OCrtptH/0FwuxERVni/mMdlQ5Vw4grUuziwDKqLYIVOUoFyX6Hzm6Wpno68fiPISEs/5NYwmRq/2TyyA==
