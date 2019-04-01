@@ -19,4 +19,17 @@ Official TypeScript client for interacting with the Nash exchange
 - [x] listAccountTransactions
 - [x] listAccountBalances
 - [x] listAccountVolumes
-## Queries
+
+## Mutations
+- [ ] cancelAllOrders 
+- [ ] cancelOrder 
+- [ ] placeLimitOrder 
+- [ ] placeMarketOrder 
+- [ ] placeStopLimitOrder 
+- [ ] placeStopMarketOrder 
+- [ ] placeStopMarketOrder 
+- [ ] signDepositRequest 
+- [ ] signWithdrawRequest 
+- [ ] syncStates 
+- [ ] getStates
+
