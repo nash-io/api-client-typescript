@@ -6,6 +6,7 @@ import { LIST_ORDERS } from '../queries/order/listOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
+import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
 import { Order } from '../queries/order/fragments/orderFragment'
@@ -17,6 +18,7 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import {
+    createListAccountVolumesParams,
     createAccountPortfolioParams,
     createListMovementsParams,
     createListAccountBalanceParams,
@@ -176,12 +178,28 @@ export class Client {
             publicKey: this.publicKey,
             signedDigest: signedPayload.signature
         }
-        console.log(signedPayload.payload)
 
         const result = await client.query({ query: GET_ACCOUNT_PORTFOLIO, variables: { payload: signedPayload.payload, signature } })
-        const accountPortfolio = result.data.getAcountPortfolio as AccountPortfolio
+        const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
 
         return accountPortfolio
+    }
+
+    /** 
+     * listAccountVolumes
+     */
+    public async listAccountVolumes(): Promise<AccountVolume> {
+        const listAccountVolumesParams = createListAccountVolumesParams()
+        const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, listAccountVolumesParams)
+        const signature = {
+            publicKey: this.publicKey,
+            signedDigest: signedPayload.signature
+        }
+
+        const result = await client.query({ query: LIST_ACCOUNT_VOLUMES, variables: { payload: signedPayload.payload, signature } })
+        const accountVolumes = result.data.listAccountVolumes as AccountVolume
+
+        return accountVolumes
     }
 
     /**
@@ -271,43 +289,3 @@ export class Client {
         console.log('successfully uploaded wallet keys to the CAS')
     }
 }
-
-// listMarkets                  V 
-// getMarket                    V 
-// listOrders                   V
-// listAccountTransactions      V
-// listAccountBalances          V
-// listMovements                V
-
-
-// listAccountOrders => needs creatListAccountOrdersParams from the crypto core
-// listAccountVolumes
-// listMovements
-// cancelOrder
-// cancelAllOrders
-
-// ListAccountOrdersPayload
-// CancelOrderPayload
-// ListAccountBalancePayload
-// ListAccountVolumesPayload
-// ListMovementsPayload
-//
-// GetAccountBalancePayload
-// GetDepositAddressPayload
-// GetMovementParamsPayload
-// GetOrderParamsPayload
-//
-// PlaceLimitOrderPayload
-// PlaceStopLimitOrderPayload
-// PlaceStopMarketOrderPayload
-// PlaceMarketOrderPayload
-//
-// SignMovementPayload
-// SyncStatePayload
-//
-// DepositRequestPayload
-// WithdrawRequestPayload
-//
-// CancelAllOrdersPayload
-// ListAccountTransactionsPayload
-// GetAccountPortfolioPayload
