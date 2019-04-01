@@ -9,6 +9,7 @@ import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
+import { CanceledOrder } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
@@ -23,6 +24,7 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { PayloadAndSignature } from '../types'
 import {
+    createCancelOrderParams,
     createGetMovementParams,
     createGetDepositAddressParams,
     createGetAccountOrderParams,
@@ -34,6 +36,7 @@ import {
     createListAccountTransactionsParams,
     createListOrdersParams, Config, CryptoCurrency, WrappedPayload
 } from '@neon-exchange/crypto-core-ts'
+import { CANCEL_ORDER_MUTATION } from 'src/mutations/orders/cancelOrder';
 
 export class Client {
     private cryptoCore: any
@@ -323,6 +326,39 @@ export class Client {
 
         return movements
     }
+
+    /**
+     * cancel an order by ID.
+     * 
+     * @param orderID 
+     */
+    public async cancelOrder(orderID: string): Promise<CanceledOrder> {
+        const cancelOrderParams = createCancelOrderParams(orderID)
+        const signedPayload = await this.signPayload(cancelOrderParams)
+
+        const result = await client.query(
+            {
+                query: CANCEL_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const canceledOrder = result.data.cancelOrder as CanceledOrder
+
+        return canceledOrder
+    }
+
+    // TODO: needs go-client revision!
+    // public async cancelAllOrders(orderID: string): Promise<CanceledOrder[]> {
+    //     const signedPayload = await this.signPayload(cancelOrderParams)
+
+    //     const result = await client.query(
+    //         {
+    //             query: CANCEL_ORDER_MUTATION,
+    //             variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+    //         })
+    //     const canceledOrder = result.data.cancelOrder as CanceledOrder
+
+    //     return canceledOrder
+    // }
 
     /** 
      * creates and uploads wallet and encryption keys to the CAS.
