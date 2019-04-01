@@ -1,3 +1,5 @@
+import { WrappedPayload } from '@neon-exchange/crypto-core-ts'
+
 /*
   Collection of common GraphQL types. Domain specific types (e.g. markets,
   orders, etc.) should not be included here.
@@ -19,6 +21,11 @@ export type PaginationCursor = string
 export interface Signature {
   publicKey: string
   signedDigest: string
+}
+
+export interface PayloadAndSignature {
+  signature: Signature,
+  payload: WrappedPayload
 }
 
 export type Payload = Record<string, any>

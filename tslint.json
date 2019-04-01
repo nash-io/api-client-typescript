@@ -32,9 +32,7 @@
       "call-signature"
     ],
     // Self-added rules
-    "no-console": {
-      "severity": "warning"
-    },
+    "no-console": false,
     "no-submodule-imports": false
   }
 }
