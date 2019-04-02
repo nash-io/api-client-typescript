@@ -22,11 +22,10 @@ Official TypeScript client for interacting with the Nash exchange
 
 ## Mutations
 - [ ] cancelAllOrders 
-- [ ] cancelOrder 
-- [ ] placeLimitOrder 
-- [ ] placeMarketOrder 
-- [ ] placeStopLimitOrder 
-- [ ] placeStopMarketOrder 
+- [x] cancelOrder 
+- [x] placeLimitOrder 
+- [x] placeMarketOrder 
+- [x] placeStopLimitOrder 
 - [ ] placeStopMarketOrder 
 - [ ] signDepositRequest 
 - [ ] signWithdrawRequest 

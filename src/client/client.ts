@@ -12,6 +12,7 @@ import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
 import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
+import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
 import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
@@ -29,6 +30,7 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { DateTime, PayloadAndSignature } from '../types'
 import {
+    createPlaceStopMarketOrderParams,
     createPlaceStopLimitOrderParams,
     createPlaceMarketOrderParams,
     createPlaceLimitOrderParams,
@@ -463,6 +465,37 @@ export class Client {
         const result = await client.mutate(
             {
                 mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a stop market order.
+     * 
+     * @param amount 
+     * @param buyOrSell 
+     * @param marketName 
+     * @param stopPrice 
+     */
+    public async placeStopMarketOrder(
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        marketName: string,
+        stopPrice: CurrencyPrice
+    ): Promise<OrderPlaced> {
+        const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+            amount,
+            buyOrSell,
+            marketName,
+            stopPrice
+        )
+        const signedPayload = await this.signPayload(placeStopMarketOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
         const orderPlaced = result.data.placeLimitOrder as OrderPlaced
