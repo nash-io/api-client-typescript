@@ -26,9 +26,9 @@ Official TypeScript client for interacting with the Nash exchange
 - [x] placeLimitOrder 
 - [x] placeMarketOrder 
 - [x] placeStopLimitOrder 
-- [ ] placeStopMarketOrder 
-- [ ] signDepositRequest 
-- [ ] signWithdrawRequest 
+- [x] placeStopMarketOrder 
+- [x] signDepositRequest 
+- [x] signWithdrawRequest 
 - [ ] syncStates 
 - [ ] getStates
 

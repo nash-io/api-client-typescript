@@ -3,7 +3,7 @@
   "packages": {
     "@neon-exchange/crypto-core-ts": {
       "version": "2.1.1",
-      "signature": "f659000060af7113ede22ee51c588fc2",
+      "signature": "2f4463cccb024cccf511384e87b7bfc8",
       "file": true
     }
   }

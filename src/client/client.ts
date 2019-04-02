@@ -13,6 +13,9 @@ import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
+import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest'
+import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest'
+import { SignMovement } from '../mutations/movements/fragments'
 import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
@@ -30,6 +33,7 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { DateTime, PayloadAndSignature } from '../types'
 import {
+    createSignMovementParams,
     createPlaceStopMarketOrderParams,
     createPlaceStopLimitOrderParams,
     createPlaceMarketOrderParams,
@@ -59,16 +63,16 @@ export class Client {
         this.debug = DEBUG
     }
 
-    public async init(): Promise<void> {
-        this.cryptoCore = await cryptoCorePromise
-    }
-
     /**
      * 
      * @param email 
      * @param password 
      */
     public async login(email: string, password: string): Promise<void> {
+        // As login always needs to be called at the start of any program/request
+        // we initialize the crypto core right here.
+        this.cryptoCore = await cryptoCorePromise
+
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
         const loginUrl = CAS_HOST_LOCAL + '/user_login'
         const body = {
@@ -502,6 +506,40 @@ export class Client {
 
         return orderPlaced
     }
+
+    /**
+     * Sign a deposit request.
+     * 
+     * @param address 
+     * @param quantity 
+     */
+    public async signDepositRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
+        return this.signMovement(SIGN_DEPOSIT_REQUEST_MUTATION, address, quantity)
+    }
+
+    /**
+     * Sign a withdraw request.
+     * 
+     * @param address 
+     * @param quantity 
+     */
+    public async signWithdrawRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
+        return this.signMovement(SIGN_WITHDRAW_REQUEST_MUTATION, address, quantity)
+    }
+
+    private async signMovement(mutation: string, address: string, quantity: CurrencyAmount): Promise<SignMovement> {
+        const signMovementParams = createSignMovementParams(address, quantity)
+        const signedPayload = await this.signPayload(signMovementParams)
+        const result = await client.mutate(
+            {
+                mutation,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const signMovement = result.data.signDepositRequest
+
+        return signMovement
+    }
+
 
     /** 
      * creates and uploads wallet and encryption keys to the CAS.
