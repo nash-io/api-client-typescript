@@ -10,6 +10,8 @@ import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
 import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
+import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
+import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
 import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
@@ -27,6 +29,8 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { DateTime, PayloadAndSignature } from '../types'
 import {
+    createPlaceStopLimitOrderParams,
+    createPlaceMarketOrderParams,
     createPlaceLimitOrderParams,
     createCancelOrderParams,
     createGetMovementParams,
@@ -396,6 +400,69 @@ export class Client {
         const result = await client.mutate(
             {
                 mutation: PLACE_LIMIT_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a market order.
+     * 
+     * @param amount 
+     * @param buyOrSell 
+     * @param marketName 
+     */
+    public async placeMarketOrder(amount: CurrencyAmount, buyOrSell: OrderBuyOrSell, marketName: string): Promise<OrderPlaced> {
+        const placeMarketOrderParams = createPlaceMarketOrderParams(amount, buyOrSell, marketName)
+        const signedPayload = await this.signPayload(placeMarketOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_MARKET_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a stop limit order.
+     * 
+     * @param allowTaker 
+     * @param amount 
+     * @param buyOrSell 
+     * @param cancellationPolicy 
+     * @param limitPrice 
+     * @param marketName 
+     * @param stopPrice 
+     * @param cancelAt 
+     */
+    public async placeStopLimitOrder(
+        allowTaker: boolean,
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        cancellationPolicy: OrderCancellationPolicy,
+        limitPrice: CurrencyPrice,
+        marketName: string,
+        stopPrice: CurrencyPrice,
+        cancelAt?: DateTime
+    ): Promise<OrderPlaced> {
+        const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            stopPrice,
+            cancelAt
+        )
+        const signedPayload = await this.signPayload(placeStopLimitOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
         const orderPlaced = result.data.placeLimitOrder as OrderPlaced
