@@ -8,13 +8,16 @@ import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
+import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
+import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
+import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
-import { CanceledOrder } from '../mutations/orders/fragments'
+import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
-import { Order } from '../queries/order/fragments/orderFragment'
+import { Order, OrderBuyOrSell, OrderCancellationPolicy } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
@@ -22,8 +25,9 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
-import { PayloadAndSignature } from '../types'
+import { DateTime, PayloadAndSignature } from '../types'
 import {
+    createPlaceLimitOrderParams,
     createCancelOrderParams,
     createGetMovementParams,
     createGetDepositAddressParams,
@@ -36,7 +40,6 @@ import {
     createListAccountTransactionsParams,
     createListOrdersParams, Config, CryptoCurrency, WrappedPayload
 } from '@neon-exchange/crypto-core-ts'
-import { CANCEL_ORDER_MUTATION } from 'src/mutations/orders/cancelOrder';
 
 export class Client {
     private cryptoCore: any
@@ -359,6 +362,46 @@ export class Client {
 
     //     return canceledOrder
     // }
+
+    /**
+     * Place a limit order.
+     * 
+     * @param allowTaker 
+     * @param amount 
+     * @param buyOrSell 
+     * @param cancelationPolicy 
+     * @param limitPrice 
+     * @param marketName 
+     * @param cancelAt 
+     */
+    public async placeLimitOrder(
+        allowTaker: boolean,
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        cancellationPolicy: OrderCancellationPolicy,
+        limitPrice: CurrencyPrice,
+        marketName: string,
+        cancelAt?: DateTime
+    ): Promise<OrderPlaced> {
+        const placeLimitOrderParams = createPlaceLimitOrderParams(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            cancelAt
+        )
+        const signedPayload = await this.signPayload(placeLimitOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_LIMIT_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
 
     /** 
      * creates and uploads wallet and encryption keys to the CAS.
