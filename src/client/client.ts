@@ -121,7 +121,7 @@ export class Client {
 
         if (encryptedSecretKey === null) {
             if (this.debug) {
-                console.log("creating and uploading keys to CAS")
+                console.log("keys not present in the CAS: creating and uploading as we speak.")
             }
             this.initParams.chainIndices = { neo: 1, eth: 1 }
             await this.createAndUploadKeys(keys.encryptionKey, casCookie)
@@ -193,10 +193,8 @@ export class Client {
             status,
             type
         )
-        console.log(listAccountOrdersParams)
+        console.log('CORE:', this.nashCoreConfig)
         const signedPayload = await this.signPayload(listAccountOrdersParams)
-        console.log(signedPayload)
-
         const result = await client.query(
             {
                 query: LIST_ACCOUNT_ORDERS,
@@ -613,9 +611,9 @@ export class Client {
 
         const url = CAS_URL + "/auth/add_initial_wallets_and_client_keys"
         const body = {
-            encrypted_secret_key: this.initParams.secretKey,
-            encrypted_secret_key_nonce: this.initParams.secretNonce,
-            encrypted_secret_key_tag: this.initParams.secretTag,
+            encrypted_secret_key: initParams.secretKey,
+            encrypted_secret_key_nonce: initParams.secretNonce,
+            encrypted_secret_key_tag: initParams.secretTag,
             signature_public_key: this.nashCoreConfig.PayloadSigning.PublicKey,
             wallets: [
                 {
@@ -629,6 +627,10 @@ export class Client {
                     public_key: this.nashCoreConfig.Wallets.eth.PublicKey
                 }
             ],
+        }
+
+        if (this.debug) {
+            console.log('CAS keys:', body)
         }
 
         const response = await fetch(url, {

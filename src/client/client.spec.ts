@@ -2,6 +2,13 @@ import { Client } from '../client'
 
 const client = new Client
 
+beforeAll(async () => {
+    const email = 'test@nash.io'
+    const password = 'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34'
+
+    await client.login(email, password)
+})
+
 test('successfull logs in a user', async () => {
     const email = 'test@nash.io'
     const password = 'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34'
