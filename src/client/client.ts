@@ -33,7 +33,8 @@ import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import { DateTime, PayloadAndSignature } from '../types'
 import {
-    createSignMovementParams,
+    createDepositRequestParams,
+    createWithdrawalRequestParams,
     createPlaceStopMarketOrderParams,
     createPlaceStopLimitOrderParams,
     createPlaceMarketOrderParams,
@@ -514,7 +515,19 @@ export class Client {
      * @param quantity 
      */
     public async signDepositRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
-        return this.signMovement(SIGN_DEPOSIT_REQUEST_MUTATION, address, quantity)
+        const signMovementParams = createDepositRequestParams(address, quantity)
+        const signedPayload = await this.signPayload(signMovementParams)
+        const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
+        console.log(canonicalString)
+        const result = await client.mutate(
+            {
+                mutation: SIGN_DEPOSIT_REQUEST_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+
+        const signMovement = result.data.signDepositRequest
+
+        return signMovement
     }
 
     /**
@@ -524,22 +537,20 @@ export class Client {
      * @param quantity 
      */
     public async signWithdrawRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
-        return this.signMovement(SIGN_WITHDRAW_REQUEST_MUTATION, address, quantity)
-    }
-
-    private async signMovement(mutation: string, address: string, quantity: CurrencyAmount): Promise<SignMovement> {
-        const signMovementParams = createSignMovementParams(address, quantity)
+        const signMovementParams = createWithdrawalRequestParams(address, quantity)
         const signedPayload = await this.signPayload(signMovementParams)
+        // const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
+        // console.log(canonicalString)
         const result = await client.mutate(
             {
-                mutation,
+                mutation: SIGN_WITHDRAW_REQUEST_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const signMovement = result.data.signDepositRequest
+
+        const signMovement = result.data.signWithdrawRequest
 
         return signMovement
     }
-
 
     /** 
      * creates and uploads wallet and encryption keys to the CAS.
