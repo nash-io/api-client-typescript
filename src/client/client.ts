@@ -26,7 +26,7 @@ import { Market, MarketStatus } from '../queries/market/fragments/marketFragment
 import { Order, OrderBuyOrSell, OrderCancellationPolicy } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
-import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
+import { CAS_URL, SALT, DEBUG } from '../config'
 import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
@@ -69,13 +69,13 @@ export class Client {
      * @param email 
      * @param password 
      */
-    public async login(email: string, password: string): Promise<void> {
+    public async login(email: string, password: string): Promise<boolean> {
         // As login always needs to be called at the start of any program/request
         // we initialize the crypto core right here.
         this.cryptoCore = await cryptoCorePromise
 
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
-        const loginUrl = CAS_HOST_LOCAL + '/user_login'
+        const loginUrl = CAS_URL + '/user_login'
         const body = {
             email,
             password: keys.authenticationKey
@@ -113,7 +113,7 @@ export class Client {
             }
             this.initParams.chainIndices = { neo: 1, eth: 1 }
             await this.createAndUploadKeys(keys.encryptionKey, casCookie)
-            return
+            return true
         }
 
         this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams)
@@ -122,6 +122,8 @@ export class Client {
         if (this.debug) {
             console.log(this.nashCoreConfig)
         }
+
+        return true
     }
 
     /**
@@ -360,20 +362,6 @@ export class Client {
         return canceledOrder
     }
 
-    // TODO: needs go-client revision!
-    // public async cancelAllOrders(orderID: string): Promise<CanceledOrder[]> {
-    //     const signedPayload = await this.signPayload(cancelOrderParams)
-
-    //     const result = await client.query(
-    //         {
-    //             query: CANCEL_ORDER_MUTATION,
-    //             variables: { payload: signedPayload.payload, signature: signedPayload.signature }
-    //         })
-    //     const canceledOrder = result.data.cancelOrder as CanceledOrder
-
-    //     return canceledOrder
-    // }
-
     /**
      * Place a limit order.
      * 
@@ -517,8 +505,6 @@ export class Client {
     public async signDepositRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
         const signMovementParams = createDepositRequestParams(address, quantity)
         const signedPayload = await this.signPayload(signMovementParams)
-        const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
-        console.log(canonicalString)
         const result = await client.mutate(
             {
                 mutation: SIGN_DEPOSIT_REQUEST_MUTATION,
@@ -539,8 +525,6 @@ export class Client {
     public async signWithdrawRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
         const signMovementParams = createWithdrawalRequestParams(address, quantity)
         const signedPayload = await this.signPayload(signMovementParams)
-        // const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
-        // console.log(canonicalString)
         const result = await client.mutate(
             {
                 mutation: SIGN_WITHDRAW_REQUEST_MUTATION,
@@ -589,7 +573,7 @@ export class Client {
         this.nashCoreConfig = await this.cryptoCore.initialize(initParams)
         this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey
 
-        const url = CAS_HOST_LOCAL + "/auth/add_initial_wallets_and_client_keys"
+        const url = CAS_URL + "/auth/add_initial_wallets_and_client_keys"
         const body = {
             encrypted_secret_key: this.initParams.secretKey,
             encrypted_secret_key_nonce: this.initParams.secretNonce,
@@ -630,6 +614,12 @@ export class Client {
      */
     private async signPayload(payload: WrappedPayload): Promise<PayloadAndSignature> {
         const signedPayload = await this.cryptoCore.signPayload(this.nashCoreConfig, payload)
+
+        if (this.debug) {
+            const canonicalString = await this.cryptoCore.canonicalString(payload)
+            console.log("canonical string: ", canonicalString)
+        }
+
         return {
             payload: signedPayload.payload,
             signature: {
