@@ -8,12 +8,22 @@ import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
+import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
+import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
+import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
+import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
+import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
+import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest'
+import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest'
+import { SignMovement } from '../mutations/movements/fragments'
+import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
+import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
 import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
-import { Order } from '../queries/order/fragments/orderFragment'
+import { Order, OrderBuyOrSell, OrderCancellationPolicy } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_HOST_LOCAL, SALT, DEBUG } from '../config'
@@ -21,8 +31,15 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
-import { PayloadAndSignature } from '../types'
+import { DateTime, PayloadAndSignature } from '../types'
 import {
+    createDepositRequestParams,
+    createWithdrawalRequestParams,
+    createPlaceStopMarketOrderParams,
+    createPlaceStopLimitOrderParams,
+    createPlaceMarketOrderParams,
+    createPlaceLimitOrderParams,
+    createCancelOrderParams,
     createGetMovementParams,
     createGetDepositAddressParams,
     createGetAccountOrderParams,
@@ -47,16 +64,16 @@ export class Client {
         this.debug = DEBUG
     }
 
-    public async init(): Promise<void> {
-        this.cryptoCore = await cryptoCorePromise
-    }
-
     /**
      * 
      * @param email 
      * @param password 
      */
     public async login(email: string, password: string): Promise<void> {
+        // As login always needs to be called at the start of any program/request
+        // we initialize the crypto core right here.
+        this.cryptoCore = await cryptoCorePromise
+
         const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(password, SALT)
         const loginUrl = CAS_HOST_LOCAL + '/user_login'
         const body = {
@@ -322,6 +339,217 @@ export class Client {
         const movements = result.data.listMovements as Movement[]
 
         return movements
+    }
+
+    /**
+     * cancel an order by ID.
+     * 
+     * @param orderID 
+     */
+    public async cancelOrder(orderID: string): Promise<CanceledOrder> {
+        const cancelOrderParams = createCancelOrderParams(orderID)
+        const signedPayload = await this.signPayload(cancelOrderParams)
+
+        const result = await client.query(
+            {
+                query: CANCEL_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const canceledOrder = result.data.cancelOrder as CanceledOrder
+
+        return canceledOrder
+    }
+
+    // TODO: needs go-client revision!
+    // public async cancelAllOrders(orderID: string): Promise<CanceledOrder[]> {
+    //     const signedPayload = await this.signPayload(cancelOrderParams)
+
+    //     const result = await client.query(
+    //         {
+    //             query: CANCEL_ORDER_MUTATION,
+    //             variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+    //         })
+    //     const canceledOrder = result.data.cancelOrder as CanceledOrder
+
+    //     return canceledOrder
+    // }
+
+    /**
+     * Place a limit order.
+     * 
+     * @param allowTaker 
+     * @param amount 
+     * @param buyOrSell 
+     * @param cancelationPolicy 
+     * @param limitPrice 
+     * @param marketName 
+     * @param cancelAt 
+     */
+    public async placeLimitOrder(
+        allowTaker: boolean,
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        cancellationPolicy: OrderCancellationPolicy,
+        limitPrice: CurrencyPrice,
+        marketName: string,
+        cancelAt?: DateTime
+    ): Promise<OrderPlaced> {
+        const placeLimitOrderParams = createPlaceLimitOrderParams(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            cancelAt
+        )
+        const signedPayload = await this.signPayload(placeLimitOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_LIMIT_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a market order.
+     * 
+     * @param amount 
+     * @param buyOrSell 
+     * @param marketName 
+     */
+    public async placeMarketOrder(amount: CurrencyAmount, buyOrSell: OrderBuyOrSell, marketName: string): Promise<OrderPlaced> {
+        const placeMarketOrderParams = createPlaceMarketOrderParams(amount, buyOrSell, marketName)
+        const signedPayload = await this.signPayload(placeMarketOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_MARKET_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a stop limit order.
+     * 
+     * @param allowTaker 
+     * @param amount 
+     * @param buyOrSell 
+     * @param cancellationPolicy 
+     * @param limitPrice 
+     * @param marketName 
+     * @param stopPrice 
+     * @param cancelAt 
+     */
+    public async placeStopLimitOrder(
+        allowTaker: boolean,
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        cancellationPolicy: OrderCancellationPolicy,
+        limitPrice: CurrencyPrice,
+        marketName: string,
+        stopPrice: CurrencyPrice,
+        cancelAt?: DateTime
+    ): Promise<OrderPlaced> {
+        const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            stopPrice,
+            cancelAt
+        )
+        const signedPayload = await this.signPayload(placeStopLimitOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Place a stop market order.
+     * 
+     * @param amount 
+     * @param buyOrSell 
+     * @param marketName 
+     * @param stopPrice 
+     */
+    public async placeStopMarketOrder(
+        amount: CurrencyAmount,
+        buyOrSell: OrderBuyOrSell,
+        marketName: string,
+        stopPrice: CurrencyPrice
+    ): Promise<OrderPlaced> {
+        const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+            amount,
+            buyOrSell,
+            marketName,
+            stopPrice
+        )
+        const signedPayload = await this.signPayload(placeStopMarketOrderParams)
+        const result = await client.mutate(
+            {
+                mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+
+        return orderPlaced
+    }
+
+    /**
+     * Sign a deposit request.
+     * 
+     * @param address 
+     * @param quantity 
+     */
+    public async signDepositRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
+        const signMovementParams = createDepositRequestParams(address, quantity)
+        const signedPayload = await this.signPayload(signMovementParams)
+        const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
+        console.log(canonicalString)
+        const result = await client.mutate(
+            {
+                mutation: SIGN_DEPOSIT_REQUEST_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+
+        const signMovement = result.data.signDepositRequest
+
+        return signMovement
+    }
+
+    /**
+     * Sign a withdraw request.
+     * 
+     * @param address 
+     * @param quantity 
+     */
+    public async signWithdrawRequest(address: string, quantity: CurrencyAmount): Promise<SignMovement> {
+        const signMovementParams = createWithdrawalRequestParams(address, quantity)
+        const signedPayload = await this.signPayload(signMovementParams)
+        // const canonicalString = await this.cryptoCore.canonicalString(signMovementParams)
+        // console.log(canonicalString)
+        const result = await client.mutate(
+            {
+                mutation: SIGN_WITHDRAW_REQUEST_MUTATION,
+                variables: { payload: signedPayload.payload, signature: signedPayload.signature }
+            })
+
+        const signMovement = result.data.signWithdrawRequest
+
+        return signMovement
     }
 
     /** 
