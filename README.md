@@ -1,9 +1,15 @@
 # nash-api-client-ts
-
 Official TypeScript client for interacting with the Nash exchange
 
-# Progress list
-## CAS
+# Installation
+`yarn install`
+
+# Test
+`yarn test`
+
+## The following API calls are implemented
+
+## Central account service
 - [x] login
 
 ## Queries
@@ -21,7 +27,6 @@ Official TypeScript client for interacting with the Nash exchange
 - [x] listAccountVolumes
 
 ## Mutations
-- [ ] cancelAllOrders 
 - [x] cancelOrder 
 - [x] placeLimitOrder 
 - [x] placeMarketOrder 
@@ -29,6 +34,9 @@ Official TypeScript client for interacting with the Nash exchange
 - [x] placeStopMarketOrder 
 - [x] signDepositRequest 
 - [x] signWithdrawRequest 
+
+Needs backend revision
+- [ ] cancelAllOrders 
 - [ ] syncStates 
 - [ ] getStates
 
