@@ -2,7 +2,7 @@ import { client } from '../apollo'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
-import { LIST_ORDERS } from '../queries/order/listOrders'
+import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
@@ -16,14 +16,11 @@ import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopM
 import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest'
 import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest'
 import { SignMovement } from '../mutations/movements/fragments'
-import { CurrencyAmount, CurrencyPrice } from '../queries/currency/fragments';
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
-import { CanceledOrder, OrderPlaced } from '../mutations/orders/fragments'
+import { CanceledOrder } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
-import { Market, MarketStatus } from '../queries/market/fragments/marketFragment'
-import { Order, OrderBuyOrSell, OrderCancellationPolicy } from '../queries/order/fragments/orderFragment'
 import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_URL, SALT, DEBUG } from '../config'
@@ -31,7 +28,21 @@ import { FiatCurrency } from '../constants/currency'
 import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol'
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
-import { DateTime, PayloadAndSignature } from '../types'
+import {
+    OrderPlaced,
+    Market,
+    DateTime,
+    PayloadAndSignature,
+    Order,
+    OrderBuyOrSell,
+    OrderCancellationPolicy,
+    CurrencyAmount,
+    CurrencyPrice,
+    PaginationCursor,
+    OrderStatus,
+    OrderType
+} from '../types';
+
 import {
     createDepositRequestParams,
     createWithdrawalRequestParams,
@@ -49,7 +60,8 @@ import {
     createListMovementsParams,
     createListAccountBalanceParams,
     createListAccountTransactionsParams,
-    createListOrdersParams, Config, CryptoCurrency, WrappedPayload
+    createListAccountOrdersParams,
+    Config, CryptoCurrency, WrappedPayload
 } from '@neon-exchange/crypto-core-ts'
 
 export class Client {
@@ -150,21 +162,47 @@ export class Client {
     }
 
     /**
-     * list available orders.
+     * list available orders for the current authenticated account.
      * 
+     * @param before 
+     * @param buyOrSell 
+     * @param limit 
      * @param marketName 
+     * @param rangeStart 
+     * @param rangeStop 
      * @param status 
+     * @param type 
      */
-    public async listOrders(marketName?: string, status?: MarketStatus): Promise<Order[]> {
-        const listOrdersParams = createListOrdersParams(marketName, status)
-        const signedPayload = await this.signPayload(listOrdersParams)
+    public async listAccountOrders(
+        before?: PaginationCursor,
+        buyOrSell?: OrderBuyOrSell,
+        limit?: number,
+        marketName?: string,
+        rangeStart?: DateTime,
+        rangeStop?: DateTime,
+        status?: [OrderStatus],
+        type?: [OrderType]
+    ): Promise<Order[]> {
+        const listAccountOrdersParams = createListAccountOrdersParams(
+            before,
+            buyOrSell,
+            limit,
+            marketName,
+            rangeStart,
+            rangeStop,
+            status,
+            type
+        )
+        console.log(listAccountOrdersParams)
+        const signedPayload = await this.signPayload(listAccountOrdersParams)
+        console.log(signedPayload)
 
         const result = await client.query(
             {
-                query: LIST_ORDERS,
+                query: LIST_ACCOUNT_ORDERS,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const orders = result.data.listOrders as Order[]
+        const orders = result.data.listAccountOrders as Order[]
 
         return orders
     }

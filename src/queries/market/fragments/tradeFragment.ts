@@ -3,9 +3,12 @@ import gql from 'graphql-tag'
 import {
   CURRENCY_PRICE_FRAGMENT,
   CURRENCY_AMOUNT_FRAGMENT,
+} from '../../../queries/currency/fragments'
+
+import {
   CurrencyAmount,
   CurrencyPrice
-} from '../../../queries/currency/fragments'
+} from '../../../types'
 
 export interface Trade {
   id: string
