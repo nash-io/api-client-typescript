@@ -17,7 +17,6 @@ import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDeposi
 import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest'
 import { SignMovement } from '../mutations/movements/fragments'
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
-import { CanceledOrder } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
@@ -28,6 +27,7 @@ import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import {
+    CancelledOrder,
     AccountBalance,
     AccountTransactionResponse,
     OrderPlaced,
@@ -386,18 +386,18 @@ export class Client {
      * 
      * @param orderID 
      */
-    public async cancelOrder(orderID: string): Promise<CanceledOrder> {
+    public async cancelOrder(orderID: string): Promise<CancelledOrder> {
         const cancelOrderParams = createCancelOrderParams(orderID)
         const signedPayload = await this.signPayload(cancelOrderParams)
 
-        const result = await client.query(
+        const result = await client.mutate(
             {
-                query: CANCEL_ORDER_MUTATION,
+                mutation: CANCEL_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const canceledOrder = result.data.cancelOrder as CanceledOrder
+        const cancelledOrder = result.data.cancelOrder as CancelledOrder
 
-        return canceledOrder
+        return cancelledOrder
     }
 
     /**
@@ -455,7 +455,7 @@ export class Client {
                 mutation: PLACE_MARKET_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+        const orderPlaced = result.data.placeMarketOrder as OrderPlaced
 
         return orderPlaced
     }
@@ -498,7 +498,8 @@ export class Client {
                 mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+        console.log(result.data)
+        const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
 
         return orderPlaced
     }

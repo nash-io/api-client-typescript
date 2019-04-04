@@ -10,6 +10,10 @@ export interface AccountOrder {
     next: DateTime
 }
 
+export interface CancelledOrder {
+    orderId: string
+}
+
 export interface Order {
     amount: CurrencyAmount
     amountRemaining: CurrencyAmount

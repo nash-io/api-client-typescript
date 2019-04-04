@@ -1,5 +1,7 @@
 import { Client } from '../client'
 import { CryptoCurrency } from '../constants/currency'
+import { createCurrencyAmount, createCurrencyPrice } from '../helpers'
+import { OrderBuyOrSell, OrderStatus, OrderCancellationPolicy } from '../types'
 
 const client = new Client
 
@@ -38,11 +40,6 @@ test('get a non-existing market throws error', async () => {
     await expect(client.getMarket('ETH_NASH')).rejects.toThrow(Error)
 })
 
-test('list account orders', async () => {
-    const accountOrder = await client.listAccountOrders()
-    expect(accountOrder.orders).toHaveLength(0)
-})
-
 test('list account transactions', async () => {
     const accountTransactionResponse = await client.listAccountTransactions()
     expect(accountTransactionResponse.transactions).toHaveLength(0)
@@ -69,10 +66,73 @@ test('get movement that not exist throws', async () => {
 })
 
 test('get account balance', async () => {
-    const accountBalance = await client.getAccountBalance(CryptoCurrency.NEO)
-    expect(accountBalance.available.amount).toBe('1000.00000000')
+    const accountBalance = await client.getAccountBalance(CryptoCurrency.GAS)
+    console.log(accountBalance)
+    expect(accountBalance.available.amount).toBeDefined()
 })
 
 test('get account order that not exist throws', async () => {
     await expect(client.getAccountOrder('1')).rejects.toThrow(Error)
 })
+
+test('list account volumes', async () => {
+    const accountVolumes = await client.listAccountVolumes()
+    expect(accountVolumes.volumes).toHaveLength(2)
+})
+
+test('list movements', async () => {
+    const movements = await client.listMovements()
+    expect(movements).toHaveLength(0)
+})
+
+test('place limit order', async () => {
+    const orderPlaced = await client.placeLimitOrder(
+        false,
+        createCurrencyAmount('10', CryptoCurrency.NEO),
+        OrderBuyOrSell.SELL,
+        OrderCancellationPolicy.GOOD_TIL_CANCELLED,
+        createCurrencyPrice('8.5', CryptoCurrency.NEO, CryptoCurrency.GAS),
+        'neo_gas'
+    )
+
+    console.log(orderPlaced)
+})
+
+test('place market order', async () => {
+    const orderPlaced = await client.placeMarketOrder(
+        createCurrencyAmount('1', CryptoCurrency.NEO),
+        OrderBuyOrSell.SELL,
+        'neo_gas'
+    )
+
+    expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
+
+test('place stop limit order', async () => {
+    const orderPlaced = await client.placeStopLimitOrder(
+        false,
+        createCurrencyAmount('1', CryptoCurrency.NEO),
+        OrderBuyOrSell.BUY,
+        OrderCancellationPolicy.GOOD_TIL_CANCELLED,
+        createCurrencyPrice('2', CryptoCurrency.GAS, CryptoCurrency.NEO),
+        'neo_gas',
+        createCurrencyPrice('3', CryptoCurrency.GAS, CryptoCurrency.NEO)
+    )
+
+    expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
+
+// neo available 1001000.00000000
+// gas available 1009250.00000000
+
+// PENDING orders cannot be canceled
+// test('cancel order', async () => {
+//     const orderPlaced = await client.placeMarketOrder(
+//         createCurrencyAmount('1', CryptoCurrency.NEO),
+//         OrderBuyOrSell.SELL,
+//         'neo_gas'
+//     )
+
+//     const cancelledOrder = await client.cancelOrder(orderPlaced.id)
+//     console.log(cancelledOrder)
+// })
