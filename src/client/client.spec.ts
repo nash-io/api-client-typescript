@@ -34,6 +34,12 @@ test('unsuccessfully logs in a user with invalid credentials', async () => {
   await expect(client.login(email, password)).rejects.toThrow(Error);
 });
 
+test('list candles', async () => {
+  const candleRange = await client.listCandles('neo_eth');
+
+  expect(candleRange.candles).toHaveLength(0);
+});
+
 test('list all available markets', async () => {
   const markets = await client.listMarkets();
   expect(markets).toHaveLength(4);

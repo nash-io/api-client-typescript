@@ -9,6 +9,7 @@ import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
+import { LIST_CANDLES } from '../queries/candlestick/listCandles';
 import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
@@ -28,6 +29,8 @@ import {
 import toHex from 'array-buffer-to-hex';
 import fetch from 'node-fetch';
 import {
+  CandleRange,
+  CandleInterval,
   AccountDepositAddress,
   Movement,
   MovementStatus,
@@ -154,6 +157,29 @@ export class Client {
     }
 
     return true;
+  }
+
+  /**
+   * List candles for the given market.
+   *
+   * @param marketName
+   * @param before
+   * @param interval
+   * @param limit
+   */
+  public async listCandles(
+    marketName: string,
+    before?: DateTime,
+    interval?: CandleInterval,
+    limit?: number
+  ): Promise<CandleRange> {
+    const result = await client.query({
+      query: LIST_CANDLES,
+      variables: { marketName, before, interval, limit }
+    });
+    const candleRange = result.data.listCandles as CandleRange;
+
+    return candleRange;
   }
 
   /**
