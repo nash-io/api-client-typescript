@@ -1,10 +1,9 @@
 import gql from 'graphql-tag'
 
 import {
-    ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT,
-    GRAPH_POINT_FRAGMENT,
-    ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT,
-    GraphPoint, AccountPortfolioBalance, AccountPortfolioTotal
+  ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT,
+  GRAPH_POINT_FRAGMENT,
+  ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT,
 } from './fragments'
 
 export const GET_ACCOUNT_PORTFOLIO = gql`
@@ -29,16 +28,3 @@ export const GET_ACCOUNT_PORTFOLIO = gql`
   ${GRAPH_POINT_FRAGMENT}
   ${ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT}
 `
-
-export interface AccountPortfolio {
-    balances: AccountPortfolioBalance[],
-    total: AccountPortfolioTotal,
-    graph: GraphPoint[]
-}
-
-export enum Period {
-    DAY = 'DAY',
-    MONTH = 'MONTH',
-    SEMESTER = 'SEMESTER',
-    WEEK = 'WEEK'
-}

@@ -1,10 +1,6 @@
 import gql from 'graphql-tag'
-import { CurrencyAccountVolume, CURRENCY_ACCOUNT_VOLUME_FRAGMENT } from '../currency/fragments'
 
-export interface AccountVolume {
-    thirtyDayTotalVolumePercent: number,
-    volumes: CurrencyAccountVolume[]
-}
+import { CURRENCY_ACCOUNT_VOLUME_FRAGMENT } from '../currency/fragments'
 
 export const LIST_ACCOUNT_VOLUMES = gql`
   query listAccountVolumes(

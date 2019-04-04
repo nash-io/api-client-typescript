@@ -1,7 +1,6 @@
 import gql from 'graphql-tag'
 
 import { ACCOUNT_BALANCE_FRAGMENT } from './fragments'
-import { Signature } from '../../types'
 
 export const LIST_ACCOUNT_BALANCES = gql`
   query listAccountBalances(
@@ -15,11 +14,3 @@ export const LIST_ACCOUNT_BALANCES = gql`
   }
   ${ACCOUNT_BALANCE_FRAGMENT}
 `
-
-export interface ListAccountBalancesVariables {
-    payload: {
-        ignoreLowBalance?: boolean
-        timestamp: number
-    }
-    signature: Signature
-}
