@@ -1,15 +1,16 @@
 import gql from 'graphql-tag'
-import { Asset, ASSET_FRAGMENT } from '../../asset/fragments'
+import { Asset } from '../../../types'
+import { ASSET_FRAGMENT } from '../../asset/fragments'
 
 export interface AccountPortfolioBalance {
-    allocation: number
-    asset: Asset
-    fiatPrice: number
-    fiatPriceChange: number
-    fiatPriceChangePercent: number
-    total: number
-    totalFiatPrice: number
-    totalFiatPriceChange: number
+  allocation: number
+  asset: Asset
+  fiatPrice: number
+  fiatPriceChange: number
+  fiatPriceChangePercent: number
+  total: number
+  totalFiatPrice: number
+  totalFiatPriceChange: number
 }
 
 export const ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT = gql`

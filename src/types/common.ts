@@ -34,10 +34,6 @@ export interface PayloadWithTimestamp extends Payload {
     timestamp: number
 }
 
-export enum TransactionType {
-    DEPOSIT = 'deposit',
-    WITHDRAWAL = 'withdrawal'
-}
 export type InputPayload = Record<string, any>
 
 export enum Blockchain {

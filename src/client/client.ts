@@ -21,7 +21,6 @@ import { CanceledOrder } from '../mutations/orders/fragments'
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { Movement, MovementStatus, MovementType } from '../queries/movement/fragments'
-import { AccountBalance, AccountTransaction } from '../queries/account/fragments'
 import { cryptoCorePromise } from '../utils/cryptoCore'
 import { CAS_URL, SALT, DEBUG } from '../config'
 import { FiatCurrency } from '../constants/currency'
@@ -29,6 +28,8 @@ import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import {
+    AccountBalance,
+    AccountTransactionResponse,
     OrderPlaced,
     Market,
     Order,
@@ -213,7 +214,7 @@ export class Client {
      * @param fiatSymbol 
      * @param limit 
      */
-    public async listAccountTransactions(cursor: string, fiatSymbol: string, limit: number): Promise<AccountTransaction[]> {
+    public async listAccountTransactions(cursor?: string, fiatSymbol?: string, limit?: number): Promise<AccountTransactionResponse> {
         const listAccountTransactionsParams = createListAccountTransactionsParams(cursor, fiatSymbol, limit)
         const signedPayload = await this.signPayload(listAccountTransactionsParams)
 
@@ -222,7 +223,7 @@ export class Client {
                 query: LIST_ACCOUNT_TRANSACTIONS,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const accountTransactions = result.data.listAccountTransactions as AccountTransaction[]
+        const accountTransactions = result.data.listAccountTransactions as AccountTransactionResponse
 
         return accountTransactions
     }

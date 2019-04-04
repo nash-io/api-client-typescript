@@ -1,26 +1,7 @@
 import gql from 'graphql-tag'
 
-import { CryptoCurrency } from '../../../constants/currency'
 import { CURRENCY_AMOUNT_FRAGMENT } from '../../currency/fragments'
-import { ASSET_FRAGMENT, Asset } from '../../asset/fragments'
-import { CurrencyAmount } from '../../../types'
-import keyBy from 'lodash/keyBy'
-
-export interface AccountBalance {
-  asset: Asset
-  available: CurrencyAmount
-  inOrders: CurrencyAmount
-  pending: CurrencyAmount
-  personal: CurrencyAmount
-  depositAddress: string
-}
-
-export type AccountBalances = AccountBalance[]
-export type AccountBalancesMap = Partial<Record<CryptoCurrency, AccountBalance>>
-
-export const getAccountBalancesMap = (
-  listAccountBalances: AccountBalances
-): AccountBalancesMap => keyBy(listAccountBalances, 'asset.symbol')
+import { ASSET_FRAGMENT } from '../../asset/fragments'
 
 export const ACCOUNT_BALANCE_FRAGMENT = gql`
   fragment accountBalanceFields on AccountBalance {

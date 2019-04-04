@@ -1,4 +1,5 @@
 import { Client } from '../client'
+import { CryptoCurrency } from '../constants/currency'
 
 const client = new Client
 
@@ -40,4 +41,38 @@ test('get a non-existing market throws error', async () => {
 test('list account orders', async () => {
     const accountOrder = await client.listAccountOrders()
     expect(accountOrder.orders).toHaveLength(0)
+})
+
+test('list account transactions', async () => {
+    const accountTransactionResponse = await client.listAccountTransactions()
+    expect(accountTransactionResponse.transactions).toHaveLength(0)
+})
+
+test('list account balances', async () => {
+    const accountBalances = await client.listAccountBalances()
+    expect(accountBalances.length).toBeGreaterThan(0)
+})
+
+test('get deposit address', async () => {
+    const depositAddress = await client.getDepositAddress(CryptoCurrency.ETH)
+    expect(depositAddress.currency).toBe('eth')
+    expect(depositAddress.address).toBeDefined()
+})
+
+test('get account portfolio', async () => {
+    const accountPortfolio = await client.getAccountPortfolio()
+    expect(accountPortfolio.balances.length).toBeGreaterThan(0)
+})
+
+test('get movement that not exist throws', async () => {
+    await expect(client.getMovement(1)).rejects.toThrow(Error)
+})
+
+test('get account balance', async () => {
+    const accountBalance = await client.getAccountBalance(CryptoCurrency.NEO)
+    expect(accountBalance.available.amount).toBe('1000.00000000')
+})
+
+test('get account order that not exist throws', async () => {
+    await expect(client.getAccountOrder('1')).rejects.toThrow(Error)
 })
