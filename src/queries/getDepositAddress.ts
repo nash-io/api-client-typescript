@@ -1,11 +1,4 @@
-import gql from 'graphql-tag'
-
-import { CryptoCurrency } from '../constants/currency'
-
-export interface AccountDepositAddress {
-    address: string,
-    currency: CryptoCurrency
-}
+import gql from 'graphql-tag';
 
 export const GET_DEPOSIT_ADDRESS = gql`
   query getDepositAddress(
@@ -18,4 +11,4 @@ export const GET_DEPOSIT_ADDRESS = gql`
       currency
     }
   }
-`
+`;

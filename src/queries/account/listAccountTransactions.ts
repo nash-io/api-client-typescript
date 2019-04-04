@@ -1,9 +1,6 @@
 import gql from 'graphql-tag'
 
-import {
-  ACCOUNT_TRANSACTION_FRAGMENT
-} from './fragments/accountTransaction'
-import { Signature } from '../../types'
+import { ACCOUNT_TRANSACTION_FRAGMENT } from './fragments/accountTransaction'
 
 export const LIST_ACCOUNT_TRANSACTIONS = gql`
     query listAccountTransactions(
@@ -20,13 +17,3 @@ export const LIST_ACCOUNT_TRANSACTIONS = gql`
     }
     ${ACCOUNT_TRANSACTION_FRAGMENT}
   `
-
-export interface ListAccountTransactionsVariables {
-  payload: {
-    cursor?: string
-    fiatSymbol?: string
-    limit?: number
-    timestamp: number
-  }
-  signature: Signature
-}

@@ -19,24 +19,31 @@ export type PaginationCursor = string
   Common types
  */
 export interface Signature {
-    publicKey: string
-    signedDigest: string
+  publicKey: string
+  signedDigest: string
 }
 
 export interface PayloadAndSignature {
-    signature: Signature,
-    payload: WrappedPayload
+  signature: Signature,
+  payload: WrappedPayload
 }
 
 export type Payload = Record<string, any>
 
 export interface PayloadWithTimestamp extends Payload {
-    timestamp: number
+  timestamp: number
 }
 
 export type InputPayload = Record<string, any>
 
 export enum Blockchain {
-    NEO = 'neo',
-    ETH = 'eth'
+  NEO = 'neo',
+  ETH = 'eth'
+}
+
+export enum Period {
+  DAY = 'DAY',
+  MONTH = 'MONTH',
+  SEMESTER = 'SEMESTER',
+  WEEK = 'WEEK'
 }
