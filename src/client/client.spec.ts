@@ -38,6 +38,6 @@ test('get a non-existing market throws error', async () => {
 })
 
 test('list account orders', async () => {
-    const orders = await client.listAccountOrders()
-    console.log(orders)
+    const accountOrder = await client.listAccountOrders()
+    expect(accountOrder.orders).toHaveLength(0)
 })

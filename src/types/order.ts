@@ -3,6 +3,12 @@ import {
     CurrencyPrice,
 } from './currency'
 import { Market } from './market'
+import { DateTime } from './common'
+
+export interface AccountOrder {
+    orders: Order[],
+    next: DateTime
+}
 
 export interface Order {
     amount: CurrencyAmount

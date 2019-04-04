@@ -31,9 +31,10 @@ import fetch from 'node-fetch'
 import {
     OrderPlaced,
     Market,
+    Order,
     DateTime,
     PayloadAndSignature,
-    Order,
+    AccountOrder,
     OrderBuyOrSell,
     OrderCancellationPolicy,
     CurrencyAmount,
@@ -182,7 +183,7 @@ export class Client {
         rangeStop?: DateTime,
         status?: [OrderStatus],
         type?: [OrderType]
-    ): Promise<Order[]> {
+    ): Promise<AccountOrder> {
         const listAccountOrdersParams = createListAccountOrdersParams(
             before,
             buyOrSell,
@@ -200,9 +201,9 @@ export class Client {
                 query: LIST_ACCOUNT_ORDERS,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const orders = result.data.listAccountOrders as Order[]
+        const accountOrder = result.data.listAccountOrders as AccountOrder
 
-        return orders
+        return accountOrder
     }
 
     /**
