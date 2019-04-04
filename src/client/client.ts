@@ -15,7 +15,6 @@ import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLi
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
 import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest'
 import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest'
-import { SignMovement } from '../mutations/movements/fragments'
 import { AccountDepositAddress, GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { AccountPortfolio, GET_ACCOUNT_PORTFOLIO, Period } from '../queries/account/getAccountPortfolio'
 import { AccountVolume, LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
@@ -27,6 +26,7 @@ import { getSecretKey, encryptSecretKey } from '@neon-exchange/nex-auth-protocol
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import {
+    SignMovement,
     CancelledOrder,
     AccountBalance,
     AccountTransactionResponse,
@@ -530,7 +530,7 @@ export class Client {
                 mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
                 variables: { payload: signedPayload.payload, signature: signedPayload.signature }
             })
-        const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+        const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced
 
         return orderPlaced
     }

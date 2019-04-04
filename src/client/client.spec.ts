@@ -1,7 +1,7 @@
 import { Client } from '../client'
 import { CryptoCurrency } from '../constants/currency'
 import { createCurrencyAmount, createCurrencyPrice } from '../helpers'
-import { OrderBuyOrSell, OrderStatus, OrderCancellationPolicy } from '../types'
+import { OrderBuyOrSell, OrderStatus, OrderCancellationPolicy, MovementStatus } from '../types'
 
 const client = new Client
 
@@ -80,22 +80,17 @@ test('list account volumes', async () => {
     expect(accountVolumes.volumes).toHaveLength(2)
 })
 
-test('list movements', async () => {
-    const movements = await client.listMovements()
-    expect(movements).toHaveLength(0)
-})
-
 test('place limit order', async () => {
     const orderPlaced = await client.placeLimitOrder(
         false,
         createCurrencyAmount('10', CryptoCurrency.NEO),
         OrderBuyOrSell.SELL,
         OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-        createCurrencyPrice('8.5', CryptoCurrency.NEO, CryptoCurrency.GAS),
+        createCurrencyPrice('8.5', CryptoCurrency.GAS, CryptoCurrency.NEO),
         'neo_gas'
     )
 
-    console.log(orderPlaced)
+    expect(orderPlaced.status).toBe(OrderStatus.PENDING)
 })
 
 test('place market order', async () => {
@@ -122,8 +117,38 @@ test('place stop limit order', async () => {
     expect(orderPlaced.status).toBe(OrderStatus.PENDING)
 })
 
-// neo available 1001000.00000000
-// gas available 1009250.00000000
+test('place stop market order', async () => {
+    const orderPlaced = await client.placeStopMarketOrder(
+        createCurrencyAmount('2', CryptoCurrency.NEO),
+        OrderBuyOrSell.SELL,
+        'neo_gas',
+        createCurrencyPrice('1', CryptoCurrency.GAS, CryptoCurrency.NEO)
+    )
+
+    expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
+
+test('sign deposit request', async () => {
+    const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6'
+    const amount = createCurrencyAmount('1.4', CryptoCurrency.ETH)
+    const signMovement = await client.signDepositRequest(address, amount)
+
+    const movements = await client.listMovements()
+    expect(movements.length).toBeGreaterThan(0)
+
+    expect(signMovement.movement.status).toBe(MovementStatus.PENDING)
+})
+
+test('sign withdraw request', async () => {
+    const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6'
+    const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH)
+    const signMovement = await client.signWithdrawRequest(address, amount)
+
+    const movements = await client.listMovements()
+    expect(movements.length).toBeGreaterThan(0)
+
+    expect(signMovement.movement.status).toBe(MovementStatus.PENDING)
+})
 
 // PENDING orders cannot be canceled
 // test('cancel order', async () => {

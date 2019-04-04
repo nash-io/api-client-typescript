@@ -1,11 +1,5 @@
 import gql from 'graphql-tag'
-import { MOVEMENT_FRAGMENT, Movement } from './movement'
-
-export interface SignMovement {
-    movement: Movement
-    publicKey: string
-    signature: string
-}
+import { MOVEMENT_FRAGMENT } from './movement'
 
 export const SIGN_MOVEMENT_FRAGMENT = gql`
   fragment signMovementFields on SignMovementResponse {
