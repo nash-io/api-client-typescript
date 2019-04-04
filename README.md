@@ -1,42 +1,75 @@
 # nash-api-client-ts
+
 Official TypeScript client for interacting with the Nash exchange
 
-# Installation
+## Installation
+
 `yarn install`
 
-# Test
+## Test
+
 `yarn test`
+
+> Note that this requires to have a local backend setup and running.
+
+## Example
+
+```typescript
+const client = new Client();
+
+// Login against the CAS
+const email = 'user@example.com';
+const password = 'flkdnvbuieladf5d6d54';
+await client.login(email, password);
+
+// Placing a market order
+const orderPlaced = await client.placeMarketOrder(
+  createCurrencyAmount('1', CryptoCurrency.NEO),
+  OrderBuyOrSell.SELL,
+  'neo_gas'
+);
+
+console.log(orderPlaced);
+
+// Listing account balances
+const accountBalances = await client.listAccountBalances();
+
+console.log(accountBalances);
+```
 
 ## The following API calls are implemented
 
 ## Central account service
+
 - [x] login
 
 ## Queries
-- [x] getMarket 
+
+- [x] getMarket
 - [x] getAccountPortfolio
 - [x] getAccountBalance
-- [x] getAccountOrder 
+- [x] getAccountOrder
 - [x] getDepositAddress
-- [x] getMovement 
-- [x] listMarkets 
-- [x] listMovements 
+- [x] getMovement
+- [x] listMarkets
+- [x] listMovements
 - [x] listAccountOrders
 - [x] listAccountTransactions
 - [x] listAccountBalances
 - [x] listAccountVolumes
 
 ## Mutations
-- [x] cancelOrder 
-- [x] placeLimitOrder 
-- [x] placeMarketOrder 
-- [x] placeStopLimitOrder 
-- [x] placeStopMarketOrder 
-- [x] signDepositRequest 
-- [x] signWithdrawRequest 
+
+- [x] cancelOrder
+- [x] placeLimitOrder
+- [x] placeMarketOrder
+- [x] placeStopLimitOrder
+- [x] placeStopMarketOrder
+- [x] signDepositRequest
+- [x] signWithdrawRequest
 
 Needs backend revision
-- [ ] cancelAllOrders 
-- [ ] syncStates 
-- [ ] getStates
 
+- [ ] cancelAllOrders
+- [ ] syncStates
+- [ ] getStates
