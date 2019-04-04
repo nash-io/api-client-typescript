@@ -12,9 +12,23 @@ Official TypeScript client for interacting with the Nash exchange
 
 > Note that this requires to have a local backend setup and running.
 
+## Configuration
+
+You can configure the endpoints of the GQL server and central account service
+
+- `GQL_URL`
+- `CAS_URL`
+
 ## Example
 
 ```typescript
+import {
+  Client,
+  OrderBuyOrSell,
+  createCurrencyAmount,
+  CryptoCurrency
+} from '@neon-exchange/api-client-ts';
+
 const client = new Client();
 
 // Login against the CAS
@@ -68,7 +82,7 @@ console.log(accountBalances);
 - [x] signDepositRequest
 - [x] signWithdrawRequest
 
-Needs backend revision
+## TODO due to backend revisions
 
 - [ ] cancelAllOrders
 - [ ] syncStates
