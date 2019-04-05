@@ -8,8 +8,12 @@ import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
 import { GET_MOVEMENT } from '../queries/movement/getMovement';
+import { GET_TICKER } from '../queries/market/getTicker';
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
 import { LIST_CANDLES } from '../queries/candlestick/listCandles';
+import { LIST_TICKERS } from '../queries/market/listTickers';
+import { LIST_TRADES } from '../queries/market/listTrades';
+import { GET_ORDERBOOK } from '../queries/market/getOrderBook';
 import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
@@ -29,6 +33,9 @@ import {
 import toHex from 'array-buffer-to-hex';
 import fetch from 'node-fetch';
 import {
+  OrderBook,
+  TradeHistory,
+  Ticker,
   CandleRange,
   CandleInterval,
   AccountDepositAddress,
@@ -157,6 +164,68 @@ export class Client {
     }
 
     return true;
+  }
+
+  /**
+   * Get a single ticker for the given market name.
+   *
+   * @param marketName
+   */
+  public async getTicker(marketName: string): Promise<Ticker> {
+    const result = await client.query({
+      query: GET_TICKER,
+      variables: { marketName }
+    });
+    const ticker = result.data.getTicker as Ticker;
+
+    return ticker;
+  }
+
+  /**
+   * Get the orderbook for the given market.
+   *
+   * @param marketName
+   */
+  public async getOrderBook(marketName: string): Promise<OrderBook> {
+    const result = await client.query({
+      query: GET_ORDERBOOK,
+      variables: { marketName }
+    });
+    const orderBook = result.data.getOrderBook as OrderBook;
+
+    return orderBook;
+  }
+
+  /**
+   * List trades for the given market name.
+   *
+   * @param marketName
+   * @param limit
+   * @param before
+   */
+  public async listTrades(
+    marketName: string,
+    limit?: number,
+    before?: PaginationCursor
+  ): Promise<TradeHistory> {
+    const result = await client.query({
+      query: LIST_TRADES,
+      variables: { marketName, limit, before }
+    });
+
+    const tradeHistory = result.data.listTrades as TradeHistory;
+
+    return tradeHistory;
+  }
+
+  /**
+   * List all available ticker information.
+   */
+  public async listTickers(): Promise<Ticker[]> {
+    const result = await client.query({ query: LIST_TICKERS });
+    const tickers = result.data.listTickers as Ticker[];
+
+    return tickers;
   }
 
   /**

@@ -34,6 +34,30 @@ test('unsuccessfully logs in a user with invalid credentials', async () => {
   await expect(client.login(email, password)).rejects.toThrow(Error);
 });
 
+test('get ticker', async () => {
+  const ticker = await client.getTicker('neo_gas');
+
+  console.log(ticker);
+});
+
+test('get orderbook', async () => {
+  const orderBook = await client.getOrderBook('neo_gas');
+
+  console.log(orderBook);
+});
+
+test('list trades', async () => {
+  const tradeHistory = await client.listTrades('neo_gas');
+
+  console.log(tradeHistory);
+});
+
+test('list tickers', async () => {
+  const tickers = await client.listTickers();
+
+  expect(tickers.length).toBeGreaterThan(0);
+});
+
 test('list candles', async () => {
   const candleRange = await client.listCandles('neo_eth');
 

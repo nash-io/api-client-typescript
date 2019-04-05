@@ -8,3 +8,4 @@ export * from './asset';
 export * from './movement';
 export * from './account';
 export * from './candle';
+export * from './trade';

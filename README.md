@@ -59,11 +59,11 @@ console.log(accountBalances);
 
 ## Queries
 
-- [ ] listTickers
-- [ ] getOrderBook
-- [ ] getTicker
-- [ ] listOrders
-- [ ] listTrades
+- [x] getTicker
+- [x] getOrderBook
+- [x] listTickers
+- [x] listOrders
+- [x] listTrades
 - [x] listCandles
 - [x] getMarket
 - [x] getAccountPortfolio
