@@ -66,7 +66,7 @@ test('list candles', async () => {
 
 test('list all available markets', async () => {
   const markets = await client.listMarkets();
-  expect(markets).toHaveLength(4);
+  expect(markets).toHaveLength(12);
 });
 
 test('get a valid market', async () => {
@@ -121,10 +121,10 @@ test('list account volumes', async () => {
 test('place limit order', async () => {
   const orderPlaced = await client.placeLimitOrder(
     false,
-    createCurrencyAmount('10', CryptoCurrency.NEO),
+    createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-    createCurrencyPrice('11.000000', CryptoCurrency.GAS, CryptoCurrency.NEO),
+    createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas'
   );
 
@@ -133,7 +133,7 @@ test('place limit order', async () => {
 
 test('place market order', async () => {
   const orderPlaced = await client.placeMarketOrder(
-    createCurrencyAmount('20', CryptoCurrency.NEO),
+    createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     'neo_gas'
   );
@@ -144,12 +144,12 @@ test('place market order', async () => {
 test('place stop limit order', async () => {
   const orderPlaced = await client.placeStopLimitOrder(
     false,
-    createCurrencyAmount('1', CryptoCurrency.NEO),
+    createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.BUY,
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-    createCurrencyPrice('2', CryptoCurrency.GAS, CryptoCurrency.NEO),
+    createCurrencyPrice('2.00', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas',
-    createCurrencyPrice('3', CryptoCurrency.GAS, CryptoCurrency.NEO)
+    createCurrencyPrice('3.00', CryptoCurrency.GAS, CryptoCurrency.NEO)
   );
 
   expect(orderPlaced.status).toBe(OrderStatus.PENDING);
@@ -157,10 +157,10 @@ test('place stop limit order', async () => {
 
 test('place stop market order', async () => {
   const orderPlaced = await client.placeStopMarketOrder(
-    createCurrencyAmount('2', CryptoCurrency.NEO),
+    createCurrencyAmount('2.00', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     'neo_gas',
-    createCurrencyPrice('1', CryptoCurrency.GAS, CryptoCurrency.NEO)
+    createCurrencyPrice('1.00', CryptoCurrency.GAS, CryptoCurrency.NEO)
   );
 
   expect(orderPlaced.status).toBe(OrderStatus.PENDING);
