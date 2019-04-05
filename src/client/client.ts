@@ -1,4 +1,5 @@
 import { client } from '../apollo';
+import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions';
@@ -23,7 +24,6 @@ import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithd
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { cryptoCorePromise } from '../utils/cryptoCore';
 import { CAS_URL, SALT, DEBUG } from '../config';
 import { FiatCurrency } from '../constants/currency';
 import {
@@ -107,12 +107,18 @@ export class Client {
   public async login(email: string, password: string): Promise<boolean> {
     // As login always needs to be called at the start of any program/request
     // we initialize the crypto core right here.
-    this.cryptoCore = await cryptoCorePromise;
+    if (this.cryptoCore === undefined) {
+      console.log('loading crypto core module..');
+      this.cryptoCore = await initializeCryptoCore();
+    } else {
+      console.log('crypto core module already loaded');
+    }
 
     const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(
       password,
       SALT
     );
+
     const loginUrl = CAS_URL + '/user_login';
     const body = {
       email,
@@ -158,10 +164,6 @@ export class Client {
 
     this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams);
     this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
-
-    if (this.debug) {
-      console.log(this.nashCoreConfig);
-    }
 
     return true;
   }
