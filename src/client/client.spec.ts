@@ -124,7 +124,7 @@ test('place limit order', async () => {
     createCurrencyAmount('10', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-    createCurrencyPrice('8.5', CryptoCurrency.GAS, CryptoCurrency.NEO),
+    createCurrencyPrice('11.000000', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas'
   );
 
@@ -133,7 +133,7 @@ test('place limit order', async () => {
 
 test('place market order', async () => {
   const orderPlaced = await client.placeMarketOrder(
-    createCurrencyAmount('1', CryptoCurrency.NEO),
+    createCurrencyAmount('20', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     'neo_gas'
   );

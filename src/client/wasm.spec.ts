@@ -1,4 +1,4 @@
-import { Client } from '../client';
+import { Client } from '.';
 
 test('calling multiple API calls does not block the WASM program', async () => {
   const client = new Client();

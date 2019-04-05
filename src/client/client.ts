@@ -26,6 +26,7 @@ import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
 import { CAS_URL, SALT, DEBUG } from '../config';
 import { FiatCurrency } from '../constants/currency';
+import { getPrecision } from '../helpers';
 import {
   getSecretKey,
   encryptSecretKey
@@ -140,6 +141,7 @@ export class Client {
     const encryptedSecretKey = this.account.encrypted_secret_key;
     const encryptedSecretKeyNonce = this.account.encrypted_secret_key_nonce;
     const encryptedSecretKeyTag = this.account.encrypted_secret_key_tag;
+    const marketData = await this.fetchMarketData();
 
     this.initParams = {
       chainIndices: { neo: 1, eth: 1 },
@@ -148,7 +150,8 @@ export class Client {
       passphrase: '',
       secretKey: encryptedSecretKey,
       secretNonce: encryptedSecretKeyNonce,
-      secretTag: encryptedSecretKeyTag
+      secretTag: encryptedSecretKeyTag,
+      marketData: marketData
     };
 
     if (encryptedSecretKey === null) {
@@ -876,5 +879,24 @@ export class Client {
         signedDigest: signedPayload.signature
       }
     };
+  }
+
+  private async fetchMarketData(): Promise<object> {
+    if (this.debug) {
+      console.log('fetching latest exchange market data');
+    }
+
+    const markets = await this.listMarkets();
+    const marketData = {};
+
+    for (const it in markets) {
+      const market = markets[it];
+      marketData[market.name] = {
+        MinTickSize: getPrecision(market.minTickSize),
+        MinTradeSize: getPrecision(market.minTradeSize)
+      };
+    }
+
+    return marketData;
   }
 }
