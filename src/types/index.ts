@@ -9,3 +9,4 @@ export * from './movement';
 export * from './account';
 export * from './candle';
 export * from './trade';
+export * from './marketData';

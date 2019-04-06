@@ -85,7 +85,8 @@ import {
   createListAccountOrdersParams,
   Config,
   CryptoCurrency,
-  WrappedPayload
+  WrappedPayload,
+  MarketData
 } from '@neon-exchange/crypto-core-ts';
 
 export class Client {
@@ -95,6 +96,7 @@ export class Client {
   private account: any;
   private debug: boolean;
   private publicKey: string;
+  public marketData: MarketData;
 
   constructor() {
     this.debug = DEBUG;
@@ -141,7 +143,7 @@ export class Client {
     const encryptedSecretKey = this.account.encrypted_secret_key;
     const encryptedSecretKeyNonce = this.account.encrypted_secret_key_nonce;
     const encryptedSecretKeyTag = this.account.encrypted_secret_key_tag;
-    const marketData = await this.fetchMarketData();
+    this.marketData = await this.fetchMarketData();
 
     this.initParams = {
       chainIndices: { neo: 1, eth: 1 },
@@ -151,7 +153,7 @@ export class Client {
       secretKey: encryptedSecretKey,
       secretNonce: encryptedSecretKeyNonce,
       secretTag: encryptedSecretKeyTag,
-      marketData: marketData
+      marketData: this.marketData
     };
 
     if (encryptedSecretKey === null) {
@@ -881,16 +883,17 @@ export class Client {
     };
   }
 
-  private async fetchMarketData(): Promise<object> {
+  private async fetchMarketData(): Promise<MarketData> {
     if (this.debug) {
       console.log('fetching latest exchange market data');
     }
 
     const markets = await this.listMarkets();
     const marketData = {};
+    let market: Market;
 
-    for (const it in markets) {
-      const market = markets[it];
+    for (const it of Object.keys(markets)) {
+      market = markets[it];
       marketData[market.name] = {
         MinTickSize: getPrecision(market.minTickSize),
         MinTradeSize: getPrecision(market.minTradeSize)
