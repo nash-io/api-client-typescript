@@ -1,16 +1,10 @@
 {
-  "extends": [
-    "tslint:recommended",
-    "tslint-config-prettier"
-  ],
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
   "linterOptions": {
-    "exclude": [
-      "config/**/*.js",
-      "node_modules/**/*.ts",
-      "coverage/**/*.js"
-    ]
+    "exclude": ["config/**/*.js", "node_modules/**/*.ts", "coverage/**/*.js"]
   },
   "rules": {
+    "no-var-requires": false,
     "object-literal-sort-keys": false,
     "ordered-imports": false,
     "jsx-no-lambda": false,
@@ -19,10 +13,7 @@
     "no-console": false,
     "member-access": false,
     "member-ordering": false,
-    "no-unused-expression": [
-      true,
-      "allow-tagged-template"
-    ],
+    "no-unused-expression": [true, "allow-tagged-template"],
     "variable-name": false
   }
 }
