@@ -111,10 +111,10 @@ export class Client {
     // As login always needs to be called at the start of any program/request
     // we initialize the crypto core right here.
     if (this.cryptoCore === undefined) {
-      console.log('loading crypto core module..');
+      if (this.debug) console.log('loading crypto core module..');
       this.cryptoCore = await initializeCryptoCore();
     } else {
-      console.log('crypto core module already loaded');
+      if (this.debug) console.log('crypto core module already loaded');
     }
 
     const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(
