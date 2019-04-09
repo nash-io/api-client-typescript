@@ -315,7 +315,6 @@ export class Client {
       status,
       type
     );
-    console.log('CORE:', this.nashCoreConfig);
     const signedPayload = await this.signPayload(listAccountOrdersParams);
     const result = await client.query({
       query: LIST_ACCOUNT_ORDERS,
