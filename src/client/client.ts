@@ -24,7 +24,7 @@ import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithd
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { CAS_URL, SALT, DEBUG } from '../config';
+import { CAS_URL, SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
 import { getPrecision } from '../helpers';
 import {
@@ -99,7 +99,7 @@ export class Client {
   public marketData: MarketData;
 
   constructor(debug?: boolean) {
-    this.debug = debug || DEBUG;
+    this.debug = debug;
   }
 
   /**
