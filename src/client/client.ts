@@ -98,8 +98,8 @@ export class Client {
   private publicKey: string;
   public marketData: MarketData;
 
-  constructor() {
-    this.debug = DEBUG;
+  constructor(debug?: boolean) {
+    this.debug = debug || DEBUG;
   }
 
   /**
