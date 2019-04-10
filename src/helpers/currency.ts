@@ -82,5 +82,5 @@ export function normalizeAmountForMarketPrecision(
     return amountSplit[0] + '.' + amountSplit[1].substring(0, tradeSize);
   }
 
-  return '';
+  return amount;
 }

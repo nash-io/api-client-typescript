@@ -8,7 +8,7 @@ import {
   MovementStatus
 } from '../types';
 
-const client = new Client();
+const client = new Client(true);
 
 beforeAll(async () => {
   const email = 'test@nash.io';
@@ -124,7 +124,7 @@ test('place limit order', async () => {
     createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-    createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
+    createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas'
   );
 
@@ -147,9 +147,9 @@ test('place stop limit order', async () => {
     createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.BUY,
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-    createCurrencyPrice('2.00', CryptoCurrency.GAS, CryptoCurrency.NEO),
+    createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas',
-    createCurrencyPrice('3.00', CryptoCurrency.GAS, CryptoCurrency.NEO)
+    createCurrencyPrice('0.020000', CryptoCurrency.GAS, CryptoCurrency.NEO)
   );
 
   expect(orderPlaced.status).toBe(OrderStatus.PENDING);

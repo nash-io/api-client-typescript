@@ -24,7 +24,7 @@ import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithd
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { CAS_URL, SALT, DEBUG } from '../config';
+import { CAS_URL, SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
 import { getPrecision } from '../helpers';
 import {
@@ -98,8 +98,8 @@ export class Client {
   private publicKey: string;
   public marketData: MarketData;
 
-  constructor() {
-    this.debug = DEBUG;
+  constructor(debug?: boolean) {
+    this.debug = debug;
   }
 
   /**
@@ -111,10 +111,14 @@ export class Client {
     // As login always needs to be called at the start of any program/request
     // we initialize the crypto core right here.
     if (this.cryptoCore === undefined) {
-      console.log('loading crypto core module..');
+      if (this.debug) {
+        console.log('loading crypto core module..');
+      }
       this.cryptoCore = await initializeCryptoCore();
     } else {
-      console.log('crypto core module already loaded');
+      if (this.debug) {
+        console.log('crypto core module already loaded');
+      }
     }
 
     const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(
@@ -315,7 +319,6 @@ export class Client {
       status,
       type
     );
-    console.log('CORE:', this.nashCoreConfig);
     const signedPayload = await this.signPayload(listAccountOrdersParams);
     const result = await client.query({
       query: LIST_ACCOUNT_ORDERS,
