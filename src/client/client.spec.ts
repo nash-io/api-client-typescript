@@ -118,6 +118,19 @@ test('list account volumes', async () => {
   expect(accountVolumes.volumes).toHaveLength(2);
 });
 
+test('placing an order with not enough funds throws an error', async () => {
+  await expect(
+    client.placeLimitOrder(
+      false,
+      createCurrencyAmount('100000000000000000000.00', CryptoCurrency.NEO),
+      OrderBuyOrSell.SELL,
+      OrderCancellationPolicy.GOOD_TIL_CANCELLED,
+      createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
+      'neo_gas'
+    )
+  ).rejects.toThrow(Error);
+});
+
 test('place limit order', async () => {
   const orderPlaced = await client.placeLimitOrder(
     false,
