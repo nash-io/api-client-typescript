@@ -1,7 +1,6 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
-import { GQL_URL } from '../config';
 import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
@@ -27,7 +26,7 @@ import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithd
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { CAS_URL, SALT } from '../config';
+import { SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
 import { getPrecision } from '../helpers';
 import {
@@ -92,39 +91,74 @@ import {
   MarketData
 } from '@neon-exchange/crypto-core-ts';
 
+/**
+ * ClientOptions is used to configure and construct a new Nash API Client.
+ */
+export interface ClientOptions {
+  apiURI: string;
+  casURI: string;
+  debug?: boolean;
+}
+
 export class Client {
+  private opts: ClientOptions;
   private cryptoCore: any;
   private initParams: any; // make interface for this!
   private nashCoreConfig: Config;
   private account: any;
-  private debug: boolean;
   private publicKey: string;
   private gql: ApolloClient<any>;
   public marketData: MarketData;
 
-  constructor(debug?: boolean) {
-    this.debug = debug;
+  /**
+   * Create a new instance of [[Client]]
+   *
+   * @param opts
+   *
+   * ```
+   * import { Client } from '@neon-exchange/api-client-ts`
+   *
+   * const nash = new Client({
+   *   apiURI: 'https://..',
+   *   casURI: 'https://..',
+   *   debug: true
+   * })
+   * ```
+   */
+  constructor(opts: ClientOptions) {
+    this.opts = opts;
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
-      link: createHttpLink({ fetch, uri: GQL_URL })
+      link: createHttpLink({ fetch, uri: this.opts.apiURI })
     });
   }
 
   /**
+   * Login against the central account service. A login is required for all signed
+   * request.
    *
    * @param email
    * @param password
+   *
+   * ```
+   * const email = 'user@nash.io`
+   * const password = `yourpassword`
+   *
+   * nash.login(email, password)
+   * .then(_ => console.log('login success'))
+   * .catch(e => console.log(`login failed ${e}`)
+   * ```
    */
   public async login(email: string, password: string): Promise<boolean> {
     // As login always needs to be called at the start of any program/request
     // we initialize the crypto core right here.
     if (this.cryptoCore === undefined) {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log('loading crypto core module..');
       }
       this.cryptoCore = await initializeCryptoCore();
     } else {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log('crypto core module already loaded');
       }
     }
@@ -134,7 +168,7 @@ export class Client {
       SALT
     );
 
-    const loginUrl = CAS_URL + '/user_login';
+    const loginUrl = this.opts.casURI + '/user_login';
     const body = {
       email,
       password: keys.authenticationKey
@@ -152,7 +186,7 @@ export class Client {
     }
     this.account = result.account;
 
-    if (this.debug) {
+    if (this.opts.debug) {
       console.log(this.account);
     }
 
@@ -173,7 +207,7 @@ export class Client {
     };
 
     if (encryptedSecretKey === null) {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log(
           'keys not present in the CAS: creating and uploading as we speak.'
         );
@@ -185,7 +219,7 @@ export class Client {
 
     this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams);
 
-    if (this.debug) {
+    if (this.opts.debug) {
       console.log(this.nashCoreConfig);
     }
 
@@ -210,9 +244,14 @@ export class Client {
   }
 
   /**
-   * Get the orderbook for the given market.
+   * Get the [[OrderBook]] for the given market.
    *
    * @param marketName
+   *
+   * ```
+   * const orderBook = await nash.getOrderBook('neo_gas')
+   * console.log(orderBook.bids)
+   * ```
    */
   public async getOrderBook(marketName: string): Promise<OrderBook> {
     const result = await this.gql.query({
@@ -499,8 +538,6 @@ export class Client {
       }
     });
     const accountBalance = result.data.getAccountBalance as AccountBalance;
-
-    console.log(accountBalance.available.amount);
 
     return accountBalance;
   }
@@ -841,7 +878,7 @@ export class Client {
     this.nashCoreConfig = await this.cryptoCore.initialize(initParams);
     this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
 
-    const url = CAS_URL + '/auth/add_initial_wallets_and_client_keys';
+    const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys';
     const body = {
       encrypted_secret_key: initParams.secretKey,
       encrypted_secret_key_nonce: initParams.secretNonce,
@@ -861,10 +898,6 @@ export class Client {
       ]
     };
 
-    if (this.debug) {
-      console.log('CAS keys:', body);
-    }
-
     const response = await fetch(url, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json', cookie: casCookie },
@@ -875,7 +908,9 @@ export class Client {
       throw new Error(result.message);
     }
 
-    console.log('successfully uploaded wallet keys to the CAS');
+    if (this.opts.debug) {
+      console.log('successfully uploaded wallet keys to the CAS');
+    }
   }
 
   /**
@@ -892,10 +927,9 @@ export class Client {
       payload
     );
 
-    if (this.debug) {
+    if (this.opts.debug) {
       const canonicalString = await this.cryptoCore.canonicalString(payload);
       console.log('canonical string: ', canonicalString);
-      console.log('signed with public key: ', this.publicKey);
     }
 
     return {
@@ -908,7 +942,7 @@ export class Client {
   }
 
   private async fetchMarketData(): Promise<MarketData> {
-    if (this.debug) {
+    if (this.opts.debug) {
       console.log('fetching latest exchange market data');
     }
 

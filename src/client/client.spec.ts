@@ -1,6 +1,7 @@
 import { Client } from '../client';
 import { CryptoCurrency } from '../constants/currency';
 import { createCurrencyAmount, createCurrencyPrice } from '../helpers';
+import { CAS_URL, GQL_URL } from '../config';
 import {
   OrderBuyOrSell,
   OrderStatus,
@@ -8,7 +9,10 @@ import {
   MovementStatus
 } from '../types';
 
-const client = new Client(true);
+const client = new Client({
+  casURI: CAS_URL,
+  apiURI: GQL_URL
+});
 
 beforeAll(async () => {
   const email = 'test@nash.io';
