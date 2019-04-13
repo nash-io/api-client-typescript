@@ -29,7 +29,7 @@ export interface Confirmations {
   denominator: number;
 }
 
-export interface AccountTransactionResponse {
+export interface AccountTransaction {
   nextCursor: PaginationCursor;
   transactions: AccountTransaction[];
 }

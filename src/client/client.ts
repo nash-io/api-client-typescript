@@ -51,7 +51,7 @@ import {
   SignMovement,
   CancelledOrder,
   AccountBalance,
-  AccountTransactionResponse,
+  AccountTransaction,
   OrderPlaced,
   Market,
   Order,
@@ -114,13 +114,15 @@ export class Client {
    * Create a new instance of [[Client]]
    *
    * @param opts
+   * @returns
    *
+   * Example
    * ```
-   * import { Client } from '@neon-exchange/api-client-ts`
+   * import { Client } from '@neon-exchange/api-client-ts'
    *
    * const nash = new Client({
-   *   apiURI: 'https://..',
-   *   casURI: 'https://..',
+   *   apiURI: 'https://pathtoapiurl',
+   *   casURI: 'https://pathtocasurl',
    *   debug: true
    * })
    * ```
@@ -129,7 +131,17 @@ export class Client {
     this.opts = opts;
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
-      link: createHttpLink({ fetch, uri: this.opts.apiURI })
+      link: createHttpLink({ fetch, uri: this.opts.apiURI }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'network-only',
+          errorPolicy: 'all'
+        },
+        query: {
+          fetchPolicy: 'network-only',
+          errorPolicy: 'all'
+        }
+      }
     });
   }
 
@@ -139,7 +151,9 @@ export class Client {
    *
    * @param email
    * @param password
+   * @returns
    *
+   * Example
    * ```
    * const email = 'user@nash.io`
    * const password = `yourpassword`
@@ -229,9 +243,16 @@ export class Client {
   }
 
   /**
-   * Get a single ticker for the given market name.
+   * Get a single [[Ticker]] for the given market name.
    *
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const ticker = await nash.getTicker('neo_gas')
+   * console.log(ticker)
+   * ```
    */
   public async getTicker(marketName: string): Promise<Ticker> {
     const result = await this.gql.query({
@@ -247,7 +268,9 @@ export class Client {
    * Get the [[OrderBook]] for the given market.
    *
    * @param marketName
+   * @returns
    *
+   * Example
    * ```
    * const orderBook = await nash.getOrderBook('neo_gas')
    * console.log(orderBook.bids)
@@ -264,11 +287,18 @@ export class Client {
   }
 
   /**
-   * List trades for the given market name.
+   * Get [[TradeHistory]] for the given market name.
    *
    * @param marketName
    * @param limit
    * @param before
+   * @returns
+   *
+   * Example
+   * ```
+   * const tradeHistory = await nash.listTrades('neo_gas')
+   * console.log(tradeHistory.trades)
+   * ```
    */
   public async listTrades(
     marketName: string,
@@ -286,7 +316,15 @@ export class Client {
   }
 
   /**
-   * List all available ticker information.
+   * Fetches as list of all available [[Ticker]] that are active on the exchange.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const tickers = await nash.listTickers()
+   * console.log(tickers)
+   * ```
    */
   public async listTickers(): Promise<Ticker[]> {
     const result = await this.gql.query({ query: LIST_TICKERS });
@@ -296,12 +334,19 @@ export class Client {
   }
 
   /**
-   * List candles for the given market.
+   * List a [[CandleRange]] for the given market.
    *
    * @param marketName
    * @param before
    * @param interval
    * @param limit
+   * @returns
+   *
+   * Example
+   * ```
+   * const candleRange = await nash.listCandles('neo_gas')
+   * console.log(candleRange)
+   * ``
    */
   public async listCandles(
     marketName: string,
@@ -319,7 +364,15 @@ export class Client {
   }
 
   /**
-   * list available markets.
+   * List all available markets.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const markets = await nash.listMarkets()
+   * console.log(markets)
+   * ```
    */
   public async listMarkets(): Promise<Market[]> {
     const result = await this.gql.query({ query: LIST_MARKETS_QUERY });
@@ -329,9 +382,16 @@ export class Client {
   }
 
   /**
-   * get a specific market by its market name.
+   * Get a specific [[Market]] by name.
    *
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const market = await nash.getMarket('neo_gas')
+   * console.log(market)
+   * ```
    */
   public async getMarket(marketName: string): Promise<Market> {
     const result = await this.gql.query({
@@ -354,6 +414,13 @@ export class Client {
    * @param rangeStop
    * @param status
    * @param type
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountOrder = await nash.listAccountOrders('neo_eth')
+   * console.log(accountOrder.orders)
+   * ```
    */
   public async listAccountOrders(
     before?: PaginationCursor,
@@ -389,17 +456,24 @@ export class Client {
   }
 
   /**
-   * list available account transactions.
+   * List available account transactions.
    *
    * @param cursor
    * @param fiatSymbol
    * @param limit
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountTransaction = await nash.listAccountTransactions()
+   * console.log(accountTransaction.transactions)
+   * ```
    */
   public async listAccountTransactions(
     cursor?: string,
     fiatSymbol?: string,
     limit?: number
-  ): Promise<AccountTransactionResponse> {
+  ): Promise<AccountTransaction> {
     const listAccountTransactionsParams = createListAccountTransactionsParams(
       cursor,
       fiatSymbol,
@@ -415,15 +489,22 @@ export class Client {
       }
     });
     const accountTransactions = result.data
-      .listAccountTransactions as AccountTransactionResponse;
+      .listAccountTransactions as AccountTransaction;
 
     return accountTransactions;
   }
 
   /**
-   * list all balances for current authenticated account.
+   * List all balances for current authenticated account.
    *
    * @param ignoreLowBalance
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountBalance = await nash.listAccountBalances()
+   * console.log(accountBalance)
+   * ```
    */
   public async listAccountBalances(
     ignoreLowBalance?: boolean
