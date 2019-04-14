@@ -527,9 +527,18 @@ export class Client {
   }
 
   /**
-   * get the deposit address for the given crypto currency.
+   * Get the deposit address for the given crypto currency.
    *
    * @param currency
+   * @returns
+   *
+   * Example
+   * ```
+   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   *
+   * const address = await nash.getDepositAddress(CryptoCurrency.NEO)
+   * console.log(address)
+   * ```
    */
   public async getDepositAddress(
     currency: CryptoCurrency
@@ -551,10 +560,17 @@ export class Client {
   }
 
   /**
-   * get the portfolio for the current authenticated account.
+   * Get the [[AccountPortfolio]] for the current authenticated account.
    *
    * @param fiatSymbol
    * @param period
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountPortfolio = await nash.getAccountPortfolio()
+   * console.log(accountPortfolio)
+   * ```
    */
   public async getAccountPortfolio(
     fiatSymbol?: FiatCurrency,
@@ -580,9 +596,16 @@ export class Client {
   }
 
   /**
-   * get a movement by the given movement id.
+   * Get a [[Movement]] by the given id.
    *
    * @param movementID
+   * @returns
+   *
+   * Example
+   * ```
+   * const movement = await nash.getMovement(1)
+   * console.log(movement)
+   * ```
    */
   public async getMovement(movementID: number): Promise<Movement> {
     const getMovemementParams = createGetMovementParams(movementID);
@@ -601,9 +624,18 @@ export class Client {
   }
 
   /**
-   * get balance for the given crypto currency.
+   * Get [[AccountBalance]] for the given crypto currency.
    *
    * @param currency
+   * @returns
+   *
+   * Example
+   * ```
+   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   *
+   * const accountBalance = await nash.getAcountBalance(CryptoCurrency.ETH)
+   * console.log(accountBalance)
+   * ```
    */
   public async getAccountBalance(
     currency: CryptoCurrency
@@ -624,9 +656,16 @@ export class Client {
   }
 
   /**
-   * get a specific order by it's ID.
+   * Get an order by ID.
    *
    * @param orderID
+   * @returns
+   *
+   * Example
+   * ```
+   * const order = await nash.getAccountOrder('999')
+   * console.log(order)
+   * ```
    */
   public async getAccountOrder(orderID: string): Promise<Order> {
     const getAccountOrderParams = createGetAccountOrderParams(orderID);
