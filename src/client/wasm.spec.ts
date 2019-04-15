@@ -1,7 +1,11 @@
 import { Client } from '.';
+import { CAS_URL, GQL_URL } from '../config';
 
 test('calling multiple API calls does not block the WASM program', async () => {
-  const client = new Client();
+  const client = new Client({
+    casURI: CAS_URL,
+    apiURI: GQL_URL
+  });
   const result = await Promise.all([
     client.listMarkets(),
     client.getMarket('eth_neo'),
@@ -12,8 +16,14 @@ test('calling multiple API calls does not block the WASM program', async () => {
 });
 
 test('can login multiple clients without blocking the WASM program', async () => {
-  const client1 = new Client();
-  const client2 = new Client();
+  const client1 = new Client({
+    casURI: CAS_URL,
+    apiURI: GQL_URL
+  });
+  const client2 = new Client({
+    casURI: CAS_URL,
+    apiURI: GQL_URL
+  });
 
   const email = 'test@nash.io';
   const password =

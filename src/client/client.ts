@@ -1,7 +1,6 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
-import { GQL_URL } from '../config';
 import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
@@ -27,9 +26,13 @@ import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithd
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { CAS_URL, SALT } from '../config';
+import { SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
-import { getPrecision } from '../helpers';
+import {
+  mapMarketsForGoClient,
+  normalizePriceForMarket,
+  normalizeAmountForMarket
+} from '../helpers';
 import {
   getSecretKey,
   encryptSecretKey
@@ -52,7 +55,7 @@ import {
   SignMovement,
   CancelledOrder,
   AccountBalance,
-  AccountTransactionResponse,
+  AccountTransaction,
   OrderPlaced,
   Market,
   Order,
@@ -88,43 +91,91 @@ import {
   createListAccountOrdersParams,
   Config,
   CryptoCurrency,
-  WrappedPayload,
-  MarketData
+  WrappedPayload
 } from '@neon-exchange/crypto-core-ts';
 
+/**
+ * ClientOptions is used to configure and construct a new Nash API Client.
+ */
+export interface ClientOptions {
+  apiURI: string;
+  casURI: string;
+  debug?: boolean;
+}
+
 export class Client {
+  private opts: ClientOptions;
   private cryptoCore: any;
   private initParams: any; // make interface for this!
   private nashCoreConfig: Config;
   private account: any;
-  private debug: boolean;
   private publicKey: string;
   private gql: ApolloClient<any>;
-  public marketData: MarketData;
+  public marketData: { [key: string]: Market };
 
-  constructor(debug?: boolean) {
-    this.debug = debug;
+  /**
+   * Create a new instance of [[Client]]
+   *
+   * @param opts
+   * @returns
+   *
+   * Example
+   * ```
+   * import { Client } from '@neon-exchange/api-client-ts'
+   *
+   * const nash = new Client({
+   *   apiURI: 'https://pathtoapiurl',
+   *   casURI: 'https://pathtocasurl',
+   *   debug: true
+   * })
+   * ```
+   */
+  constructor(opts: ClientOptions) {
+    this.opts = opts;
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
-      link: createHttpLink({ fetch, uri: GQL_URL })
+      link: createHttpLink({ fetch, uri: this.opts.apiURI }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'network-only',
+          errorPolicy: 'all'
+        },
+        query: {
+          fetchPolicy: 'network-only',
+          errorPolicy: 'all'
+        }
+      }
     });
   }
 
   /**
+   * Login against the central account service. A login is required for all signed
+   * request.
    *
    * @param email
    * @param password
+   * @returns
+   *
+   * Example
+   * ```
+   * const email = 'user@nash.io`
+   * const password = `yourpassword`
+   *
+   * nash.login(email, password)
+   * .then(_ => console.log('login success'))
+   * .catch(e => console.log(`login failed ${e}`)
+   * ```
    */
   public async login(email: string, password: string): Promise<boolean> {
     // As login always needs to be called at the start of any program/request
     // we initialize the crypto core right here.
     if (this.cryptoCore === undefined) {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log('loading crypto core module..');
       }
       this.cryptoCore = await initializeCryptoCore();
     } else {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log('crypto core module already loaded');
       }
     }
@@ -134,7 +185,7 @@ export class Client {
       SALT
     );
 
-    const loginUrl = CAS_URL + '/user_login';
+    const loginUrl = this.opts.casURI + '/user_login';
     const body = {
       email,
       password: keys.authenticationKey
@@ -152,7 +203,7 @@ export class Client {
     }
     this.account = result.account;
 
-    if (this.debug) {
+    if (this.opts.debug) {
       console.log(this.account);
     }
 
@@ -169,11 +220,11 @@ export class Client {
       secretKey: encryptedSecretKey,
       secretNonce: encryptedSecretKeyNonce,
       secretTag: encryptedSecretKeyTag,
-      marketData: this.marketData
+      marketData: mapMarketsForGoClient(this.marketData)
     };
 
     if (encryptedSecretKey === null) {
-      if (this.debug) {
+      if (this.opts.debug) {
         console.log(
           'keys not present in the CAS: creating and uploading as we speak.'
         );
@@ -185,7 +236,7 @@ export class Client {
 
     this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams);
 
-    if (this.debug) {
+    if (this.opts.debug) {
       console.log(this.nashCoreConfig);
     }
 
@@ -195,9 +246,16 @@ export class Client {
   }
 
   /**
-   * Get a single ticker for the given market name.
+   * Get a single [[Ticker]] for the given market name.
    *
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const ticker = await nash.getTicker('neo_gas')
+   * console.log(ticker)
+   * ```
    */
   public async getTicker(marketName: string): Promise<Ticker> {
     const result = await this.gql.query({
@@ -210,9 +268,16 @@ export class Client {
   }
 
   /**
-   * Get the orderbook for the given market.
+   * Get the [[OrderBook]] for the given market.
    *
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const orderBook = await nash.getOrderBook('neo_gas')
+   * console.log(orderBook.bids)
+   * ```
    */
   public async getOrderBook(marketName: string): Promise<OrderBook> {
     const result = await this.gql.query({
@@ -225,11 +290,18 @@ export class Client {
   }
 
   /**
-   * List trades for the given market name.
+   * Get [[TradeHistory]] for the given market name.
    *
    * @param marketName
    * @param limit
    * @param before
+   * @returns
+   *
+   * Example
+   * ```
+   * const tradeHistory = await nash.listTrades('neo_gas')
+   * console.log(tradeHistory.trades)
+   * ```
    */
   public async listTrades(
     marketName: string,
@@ -247,7 +319,15 @@ export class Client {
   }
 
   /**
-   * List all available ticker information.
+   * Fetches as list of all available [[Ticker]] that are active on the exchange.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const tickers = await nash.listTickers()
+   * console.log(tickers)
+   * ```
    */
   public async listTickers(): Promise<Ticker[]> {
     const result = await this.gql.query({ query: LIST_TICKERS });
@@ -257,12 +337,19 @@ export class Client {
   }
 
   /**
-   * List candles for the given market.
+   * List a [[CandleRange]] for the given market.
    *
    * @param marketName
    * @param before
    * @param interval
    * @param limit
+   * @returns
+   *
+   * Example
+   * ```
+   * const candleRange = await nash.listCandles('neo_gas')
+   * console.log(candleRange)
+   * ``
    */
   public async listCandles(
     marketName: string,
@@ -280,7 +367,15 @@ export class Client {
   }
 
   /**
-   * list available markets.
+   * List all available markets.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const markets = await nash.listMarkets()
+   * console.log(markets)
+   * ```
    */
   public async listMarkets(): Promise<Market[]> {
     const result = await this.gql.query({ query: LIST_MARKETS_QUERY });
@@ -290,9 +385,16 @@ export class Client {
   }
 
   /**
-   * get a specific market by its market name.
+   * Get a specific [[Market]] by name.
    *
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const market = await nash.getMarket('neo_gas')
+   * console.log(market)
+   * ```
    */
   public async getMarket(marketName: string): Promise<Market> {
     const result = await this.gql.query({
@@ -315,6 +417,13 @@ export class Client {
    * @param rangeStop
    * @param status
    * @param type
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountOrder = await nash.listAccountOrders('neo_eth')
+   * console.log(accountOrder.orders)
+   * ```
    */
   public async listAccountOrders(
     before?: PaginationCursor,
@@ -350,17 +459,24 @@ export class Client {
   }
 
   /**
-   * list available account transactions.
+   * List available account transactions.
    *
    * @param cursor
    * @param fiatSymbol
    * @param limit
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountTransaction = await nash.listAccountTransactions()
+   * console.log(accountTransaction.transactions)
+   * ```
    */
   public async listAccountTransactions(
     cursor?: string,
     fiatSymbol?: string,
     limit?: number
-  ): Promise<AccountTransactionResponse> {
+  ): Promise<AccountTransaction> {
     const listAccountTransactionsParams = createListAccountTransactionsParams(
       cursor,
       fiatSymbol,
@@ -376,15 +492,22 @@ export class Client {
       }
     });
     const accountTransactions = result.data
-      .listAccountTransactions as AccountTransactionResponse;
+      .listAccountTransactions as AccountTransaction;
 
     return accountTransactions;
   }
 
   /**
-   * list all balances for current authenticated account.
+   * List all balances for current authenticated account.
    *
    * @param ignoreLowBalance
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountBalance = await nash.listAccountBalances()
+   * console.log(accountBalance)
+   * ```
    */
   public async listAccountBalances(
     ignoreLowBalance?: boolean
@@ -407,9 +530,18 @@ export class Client {
   }
 
   /**
-   * get the deposit address for the given crypto currency.
+   * Get the deposit address for the given crypto currency.
    *
    * @param currency
+   * @returns
+   *
+   * Example
+   * ```
+   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   *
+   * const address = await nash.getDepositAddress(CryptoCurrency.NEO)
+   * console.log(address)
+   * ```
    */
   public async getDepositAddress(
     currency: CryptoCurrency
@@ -431,10 +563,17 @@ export class Client {
   }
 
   /**
-   * get the portfolio for the current authenticated account.
+   * Get the [[AccountPortfolio]] for the current authenticated account.
    *
    * @param fiatSymbol
    * @param period
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountPortfolio = await nash.getAccountPortfolio()
+   * console.log(accountPortfolio)
+   * ```
    */
   public async getAccountPortfolio(
     fiatSymbol?: FiatCurrency,
@@ -460,9 +599,16 @@ export class Client {
   }
 
   /**
-   * get a movement by the given movement id.
+   * Get a [[Movement]] by the given id.
    *
    * @param movementID
+   * @returns
+   *
+   * Example
+   * ```
+   * const movement = await nash.getMovement(1)
+   * console.log(movement)
+   * ```
    */
   public async getMovement(movementID: number): Promise<Movement> {
     const getMovemementParams = createGetMovementParams(movementID);
@@ -481,9 +627,18 @@ export class Client {
   }
 
   /**
-   * get balance for the given crypto currency.
+   * Get [[AccountBalance]] for the given crypto currency.
    *
    * @param currency
+   * @returns
+   *
+   * Example
+   * ```
+   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   *
+   * const accountBalance = await nash.getAcountBalance(CryptoCurrency.ETH)
+   * console.log(accountBalance)
+   * ```
    */
   public async getAccountBalance(
     currency: CryptoCurrency
@@ -500,15 +655,20 @@ export class Client {
     });
     const accountBalance = result.data.getAccountBalance as AccountBalance;
 
-    console.log(accountBalance.available.amount);
-
     return accountBalance;
   }
 
   /**
-   * get a specific order by it's ID.
+   * Get an order by ID.
    *
    * @param orderID
+   * @returns
+   *
+   * Example
+   * ```
+   * const order = await nash.getAccountOrder('999')
+   * console.log(order)
+   * ```
    */
   public async getAccountOrder(orderID: string): Promise<Order> {
     const getAccountOrderParams = createGetAccountOrderParams(orderID);
@@ -527,7 +687,15 @@ export class Client {
   }
 
   /**
-   * list all volumes for the current authenticated account.
+   * List all volumes for the current authenticated account.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountVolume = await nash.listAccountVolumes()
+   * console.log(accountVolume.thirtyDayTotalVolumePercent)
+   * ```
    */
   public async listAccountVolumes(): Promise<AccountVolume> {
     const listAccountVolumesParams = createListAccountVolumesParams();
@@ -546,11 +714,18 @@ export class Client {
   }
 
   /**
-   * list all movements for the current authenticated account.
+   * List all movements for the current authenticated account.
    *
    * @param currency
    * @param status
    * @param type
+   * @returns
+   *
+   * Example
+   * ```
+   * const movements = await nash.listMovements()
+   * console.log(movements)
+   * ```
    */
   public async listMovements(
     currency?: CryptoCurrency,
@@ -577,9 +752,16 @@ export class Client {
   }
 
   /**
-   * cancel an order by ID.
+   * Cancel an order by ID.
    *
    * @param orderID
+   * @returns
+   *
+   * Example
+   * ```
+   * const cancelledOrder = await nash.cancelOrder('11')
+   * console.log(cancelledOrder)
+   * ```
    */
   public async cancelOrder(orderID: string): Promise<CancelledOrder> {
     const cancelOrderParams = createCancelOrderParams(orderID);
@@ -607,6 +789,27 @@ export class Client {
    * @param limitPrice
    * @param marketName
    * @param cancelAt
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   *   OrderCancellationPolicy
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeLimitOrder(
+   *   false,
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
+   *   'neo_gas'
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeLimitOrder(
     allowTaker: boolean,
@@ -617,12 +820,20 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const normalizedAmount = normalizeAmountForMarket(
+      amount,
+      this.marketData[marketName]
+    );
+    const normalizedLimitPrice = normalizePriceForMarket(
+      limitPrice,
+      this.marketData[marketName]
+    );
     const placeLimitOrderParams = createPlaceLimitOrderParams(
       allowTaker,
-      amount,
+      normalizedAmount,
       buyOrSell,
       cancellationPolicy,
-      limitPrice,
+      normalizedLimitPrice,
       marketName,
       cancelAt
     );
@@ -646,14 +857,34 @@ export class Client {
    * @param amount
    * @param buyOrSell
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   OrderBuyOrSell,
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeMarketOrder(
+   *   createCurrencyAmount('1.00', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.SELL,
+   *   'neo_gas'
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeMarketOrder(
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string
   ): Promise<OrderPlaced> {
-    const placeMarketOrderParams = createPlaceMarketOrderParams(
+    const normalizedAmount = normalizeAmountForMarket(
       amount,
+      this.marketData[marketName]
+    );
+    const placeMarketOrderParams = createPlaceMarketOrderParams(
+      normalizedAmount,
       buyOrSell,
       marketName
     );
@@ -681,6 +912,28 @@ export class Client {
    * @param marketName
    * @param stopPrice
    * @param cancelAt
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   *   OrderCancellationPolicy
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeStopLimitOrder(
+   *   false,
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
+   *   'neo_gas'
+   *   createCurrencyPrice('0.02', CryptoCurrency.GAS, CryptoCurrency.NEO)
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeStopLimitOrder(
     allowTaker: boolean,
@@ -692,14 +945,26 @@ export class Client {
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const normalizedAmount = normalizeAmountForMarket(
+      amount,
+      this.marketData[marketName]
+    );
+    const normalizedLimitPrice = normalizePriceForMarket(
+      limitPrice,
+      this.marketData[marketName]
+    );
+    const normalizedStopPrice = normalizePriceForMarket(
+      stopPrice,
+      this.marketData[marketName]
+    );
     const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
       allowTaker,
-      amount,
+      normalizedAmount,
       buyOrSell,
       cancellationPolicy,
-      limitPrice,
+      normalizedLimitPrice,
       marketName,
-      stopPrice,
+      normalizedStopPrice,
       cancelAt
     );
     const signedPayload = await this.signPayload(placeStopLimitOrderParams);
@@ -722,6 +987,24 @@ export class Client {
    * @param buyOrSell
    * @param marketName
    * @param stopPrice
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeStopLimitOrder(
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   'neo_gas'
+   *   createCurrencyPrice('0.02', CryptoCurrency.GAS, CryptoCurrency.NEO)
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeStopMarketOrder(
     amount: CurrencyAmount,
@@ -729,11 +1012,20 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice
   ): Promise<OrderPlaced> {
-    const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+    const normalizedAmount = normalizeAmountForMarket(
       amount,
+      this.marketData[marketName]
+    );
+    const normalizedStopPrice = normalizePriceForMarket(
+      stopPrice,
+      this.marketData[marketName]
+    );
+
+    const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+      normalizedAmount,
       buyOrSell,
       marketName,
-      stopPrice
+      normalizedStopPrice
     );
     const signedPayload = await this.signPayload(placeStopMarketOrderParams);
     const result = await this.gql.mutate({
@@ -753,6 +1045,17 @@ export class Client {
    *
    * @param address
    * @param quantity
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   *
+   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
+   * const signedMovement = await nash.signDepositRequest(address, amount);
+   * console.log(signedMovement)
+   * ```
    */
   public async signDepositRequest(
     address: string,
@@ -778,6 +1081,17 @@ export class Client {
    *
    * @param address
    * @param quantity
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   *
+   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
+   * const signedMovement = await nash.signWithdrawRequest(address, amount);
+   * console.log(signedMovement)
+   * ```
    */
   public async signWithdrawRequest(
     address: string,
@@ -836,12 +1150,13 @@ export class Client {
       passphrase: '',
       secretKey: toHex(res.encryptedSecretKey),
       secretNonce: toHex(res.nonce),
-      secretTag: toHex(res.tag)
+      secretTag: toHex(res.tag),
+      marketData: mapMarketsForGoClient(this.marketData)
     };
     this.nashCoreConfig = await this.cryptoCore.initialize(initParams);
     this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
 
-    const url = CAS_URL + '/auth/add_initial_wallets_and_client_keys';
+    const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys';
     const body = {
       encrypted_secret_key: initParams.secretKey,
       encrypted_secret_key_nonce: initParams.secretNonce,
@@ -861,10 +1176,6 @@ export class Client {
       ]
     };
 
-    if (this.debug) {
-      console.log('CAS keys:', body);
-    }
-
     const response = await fetch(url, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json', cookie: casCookie },
@@ -875,7 +1186,9 @@ export class Client {
       throw new Error(result.message);
     }
 
-    console.log('successfully uploaded wallet keys to the CAS');
+    if (this.opts.debug) {
+      console.log('successfully uploaded wallet keys to the CAS');
+    }
   }
 
   /**
@@ -892,10 +1205,9 @@ export class Client {
       payload
     );
 
-    if (this.debug) {
+    if (this.opts.debug) {
       const canonicalString = await this.cryptoCore.canonicalString(payload);
       console.log('canonical string: ', canonicalString);
-      console.log('signed with public key: ', this.publicKey);
     }
 
     return {
@@ -907,8 +1219,8 @@ export class Client {
     };
   }
 
-  private async fetchMarketData(): Promise<MarketData> {
-    if (this.debug) {
+  private async fetchMarketData(): Promise<{ [key: string]: Market }> {
+    if (this.opts.debug) {
       console.log('fetching latest exchange market data');
     }
 
@@ -918,10 +1230,7 @@ export class Client {
 
     for (const it of Object.keys(markets)) {
       market = markets[it];
-      marketData[market.name] = {
-        MinTickSize: getPrecision(market.minTickSize),
-        MinTradeSize: getPrecision(market.minTradeSize)
-      };
+      marketData[market.name] = market;
     }
 
     return marketData;

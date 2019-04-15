@@ -1,5 +1,6 @@
-import { CurrencyAmount, CurrencyPrice } from '../types';
+import { CurrencyAmount, Market, CurrencyPrice } from '../types';
 import { CryptoCurrency } from '../constants/currency';
+import { MarketData } from '@neon-exchange/crypto-core-ts';
 
 /**
  *
@@ -83,4 +84,42 @@ export function normalizeAmountForMarketPrecision(
   }
 
   return amount;
+}
+
+export function normalizeAmountForMarket(
+  amount: CurrencyAmount,
+  market: Market
+): CurrencyAmount {
+  const precision = getPrecision(market.minTradeSize);
+  const normalizedAmount = normalizeAmountForMarketPrecision(
+    amount.amount,
+    precision
+  );
+  return createCurrencyAmount(normalizedAmount, amount.currency);
+}
+
+export function normalizePriceForMarket(
+  price: CurrencyPrice,
+  market: Market
+): CurrencyPrice {
+  const precision = getPrecision(market.minTickSize);
+  const normalizedPrice = normalizeAmountForMarketPrecision(
+    price.amount,
+    precision
+  );
+  return createCurrencyPrice(normalizedPrice, price.currencyA, price.currencyB);
+}
+
+export function mapMarketsForGoClient(markets: {
+  [key: string]: Market;
+}): MarketData {
+  const marketData = {};
+  for (const it of Object.keys(markets)) {
+    const market = markets[it];
+    marketData[market.name] = {
+      minTickSize: getPrecision(market.minTickSize),
+      minTradeSize: getPrecision(market.minTradeSize)
+    };
+  }
+  return marketData;
 }
