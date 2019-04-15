@@ -687,7 +687,15 @@ export class Client {
   }
 
   /**
-   * list all volumes for the current authenticated account.
+   * List all volumes for the current authenticated account.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const accountVolume = await nash.listAccountVolumes()
+   * console.log(accountVolume.thirtyDayTotalVolumePercent)
+   * ```
    */
   public async listAccountVolumes(): Promise<AccountVolume> {
     const listAccountVolumesParams = createListAccountVolumesParams();
@@ -706,11 +714,18 @@ export class Client {
   }
 
   /**
-   * list all movements for the current authenticated account.
+   * List all movements for the current authenticated account.
    *
    * @param currency
    * @param status
    * @param type
+   * @returns
+   *
+   * Example
+   * ```
+   * const movements = await nash.listMovements()
+   * console.log(movements)
+   * ```
    */
   public async listMovements(
     currency?: CryptoCurrency,
@@ -737,9 +752,16 @@ export class Client {
   }
 
   /**
-   * cancel an order by ID.
+   * Cancel an order by ID.
    *
    * @param orderID
+   * @returns
+   *
+   * Example
+   * ```
+   * const cancelledOrder = await nash.cancelOrder('11')
+   * console.log(cancelledOrder)
+   * ```
    */
   public async cancelOrder(orderID: string): Promise<CancelledOrder> {
     const cancelOrderParams = createCancelOrderParams(orderID);
@@ -767,6 +789,27 @@ export class Client {
    * @param limitPrice
    * @param marketName
    * @param cancelAt
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   *   OrderCancellationPolicy
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeLimitOrder(
+   *   false,
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
+   *   'neo_gas'
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeLimitOrder(
     allowTaker: boolean,
@@ -814,6 +857,22 @@ export class Client {
    * @param amount
    * @param buyOrSell
    * @param marketName
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   OrderBuyOrSell,
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeMarketOrder(
+   *   createCurrencyAmount('1.00', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.SELL,
+   *   'neo_gas'
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeMarketOrder(
     amount: CurrencyAmount,
@@ -853,6 +912,28 @@ export class Client {
    * @param marketName
    * @param stopPrice
    * @param cancelAt
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   *   OrderCancellationPolicy
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeStopLimitOrder(
+   *   false,
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
+   *   'neo_gas'
+   *   createCurrencyPrice('0.02', CryptoCurrency.GAS, CryptoCurrency.NEO)
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeStopLimitOrder(
     allowTaker: boolean,
@@ -906,6 +987,24 @@ export class Client {
    * @param buyOrSell
    * @param marketName
    * @param stopPrice
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import {
+   *   createCurrencyAmount,
+   *   createCurrencyPrice,
+   *   OrderBuyOrSell,
+   * } from '@neon-exchange/api-client-ts'
+   *
+   * const order = await nash.placeStopLimitOrder(
+   *   createCurrencyAmount('1', CryptoCurrency.NEO),
+   *   OrderBuyOrSell.BUY,
+   *   'neo_gas'
+   *   createCurrencyPrice('0.02', CryptoCurrency.GAS, CryptoCurrency.NEO)
+   * )
+   * console.log(order.status)
+   * ```
    */
   public async placeStopMarketOrder(
     amount: CurrencyAmount,
@@ -946,6 +1045,17 @@ export class Client {
    *
    * @param address
    * @param quantity
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   *
+   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
+   * const signedMovement = await nash.signDepositRequest(address, amount);
+   * console.log(signedMovement)
+   * ```
    */
   public async signDepositRequest(
     address: string,
@@ -971,6 +1081,17 @@ export class Client {
    *
    * @param address
    * @param quantity
+   * @returns
+   *
+   * Example
+   * ```typescript
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   *
+   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
+   * const signedMovement = await nash.signWithdrawRequest(address, amount);
+   * console.log(signedMovement)
+   * ```
    */
   public async signWithdrawRequest(
     address: string,

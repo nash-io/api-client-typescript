@@ -67,196 +67,43 @@
 				<h1 id="nash-api-client-ts">nash-api-client-ts</h1>
 				<p>Official TypeScript client for interacting with the Nash exchange</p>
 				<h2 id="installation">Installation</h2>
-				<p><code>yarn install</code></p>
-				<h2 id="test">Test</h2>
-				<p><code>yarn test</code></p>
-				<blockquote>
-					<p>Note that this requires to have a local backend setup and running.</p>
-				</blockquote>
-				<h2 id="configuration">Configuration</h2>
-				<p>You can configure the endpoints of the GQL server and central account service</p>
-				<ul>
-					<li><code>GQL_URL</code></li>
-					<li><code>CAS_URL</code></li>
-				</ul>
-				<h4 id="example">example</h4>
-				<p><code>export GQL_URL=&#39;http://localhost:3000&#39;</code>
-				<code>export CAS_URL=&#39;http://localhost:4000&#39;</code></p>
-				<h2 id="starter-example">Starter example</h2>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> {
-  Client,
-  OrderBuyOrSell,
-  createCurrencyAmount,
-  CryptoCurrency
-} <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>;
+				<p>NPM</p>
+				<pre><code><span class="hljs-selector-tag">npm</span> <span class="hljs-selector-tag">install</span> @<span class="hljs-keyword">neon</span>-<span class="hljs-keyword">exchange</span>/<span class="hljs-keyword">api</span>-<span class="hljs-keyword">client</span>-<span class="hljs-keyword">ts</span> --save</code></pre><p>Yarn</p>
+				<pre><code><span class="hljs-selector-tag">yarn</span> <span class="hljs-selector-tag">add</span> @<span class="hljs-keyword">neon</span>-<span class="hljs-keyword">exchange</span>/<span class="hljs-keyword">api</span>-<span class="hljs-keyword">client</span>-<span class="hljs-keyword">ts</span></code></pre><h2 id="usage">Usage</h2>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>
 
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client();
+<span class="hljs-keyword">const</span> nash = <span class="hljs-keyword">new</span> Client({
+  apiURI: <span class="hljs-string">'path_to_nash_api'</span>,
+  casURI: <span class="hljs-string">'path_to_nash_cas'</span>,
+  debug: <span class="hljs-literal">false</span>
+})
 
-<span class="hljs-comment">// Login against the CAS</span>
-<span class="hljs-keyword">const</span> email = <span class="hljs-string">'user@example.com'</span>;
-<span class="hljs-keyword">const</span> password = <span class="hljs-string">'flkdnvbuieladf5d6d54'</span>;
-<span class="hljs-keyword">await</span> client.login(email, password);
+<span class="hljs-keyword">const</span> markets = nash.listMarkets()
+<span class="hljs-built_in">console</span>.log(markets)</code></pre>
+				<h2 id="authentication">Authentication</h2>
+				<p>Most of the Nash API request require the client to be authenticated, this is needed to sign payload that is being send in the request.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client, CryptoCurrency } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>
 
-<span class="hljs-comment">// Placing a market order</span>
-<span class="hljs-keyword">const</span> orderPlaced = <span class="hljs-keyword">await</span> client.placeMarketOrder(
-  createCurrencyAmount(<span class="hljs-string">'1'</span>, CryptoCurrency.NEO),
-  OrderBuyOrSell.SELL,
-  <span class="hljs-string">'neo_gas'</span>
-);
+<span class="hljs-keyword">const</span> nash = <span class="hljs-keyword">new</span> Client({
+  apiURI: <span class="hljs-string">'path_to_nash_api'</span>,
+  casURI: <span class="hljs-string">'path_to_nash_cas'</span>,
+  debug: <span class="hljs-literal">false</span>
+})
+<span class="hljs-keyword">const</span> email = <span class="hljs-string">'user@email.com'</span>
+<span class="hljs-keyword">const</span> password = <span class="hljs-string">'userpassword'</span>
 
-<span class="hljs-built_in">console</span>.log(orderPlaced);
+<span class="hljs-keyword">const</span> run = <span class="hljs-keyword">async</span>() =&gt; {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">await</span> nash.login(email, password)
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">console</span>.log(e)
+  }
 
-<span class="hljs-comment">// Listing account balances</span>
-<span class="hljs-keyword">const</span> accountBalances = <span class="hljs-keyword">await</span> client.listAccountBalances();
-
-<span class="hljs-built_in">console</span>.log(accountBalances);</code></pre>
-				<h2 id="placing-orders">Placing orders</h2>
-				<h3 id="market-order">market order</h3>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> {
-  Client,
-  OrderBuyOrSell,
-  createCurrencyAmount,
-  CryptoCurrency
-} <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>;
-
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client();
-
-<span class="hljs-keyword">try</span> {
-  <span class="hljs-keyword">await</span> client.login(<span class="hljs-string">'email'</span>, <span class="hljs-string">'password'</span>);
-} <span class="hljs-keyword">catch</span> (e) {
-  <span class="hljs-comment">// handle the error.</span>
+  <span class="hljs-keyword">const</span> balance = <span class="hljs-keyword">await</span> nash.getAccountBalance(CryptoCurrency.NEO)
+  <span class="hljs-built_in">console</span>.log(balance)
 }
 
-<span class="hljs-keyword">const</span> orderPlaced = <span class="hljs-keyword">await</span> client.placeMarketOrder(
-  createCurrencyAmount(<span class="hljs-string">'1.00'</span>, CryptoCurrency.NEO),
-  OrderBuyOrSell.SELL,
-  <span class="hljs-string">'neo_gas'</span>
-);
-
-<span class="hljs-built_in">console</span>.log(orderPlaced.status);</code></pre>
-				<h3 id="limit-order">limit order</h3>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> {
-  Client,
-  OrderBuyOrSell,
-  createCurrencyAmount,
-  createCurrencyPrice,
-  CryptoCurrency,
-  OrderCancellationPolicy
-} <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>;
-
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client();
-
-<span class="hljs-keyword">try</span> {
-  <span class="hljs-keyword">await</span> client.login(<span class="hljs-string">'email'</span>, <span class="hljs-string">'password'</span>);
-} <span class="hljs-keyword">catch</span> (e) {
-  <span class="hljs-comment">// handle the error.</span>
-}
-
-<span class="hljs-keyword">const</span> orderPlaced = <span class="hljs-keyword">await</span> client.placeLimitOrder(
-  <span class="hljs-literal">false</span>,
-  createCurrencyAmount(<span class="hljs-string">'1.00'</span>, CryptoCurrency.NEO),
-  OrderBuyOrSell.SELL,
-  OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-  createCurrencyPrice(<span class="hljs-string">'0.01'</span>, CryptoCurrency.GAS, CryptoCurrency.NEO),
-  <span class="hljs-string">'neo_gas'</span>
-);
-
-<span class="hljs-built_in">console</span>.log(orderPlaced.status);</code></pre>
-				<h3 id="stop-market-order">stop market order</h3>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> {
-  Client,
-  OrderBuyOrSell,
-  createCurrencyAmount,
-  CryptoCurrency
-} <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>;
-
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client();
-
-<span class="hljs-keyword">try</span> {
-  <span class="hljs-keyword">await</span> client.login(<span class="hljs-string">'email'</span>, <span class="hljs-string">'password'</span>);
-} <span class="hljs-keyword">catch</span> (e) {
-  <span class="hljs-comment">// handle the error.</span>
-}
-
-<span class="hljs-keyword">const</span> orderPlaced = <span class="hljs-keyword">await</span> client.placeStopMarketOrder(
-  createCurrencyAmount(<span class="hljs-string">'2.00'</span>, CryptoCurrency.NEO),
-  OrderBuyOrSell.SELL,
-  <span class="hljs-string">'neo_gas'</span>,
-  createCurrencyPrice(<span class="hljs-string">'1.00'</span>, CryptoCurrency.GAS, CryptoCurrency.NEO)
-);
-
-<span class="hljs-built_in">console</span>.log(orderPlaced.status);</code></pre>
-				<h3 id="stop-limit-order">stop limit order</h3>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> {
-  Client,
-  OrderBuyOrSell,
-  createCurrencyAmount,
-  createCurrencyPrice,
-  CryptoCurrency,
-  OrderCancellationPolicy
-} <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>;
-
-<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client();
-
-<span class="hljs-keyword">try</span> {
-  <span class="hljs-keyword">await</span> client.login(<span class="hljs-string">'email'</span>, <span class="hljs-string">'password'</span>);
-} <span class="hljs-keyword">catch</span> (e) {
-  <span class="hljs-comment">// handle the error.</span>
-}
-
-<span class="hljs-keyword">const</span> orderPlaced = <span class="hljs-keyword">await</span> client.placeStopLimitOrder(
-  <span class="hljs-literal">false</span>,
-  createCurrencyAmount(<span class="hljs-string">'1.00'</span>, CryptoCurrency.NEO),
-  OrderBuyOrSell.BUY,
-  OrderCancellationPolicy.GOOD_TIL_CANCELLED,
-  createCurrencyPrice(<span class="hljs-string">'2.00'</span>, CryptoCurrency.GAS, CryptoCurrency.NEO),
-  <span class="hljs-string">'neo_gas'</span>,
-  createCurrencyPrice(<span class="hljs-string">'3.00'</span>, CryptoCurrency.GAS, CryptoCurrency.NEO)
-);
-
-<span class="hljs-built_in">console</span>.log(orderPlaced.status);</code></pre>
-				<h2 id="the-following-api-calls-are-implemented">The following API calls are implemented</h2>
-				<h2 id="central-account-service">Central account service</h2>
-				<ul>
-					<li><input checked="" disabled="" type="checkbox"> login</li>
-				</ul>
-				<h2 id="queries">Queries</h2>
-				<ul>
-					<li><input checked="" disabled="" type="checkbox"> getTicker</li>
-					<li><input checked="" disabled="" type="checkbox"> getOrderBook</li>
-					<li><input checked="" disabled="" type="checkbox"> listTickers</li>
-					<li><input checked="" disabled="" type="checkbox"> listOrders</li>
-					<li><input checked="" disabled="" type="checkbox"> listTrades</li>
-					<li><input checked="" disabled="" type="checkbox"> listCandles</li>
-					<li><input checked="" disabled="" type="checkbox"> getMarket</li>
-					<li><input checked="" disabled="" type="checkbox"> getAccountPortfolio</li>
-					<li><input checked="" disabled="" type="checkbox"> getAccountBalance</li>
-					<li><input checked="" disabled="" type="checkbox"> getAccountOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> getDepositAddress</li>
-					<li><input checked="" disabled="" type="checkbox"> getMovement</li>
-					<li><input checked="" disabled="" type="checkbox"> listMarkets</li>
-					<li><input checked="" disabled="" type="checkbox"> listMovements</li>
-					<li><input checked="" disabled="" type="checkbox"> listAccountOrders</li>
-					<li><input checked="" disabled="" type="checkbox"> listAccountTransactions</li>
-					<li><input checked="" disabled="" type="checkbox"> listAccountBalances</li>
-					<li><input checked="" disabled="" type="checkbox"> listAccountVolumes</li>
-				</ul>
-				<h2 id="mutations">Mutations</h2>
-				<ul>
-					<li><input checked="" disabled="" type="checkbox"> cancelOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> placeLimitOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> placeMarketOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> placeStopLimitOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> placeStopMarketOrder</li>
-					<li><input checked="" disabled="" type="checkbox"> signDepositRequest</li>
-					<li><input checked="" disabled="" type="checkbox"> signWithdrawRequest</li>
-				</ul>
-				<h2 id="todo-due-to-backend-revisions">TODO due to backend revisions</h2>
-				<ul>
-					<li><input disabled="" type="checkbox"> cancelAllOrders</li>
-					<li><input disabled="" type="checkbox"> syncStates</li>
-					<li><input disabled="" type="checkbox"> getStates</li>
-				</ul>
+run()</code></pre>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">

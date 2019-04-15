@@ -76,7 +76,10 @@
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#createcurrencyamount" class="tsd-kind-icon">create<wbr>Currency<wbr>Amount</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#createcurrencyprice" class="tsd-kind-icon">create<wbr>Currency<wbr>Price</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#getprecision" class="tsd-kind-icon">get<wbr>Precision</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#mapmarketsforgoclient" class="tsd-kind-icon">map<wbr>Markets<wbr>For<wbr>GoClient</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#normalizeamountformarket" class="tsd-kind-icon">normalize<wbr>Amount<wbr>For<wbr>Market</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#normalizeamountformarketprecision" class="tsd-kind-icon">normalize<wbr>Amount<wbr>For<wbr>Market<wbr>Precision</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_helpers_currency_.html#normalizepriceformarket" class="tsd-kind-icon">normalize<wbr>Price<wbr>For<wbr>Market</a></li>
 							</ul>
 						</section>
 					</div>
@@ -94,7 +97,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/fb93974/src/helpers/currency.ts#L9">helpers/currency.ts:9</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L10">helpers/currency.ts:10</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -124,7 +127,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/fb93974/src/helpers/currency.ts#L25">helpers/currency.ts:25</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L26">helpers/currency.ts:26</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -157,7 +160,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/fb93974/src/helpers/currency.ts#L42">helpers/currency.ts:42</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L43">helpers/currency.ts:43</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -171,6 +174,60 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="mapmarketsforgoclient" class="tsd-anchor"></a>
+					<h3>map<wbr>Markets<wbr>For<wbr>GoClient</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">map<wbr>Markets<wbr>For<wbr>GoClient<span class="tsd-signature-symbol">(</span>markets<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_marketdata_.marketdata.html" class="tsd-signature-type">MarketData</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L113">helpers/currency.ts:113</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>markets: <span class="tsd-signature-type">object</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-index-signature">
+											<h5><span class="tsd-signature-symbol">[</span>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="../interfaces/_types_market_.market.html" class="tsd-signature-type">Market</a></h5>
+										</li>
+									</ul>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_types_marketdata_.marketdata.html" class="tsd-signature-type">MarketData</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="normalizeamountformarket" class="tsd-anchor"></a>
+					<h3>normalize<wbr>Amount<wbr>For<wbr>Market</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">normalize<wbr>Amount<wbr>For<wbr>Market<span class="tsd-signature-symbol">(</span>amount<span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_currency_.currencyamount.html" class="tsd-signature-type">CurrencyAmount</a>, market<span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_market_.market.html" class="tsd-signature-type">Market</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_currency_.currencyamount.html" class="tsd-signature-type">CurrencyAmount</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L89">helpers/currency.ts:89</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>amount: <a href="../interfaces/_types_currency_.currencyamount.html" class="tsd-signature-type">CurrencyAmount</a></h5>
+								</li>
+								<li>
+									<h5>market: <a href="../interfaces/_types_market_.market.html" class="tsd-signature-type">Market</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_types_currency_.currencyamount.html" class="tsd-signature-type">CurrencyAmount</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
 					<a name="normalizeamountformarketprecision" class="tsd-anchor"></a>
 					<h3>normalize<wbr>Amount<wbr>For<wbr>Market<wbr>Precision</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
@@ -180,7 +237,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/fb93974/src/helpers/currency.ts#L51">helpers/currency.ts:51</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L52">helpers/currency.ts:52</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -200,6 +257,32 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="normalizepriceformarket" class="tsd-anchor"></a>
+					<h3>normalize<wbr>Price<wbr>For<wbr>Market</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">normalize<wbr>Price<wbr>For<wbr>Market<span class="tsd-signature-symbol">(</span>price<span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_currency_.currencyprice.html" class="tsd-signature-type">CurrencyPrice</a>, market<span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_market_.market.html" class="tsd-signature-type">Market</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_types_currency_.currencyprice.html" class="tsd-signature-type">CurrencyPrice</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-ts/blob/4a80a25/src/helpers/currency.ts#L101">helpers/currency.ts:101</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>price: <a href="../interfaces/_types_currency_.currencyprice.html" class="tsd-signature-type">CurrencyPrice</a></h5>
+								</li>
+								<li>
+									<h5>market: <a href="../interfaces/_types_market_.market.html" class="tsd-signature-type">Market</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_types_currency_.currencyprice.html" class="tsd-signature-type">CurrencyPrice</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -228,7 +311,16 @@
 						<a href="_helpers_currency_.html#getprecision" class="tsd-kind-icon">get<wbr>Precision</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_helpers_currency_.html#mapmarketsforgoclient" class="tsd-kind-icon">map<wbr>Markets<wbr>For<wbr>GoClient</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_helpers_currency_.html#normalizeamountformarket" class="tsd-kind-icon">normalize<wbr>Amount<wbr>For<wbr>Market</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="_helpers_currency_.html#normalizeamountformarketprecision" class="tsd-kind-icon">normalize<wbr>Amount<wbr>For<wbr>Market<wbr>Precision</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_helpers_currency_.html#normalizepriceformarket" class="tsd-kind-icon">normalize<wbr>Price<wbr>For<wbr>Market</a>
 					</li>
 				</ul>
 			</nav>
