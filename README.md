@@ -1,6 +1,6 @@
 # nash-api-client-ts
 
-Official TypeScript client for interacting with the Nash exchange
+Official TypeScript client for interacting with the Nash exchange.
 
 ## Installation
 NPM
@@ -28,7 +28,7 @@ console.log(markets)
 ```
 
 ## Authentication
-Most of the Nash API request require the client to be authenticated, this is needed to sign payload that is being send in the request.
+Most of the Nash API requests require the client to be authenticated, this is needed to sign the payloads that are being send over the wire.
 
 ```typescript
 import { Client, CryptoCurrency } from '@neon-exchange/api-client-ts'
