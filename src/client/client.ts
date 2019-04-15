@@ -28,7 +28,11 @@ import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
 import { SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
-import { getPrecision } from '../helpers';
+import {
+  mapMarketsForGoClient,
+  normalizePriceForMarket,
+  normalizeAmountForMarket
+} from '../helpers';
 import {
   getSecretKey,
   encryptSecretKey
@@ -87,8 +91,7 @@ import {
   createListAccountOrdersParams,
   Config,
   CryptoCurrency,
-  WrappedPayload,
-  MarketData
+  WrappedPayload
 } from '@neon-exchange/crypto-core-ts';
 
 /**
@@ -108,7 +111,7 @@ export class Client {
   private account: any;
   private publicKey: string;
   private gql: ApolloClient<any>;
-  public marketData: MarketData;
+  public marketData: { [key: string]: Market };
 
   /**
    * Create a new instance of [[Client]]
@@ -217,7 +220,7 @@ export class Client {
       secretKey: encryptedSecretKey,
       secretNonce: encryptedSecretKeyNonce,
       secretTag: encryptedSecretKeyTag,
-      marketData: this.marketData
+      marketData: mapMarketsForGoClient(this.marketData)
     };
 
     if (encryptedSecretKey === null) {
@@ -774,12 +777,20 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const normalizedAmount = normalizeAmountForMarket(
+      amount,
+      this.marketData[marketName]
+    );
+    const normalizedLimitPrice = normalizePriceForMarket(
+      limitPrice,
+      this.marketData[marketName]
+    );
     const placeLimitOrderParams = createPlaceLimitOrderParams(
       allowTaker,
-      amount,
+      normalizedAmount,
       buyOrSell,
       cancellationPolicy,
-      limitPrice,
+      normalizedLimitPrice,
       marketName,
       cancelAt
     );
@@ -809,8 +820,12 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string
   ): Promise<OrderPlaced> {
-    const placeMarketOrderParams = createPlaceMarketOrderParams(
+    const normalizedAmount = normalizeAmountForMarket(
       amount,
+      this.marketData[marketName]
+    );
+    const placeMarketOrderParams = createPlaceMarketOrderParams(
+      normalizedAmount,
       buyOrSell,
       marketName
     );
@@ -849,14 +864,26 @@ export class Client {
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const normalizedAmount = normalizeAmountForMarket(
+      amount,
+      this.marketData[marketName]
+    );
+    const normalizedLimitPrice = normalizePriceForMarket(
+      limitPrice,
+      this.marketData[marketName]
+    );
+    const normalizedStopPrice = normalizePriceForMarket(
+      stopPrice,
+      this.marketData[marketName]
+    );
     const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
       allowTaker,
-      amount,
+      normalizedAmount,
       buyOrSell,
       cancellationPolicy,
-      limitPrice,
+      normalizedLimitPrice,
       marketName,
-      stopPrice,
+      normalizedStopPrice,
       cancelAt
     );
     const signedPayload = await this.signPayload(placeStopLimitOrderParams);
@@ -886,11 +913,20 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice
   ): Promise<OrderPlaced> {
-    const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+    const normalizedAmount = normalizeAmountForMarket(
       amount,
+      this.marketData[marketName]
+    );
+    const normalizedStopPrice = normalizePriceForMarket(
+      stopPrice,
+      this.marketData[marketName]
+    );
+
+    const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
+      normalizedAmount,
       buyOrSell,
       marketName,
-      stopPrice
+      normalizedStopPrice
     );
     const signedPayload = await this.signPayload(placeStopMarketOrderParams);
     const result = await this.gql.mutate({
@@ -993,7 +1029,8 @@ export class Client {
       passphrase: '',
       secretKey: toHex(res.encryptedSecretKey),
       secretNonce: toHex(res.nonce),
-      secretTag: toHex(res.tag)
+      secretTag: toHex(res.tag),
+      marketData: mapMarketsForGoClient(this.marketData)
     };
     this.nashCoreConfig = await this.cryptoCore.initialize(initParams);
     this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
@@ -1061,7 +1098,7 @@ export class Client {
     };
   }
 
-  private async fetchMarketData(): Promise<MarketData> {
+  private async fetchMarketData(): Promise<{ [key: string]: Market }> {
     if (this.opts.debug) {
       console.log('fetching latest exchange market data');
     }
@@ -1072,10 +1109,7 @@ export class Client {
 
     for (const it of Object.keys(markets)) {
       market = markets[it];
-      marketData[market.name] = {
-        MinTickSize: getPrecision(market.minTickSize),
-        MinTradeSize: getPrecision(market.minTradeSize)
-      };
+      marketData[market.name] = market;
     }
 
     return marketData;
