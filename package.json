@@ -1,5 +1,5 @@
 {
-  "name": "nash-api-client-ts",
+  "name": "@neon-exchange/api-client-ts",
   "version": "1.0.0",
   "description": "Official typescript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
