@@ -1,4 +1,4 @@
 declare module '*.wasm' {
-    const value: WebAssembly.BufferSource
-    export default value
+  const value: WebAssembly.BufferSource;
+  export default value;
 }

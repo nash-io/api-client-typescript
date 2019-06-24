@@ -1,10 +1,10 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 import {
   ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT,
   GRAPH_POINT_FRAGMENT,
-  ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT,
-} from './fragments'
+  ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT
+} from './fragments';
 
 export const GET_ACCOUNT_PORTFOLIO = gql`
   query getAccountPortfolio(
@@ -27,4 +27,4 @@ export const GET_ACCOUNT_PORTFOLIO = gql`
   ${ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT}
   ${GRAPH_POINT_FRAGMENT}
   ${ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT}
-`
+`;

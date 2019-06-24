@@ -1,6 +1,6 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
-import { CANCELED_ORDER_FRAGMENT } from './fragments'
+import { CANCELED_ORDER_FRAGMENT } from './fragments';
 
 export const CANCEL_ALL_ORDERS_MUTATION = gql`
   mutation cancelAllOrders($marketName: MarketName!, $signature: Signature!) {
@@ -11,4 +11,4 @@ export const CANCEL_ALL_ORDERS_MUTATION = gql`
     }
   }
   ${CANCELED_ORDER_FRAGMENT}
-`
+`;

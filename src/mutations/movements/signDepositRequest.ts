@@ -1,6 +1,6 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
-import { SIGN_MOVEMENT_FRAGMENT } from './fragments'
+import { SIGN_MOVEMENT_FRAGMENT } from './fragments';
 
 export const SIGN_DEPOSIT_REQUEST_MUTATION = gql`
   mutation signDepositRequest(
@@ -12,4 +12,4 @@ export const SIGN_DEPOSIT_REQUEST_MUTATION = gql`
     }
   }
   ${SIGN_MOVEMENT_FRAGMENT}
-`
+`;

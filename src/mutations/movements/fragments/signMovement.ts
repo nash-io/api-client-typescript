@@ -1,5 +1,5 @@
-import gql from 'graphql-tag'
-import { MOVEMENT_FRAGMENT } from './movement'
+import gql from 'graphql-tag';
+import { MOVEMENT_FRAGMENT } from './movement';
 
 export const SIGN_MOVEMENT_FRAGMENT = gql`
   fragment signMovementFields on SignMovementResponse {
@@ -10,4 +10,4 @@ export const SIGN_MOVEMENT_FRAGMENT = gql`
     signature
   }
   ${MOVEMENT_FRAGMENT}
-`
+`;

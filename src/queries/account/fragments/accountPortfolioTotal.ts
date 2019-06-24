@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export const ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT = gql`
   fragment accountPortfolioTotalFields on AccountPortfolioTotal {
@@ -16,4 +16,4 @@ export const ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT = gql`
     totalFiatPriceChange
     totalFiatPriceChangePercent
   }
-`
+`;

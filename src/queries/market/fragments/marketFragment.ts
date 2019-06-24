@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export const MARKET_FRAGMENT = gql`
   fragment marketFields on Market {
@@ -11,4 +11,4 @@ export const MARKET_FRAGMENT = gql`
     name
     status
   }
-`
+`;

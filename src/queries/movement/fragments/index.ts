@@ -1,1 +1,1 @@
-export * from './movementFragment'
+export * from './movementFragment';
