@@ -1,1 +1,1 @@
-export * from './assetFragment'
+export * from './assetFragment';

@@ -1,2 +1,2 @@
-export * from './cancelOrderFragment'
-export * from './orderPlacedFragment'
+export * from './cancelOrderFragment';
+export * from './orderPlacedFragment';

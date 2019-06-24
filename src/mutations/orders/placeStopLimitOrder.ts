@@ -1,6 +1,6 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
-import { ORDER_PLACED_FRAGMENT } from './fragments'
+import { ORDER_PLACED_FRAGMENT } from './fragments';
 
 export const PLACE_STOP_LIMIT_ORDER_MUTATION = gql`
   mutation placeStopLimitOrder(
@@ -12,4 +12,4 @@ export const PLACE_STOP_LIMIT_ORDER_MUTATION = gql`
     }
   }
   ${ORDER_PLACED_FRAGMENT}
-`
+`;

@@ -1,6 +1,8 @@
 import { CurrencyAmount, Market, CurrencyPrice } from '../types';
 import { CryptoCurrency } from '../constants/currency';
-import { MarketData } from '@neon-exchange/crypto-core-ts';
+import { Market as MarketAuth } from '@neon-exchange/nex-auth-protocol';
+
+type MarketData = { [key: string]: MarketAuth };
 
 /**
  *
@@ -118,8 +120,10 @@ export function mapMarketsForGoClient(markets: {
     const market = markets[it];
     marketData[market.name] = {
       minTickSize: getPrecision(market.minTickSize),
-      minTradeSize: getPrecision(market.minTradeSize)
+      minTradeSize: getPrecision(market.minTradeSize),
+      minTradeIncrement: getPrecision(market.minTradeSize)
     };
   }
+
   return marketData;
 }

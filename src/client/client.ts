@@ -1,7 +1,6 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
-import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions';
@@ -33,10 +32,6 @@ import {
   normalizePriceForMarket,
   normalizeAmountForMarket
 } from '../helpers';
-import {
-  getSecretKey,
-  encryptSecretKey
-} from '@neon-exchange/nex-auth-protocol';
 import toHex from 'array-buffer-to-hex';
 import fetch from 'node-fetch';
 import {
@@ -60,7 +55,6 @@ import {
   Market,
   Order,
   DateTime,
-  PayloadAndSignature,
   AccountOrder,
   OrderBuyOrSell,
   OrderCancellationPolicy,
@@ -71,7 +65,17 @@ import {
   OrderType
 } from '../types';
 
+import { CryptoCurrency } from '../constants/currency';
+
 import {
+  getSecretKey,
+  encryptSecretKey,
+  PayloadAndKind,
+  getHKDFKeysFromPassword,
+  initialize,
+  InitParams,
+  Config,
+  signPayload,
   createDepositRequestParams,
   createWithdrawalRequestParams,
   createPlaceStopMarketOrderParams,
@@ -88,11 +92,8 @@ import {
   createListMovementsParams,
   createListAccountBalanceParams,
   createListAccountTransactionsParams,
-  createListAccountOrdersParams,
-  Config,
-  CryptoCurrency,
-  WrappedPayload
-} from '@neon-exchange/crypto-core-ts';
+  createListAccountOrdersParams
+} from '@neon-exchange/nex-auth-protocol';
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
@@ -106,7 +107,7 @@ export interface ClientOptions {
 export class Client {
   private opts: ClientOptions;
   private cryptoCore: any;
-  private initParams: any; // make interface for this!
+  private initParams: InitParams;
   private nashCoreConfig: Config;
   private account: any;
   private publicKey: string;
@@ -167,28 +168,11 @@ export class Client {
    * ```
    */
   public async login(email: string, password: string): Promise<boolean> {
-    // As login always needs to be called at the start of any program/request
-    // we initialize the crypto core right here.
-    if (this.cryptoCore === undefined) {
-      if (this.opts.debug) {
-        console.log('loading crypto core module..');
-      }
-      this.cryptoCore = await initializeCryptoCore();
-    } else {
-      if (this.opts.debug) {
-        console.log('crypto core module already loaded');
-      }
-    }
-
-    const keys = await this.cryptoCore.deriveHKDFKeysFromPassword(
-      password,
-      SALT
-    );
-
+    const keys = await getHKDFKeysFromPassword(password, SALT);
     const loginUrl = this.opts.casURI + '/user_login';
     const body = {
       email,
-      password: keys.authenticationKey
+      password: keys.authKey
     };
 
     const response = await fetch(loginUrl, {
@@ -196,51 +180,54 @@ export class Client {
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
     });
+
     const casCookie = response.headers.get('set-cookie');
     const result = await response.json();
     if (result.error) {
       throw new Error(result.message);
     }
-    this.account = result.account;
 
+    this.account = result.account;
     if (this.opts.debug) {
       console.log(this.account);
     }
 
-    const encryptedSecretKey = this.account.encrypted_secret_key;
-    const encryptedSecretKeyNonce = this.account.encrypted_secret_key_nonce;
-    const encryptedSecretKeyTag = this.account.encrypted_secret_key_tag;
     this.marketData = await this.fetchMarketData();
+    const aead = {
+      encryptedSecretKey: this.account.encrypted_secret_key,
+      nonce: this.account.encrypted_secret_key_nonce,
+      tag: this.account.encrypted_secret_key_tag
+    };
 
     this.initParams = {
-      chainIndices: { neo: 1, eth: 1 },
+      walletIndices: { neo: 1, eth: 1 },
       encryptionKey: keys.encryptionKey,
-      enginePubkey: 'dummy',
-      passphrase: '',
-      secretKey: encryptedSecretKey,
-      secretNonce: encryptedSecretKeyNonce,
-      secretTag: encryptedSecretKeyTag,
+      aead,
       marketData: mapMarketsForGoClient(this.marketData)
     };
 
-    if (encryptedSecretKey === null) {
+    if (aead.encryptedSecretKey === null) {
       if (this.opts.debug) {
         console.log(
           'keys not present in the CAS: creating and uploading as we speak.'
         );
       }
-      this.initParams.chainIndices = { neo: 1, eth: 1 };
-      await this.createAndUploadKeys(keys.encryptionKey, casCookie);
+
+      this.initParams.walletIndices = { neo: 1, eth: 1 };
+      await this.createAndUploadKeys(
+        keys.encryptionKey.toString('hex'),
+        casCookie
+      );
+
       return true;
     }
 
-    this.nashCoreConfig = await this.cryptoCore.initialize(this.initParams);
-
+    this.nashCoreConfig = await initialize(this.initParams);
     if (this.opts.debug) {
       console.log(this.nashCoreConfig);
     }
 
-    this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
 
     return true;
   }
@@ -445,6 +432,7 @@ export class Client {
       status,
       type
     );
+
     const signedPayload = await this.signPayload(listAccountOrdersParams);
     const result = await this.gql.query({
       query: LIST_ACCOUNT_ORDERS,
@@ -1143,35 +1131,40 @@ export class Client {
       Buffer.from(encryptionKey, 'hex'),
       getSecretKey()
     );
+
+    const aead = {
+      encryptedSecretKey: toHex(res.encryptedSecretKey),
+      tag: toHex(res.tag),
+      nonce: toHex(res.nonce)
+    };
+
     const initParams = {
-      chainIndices: { neo: 1, eth: 1 },
+      walletIndices: { neo: 1, eth: 1 },
       encryptionKey,
-      enginePubkey: 'dummy',
-      passphrase: '',
-      secretKey: toHex(res.encryptedSecretKey),
-      secretNonce: toHex(res.nonce),
-      secretTag: toHex(res.tag),
+      aead,
       marketData: mapMarketsForGoClient(this.marketData)
     };
+
     this.nashCoreConfig = await this.cryptoCore.initialize(initParams);
-    this.publicKey = this.nashCoreConfig.PayloadSigning.PublicKey;
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
 
     const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys';
     const body = {
-      encrypted_secret_key: initParams.secretKey,
-      encrypted_secret_key_nonce: initParams.secretNonce,
-      encrypted_secret_key_tag: initParams.secretTag,
-      signature_public_key: this.nashCoreConfig.PayloadSigning.PublicKey,
+      encrypted_secret_key: initParams.aead.encryptedSecretKey,
+      encrypted_secret_key_nonce: initParams.aead.nonce,
+      encrypted_secret_key_tag: initParams.aead.tag,
+      signature_public_key: this.nashCoreConfig.payloadSigningKey.publicKey,
+      // TODO(@anthdm): construct the wallets object in more generic way.
       wallets: [
         {
-          address: this.nashCoreConfig.Wallets.neo.Address,
+          address: this.nashCoreConfig.wallets.neo.address,
           blockchain: 'neo',
-          public_key: this.nashCoreConfig.Wallets.neo.PublicKey
+          public_key: this.nashCoreConfig.wallets.neo.publicKey
         },
         {
-          address: this.nashCoreConfig.Wallets.eth.Address,
+          address: this.nashCoreConfig.wallets.eth.address,
           blockchain: 'eth',
-          public_key: this.nashCoreConfig.Wallets.eth.PublicKey
+          public_key: this.nashCoreConfig.wallets.eth.publicKey
         }
       ]
     };
@@ -1181,11 +1174,11 @@ export class Client {
       headers: { 'Content-Type': 'application/json', cookie: casCookie },
       method: 'POST'
     });
+
     const result = await response.json();
     if (result.error) {
       throw new Error(result.message);
     }
-
     if (this.opts.debug) {
       console.log('successfully uploaded wallet keys to the CAS');
     }
@@ -1195,23 +1188,24 @@ export class Client {
    * helper function that returns the correct types for the needed GQL queries
    * and mutations.
    *
+   * @param [SigningPayloadID]
    * @param payload
+   * @returns
    */
-  private async signPayload(
-    payload: WrappedPayload
-  ): Promise<PayloadAndSignature> {
-    const signedPayload = await this.cryptoCore.signPayload(
-      this.nashCoreConfig,
-      payload
+  private async signPayload(payloadAndKind: PayloadAndKind): Promise<any> {
+    const privateKey = Buffer.from(
+      this.nashCoreConfig.payloadSigningKey.privateKey,
+      'hex'
     );
 
-    if (this.opts.debug) {
-      const canonicalString = await this.cryptoCore.canonicalString(payload);
-      console.log('canonical string: ', canonicalString);
-    }
+    const signedPayload = signPayload(
+      privateKey,
+      payloadAndKind,
+      this.nashCoreConfig
+    );
 
     return {
-      payload: signedPayload.payload,
+      payload: payloadAndKind.payload,
       signature: {
         publicKey: this.publicKey,
         signedDigest: signedPayload.signature

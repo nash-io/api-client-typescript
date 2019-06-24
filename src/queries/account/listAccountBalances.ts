@@ -1,6 +1,6 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
-import { ACCOUNT_BALANCE_FRAGMENT } from './fragments'
+import { ACCOUNT_BALANCE_FRAGMENT } from './fragments';
 
 export const LIST_ACCOUNT_BALANCES = gql`
   query listAccountBalances(
@@ -13,4 +13,4 @@ export const LIST_ACCOUNT_BALANCES = gql`
     }
   }
   ${ACCOUNT_BALANCE_FRAGMENT}
-`
+`;

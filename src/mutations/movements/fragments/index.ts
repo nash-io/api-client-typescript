@@ -1,2 +1,2 @@
-export * from './movement'
-export * from './signMovement'
+export * from './movement';
+export * from './signMovement';

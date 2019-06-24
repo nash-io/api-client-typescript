@@ -1,1 +1,1 @@
-export * from './orderFragment'
+export * from './orderFragment';
