@@ -1,20 +1,22 @@
 # nash-api-client-ts
 
-Official TypeScript client for interacting with the Nash exchange and Central Account Service.
+Official TypeScript client for interacting with the Nash exchange.
 
-## Installation
+## Getting Started
 
-NPM
+To install, download a release bundle, or install it from NPM:
 
-```
-npm install @neon-exchange/api-client-ts --save
-```
+    yarn add @neon-exchange/api-client-ts
 
-Yarn
+If you install it from a release bundle, make install the dependencies and run `yarn link`, in order to
+use it just like the module from NPM:
 
-```
-yarn add @neon-exchange/api-client-ts
-```
+  unzip api-client-ts-task-bundle.zip
+  cd api-client-ts-task-bundle
+  yarn install
+  yarn link
+  cd ..
+
 
 ## Usage
 
@@ -49,12 +51,12 @@ const password = 'userpassword';
 const run = async () => {
   try {
     await nash.login(email, password);
+
+    const balance = await nash.getAccountBalance(CryptoCurrency.NEO);
+    console.log(balance);
   } catch (e) {
     console.log(e);
   }
-
-  const balance = await nash.getAccountBalance(CryptoCurrency.NEO);
-  console.log(balance);
 };
 
 run();
