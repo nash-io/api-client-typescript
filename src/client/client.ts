@@ -93,7 +93,7 @@ import {
   createListAccountBalanceParams,
   createListAccountTransactionsParams,
   createListAccountOrdersParams
-} from '@neon-exchange/nex-auth-protocol';
+} from '@neon-exchange/nash-protocol';
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.

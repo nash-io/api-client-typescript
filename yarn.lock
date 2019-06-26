@@ -657,10 +657,10 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/nex-auth-protocol@^1.7.7":
+"@neon-exchange/nash-protocol@^1.7.8":
   version "1.7.8"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nex-auth-protocol/-/nex-auth-protocol-1.7.7.tgz#08359e9c31011fad9d648aee4186f995cce25c4b"
-  integrity sha512-vFMHRJcYT3HF5b8V9h+bD+DXNTlwtKfcDNGN9Cjkct6p9iINYImAraeLsMVBd/YAQU4Hl3+GA8+F7OL06OGu6Q==
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-1.7.8.tgz#86f9e5502c849fd08960654564846e408b05c28f"
+  integrity sha512-aUwfnhJoCIBAAna5HdsIEtYgg6Mh/Clmw/DXAyg5ekpfzdHDDp3O78W1+L4mgKh4fpgBGw9sRWiMu7Et+PcEaQ==
   dependencies:
     "@cityofzion/neon-core" "^4.5.2"
     "@cityofzion/neon-js" "^4.5.2"
@@ -2608,10 +2608,23 @@ ecc-jsbn@~0.1.1:
     jsbn "~0.1.0"
     safer-buffer "^2.1.0"
 
-elliptic@6.4.1, elliptic@^6.4.0, elliptic@^6.4.1:
+elliptic@6.4.1:
   version "6.4.1"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.4.1.tgz#c2d0b7776911b86722c632c3c06c60f2f819939a"
   integrity sha512-BsXLz5sqX8OHcsh7CqBMztyXARmGQ3LWPtGjJi6DiJHq5C/qvi9P3OqgswKSDftbu8+IoI/QDTAm2fFnQ9SZSQ==
+  dependencies:
+    bn.js "^4.4.0"
+    brorand "^1.0.1"
+    hash.js "^1.0.0"
+    hmac-drbg "^1.0.0"
+    inherits "^2.0.1"
+    minimalistic-assert "^1.0.0"
+    minimalistic-crypto-utils "^1.0.0"
+
+elliptic@^6.4.0, elliptic@^6.4.1:
+  version "6.5.0"
+  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.0.tgz#2b8ed4c891b7de3200e14412a5b8248c7af505ca"
+  integrity sha512-eFOJTMyCYb7xtE/caJ6JJu+bhi67WCYNbkGSknu20pmM8Ke/bqOfdnZWxyoGN26JgfxTbXrsCkEw4KheCT/KGg==
   dependencies:
     bn.js "^4.4.0"
     brorand "^1.0.1"

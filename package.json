@@ -27,7 +27,7 @@
     "clean": "rm -rf build test",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
-    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('nex-auth-protocol must be installed with Yarn: https://yarnpkg.com/')\""
+    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('nash-protocol must be installed with Yarn: https://yarnpkg.com/')\""
   },
   "scripts-info": {
     "info": "Display information about the package scripts",
@@ -46,7 +46,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@neon-exchange/nex-auth-protocol": "^1.7.7",
+    "@neon-exchange/nash-protocol": "^1.7.8",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
     "apollo-cache-inmemory": "^1.5.1",
