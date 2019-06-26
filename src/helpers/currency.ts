@@ -1,6 +1,6 @@
 import { CurrencyAmount, Market, CurrencyPrice } from '../types';
 import { CryptoCurrency } from '../constants/currency';
-import { Market as MarketAuth } from '@neon-exchange/nex-auth-protocol';
+import { Market as MarketAuth } from '@neon-exchange/nash-protocol';
 
 type MarketData = { [key: string]: MarketAuth };
 
@@ -63,7 +63,7 @@ export function normalizeAmountForMarketPrecision(
     } else {
       throw new Error(
         `to many decimals given expected: ${tradeSize} got ${
-          amountSplit[1].length
+        amountSplit[1].length
         }`
       );
     }
