@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "packages": {
+    "@neon-exchange/crypto-core-ts": {
+      "signature": "c5d891824c0a48d06565090f42c070ee",
+      "file": true
+    },
+    "@neon-exchange/nex-auth-protocol": {
+      "signature": "48a1dfe960a7f48c41c4171fba66399f",
+      "file": true
+    }
+  }
+}

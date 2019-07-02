@@ -7,7 +7,6 @@ src/**.js
 coverage
 .nyc_output
 *.log
-.yalc/*
 
 package-lock.json
 .vscode

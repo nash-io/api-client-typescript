@@ -609,15 +609,11 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/crypto-core-ts@^2.2.5":
-  version "2.2.5"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/crypto-core-ts/-/crypto-core-ts-2.2.5.tgz#cc8dd8e597265466f8d221bb6f499ef96c965305"
-  integrity sha512-og0IVJmQUGYOt6I3+X4C/vQsK5smWN8M3T564DsaM1UZVlTW2EGFv5jfQ0Z3Q9Q2E38knXJqlXTJjja7ecytAg==
+"@neon-exchange/crypto-core-ts@file:.yalc/@neon-exchange/crypto-core-ts":
+  version "2.2.5-c5d89182"
 
-"@neon-exchange/nex-auth-protocol@^1.7.42":
-  version "1.7.42"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nex-auth-protocol/-/nex-auth-protocol-1.7.42.tgz#91caa43f77a2186df30f985a75e7b7d99534dffb"
-  integrity sha512-E+O1E5nLYieI+0OHPu57pbb47/n/qPuA35Db13vEB4lFlTm7rhZUgpdKoSq2obZ5EqGHwOKw0mF1VrWrlQg2Ug==
+"@neon-exchange/nex-auth-protocol@file:.yalc/@neon-exchange/nex-auth-protocol":
+  version "1.7.42-48a1dfe9"
   dependencies:
     bip39 "2.5.0"
     browserify-aes "1.2.0"

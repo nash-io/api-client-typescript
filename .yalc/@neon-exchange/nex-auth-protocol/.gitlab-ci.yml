@@ -1,0 +1,160 @@
+stages:
+  - setup
+  - lint
+  - test
+  - build
+  - verify
+
+variables:
+  DOCKER_HOST: tcp://localhost:2375
+  DOCKER_DRIVER: overlay2
+  CACHE_KEY: $CI_PROJECT_NAME-$CI_COMMIT_REF_SLUG
+  DOCKER_IMG: docker:stable
+  DOCKER_SERVICE: docker:stable-dind
+  NODE_IMG: registry.gitlab.com/nash-io/docker-node:latest
+  SEC_TOOLS_IMG: registry.gitlab.com/nash-io/docker-sec-tools:latest
+  CODEQ_IMG: codeclimate/codeclimate:0.83.0
+  SNYK_NPM_IMG: snyk/snyk-cli:npm
+
+.install_deps: &install_deps |
+  yarn --pure-lockfile --cache-folder .yarn
+
+####################
+# SETUP
+####################
+
+install_deps:
+  image: $NODE_IMG
+  stage: setup
+  tags:
+    - gke
+  script:
+    - *install_deps
+  cache:
+    untracked: true
+    key: $CACHE_KEY
+    paths:
+      - .yarn
+
+####################
+# LINT
+####################
+
+lint:
+  image: $NODE_IMG
+  stage: lint
+  tags:
+    - gke
+  before_script:
+    - *install_deps
+  script:
+    - yarn test:lint
+  cache:
+    untracked: true
+    policy: pull
+    key: $CACHE_KEY
+    paths:
+      - .yarn
+
+code_quality:
+  image: $DOCKER_IMG
+  stage: lint
+  tags:
+    - gke
+  services:
+    - $DOCKER_SERVICE
+  script:
+    - docker run --env CODECLIMATE_CODE="$PWD" --volume /tmp/cc:/tmp/cc --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock
+      "$CODEQ_IMG" analyze -f html > code-quality-report.html
+  cache: {}
+  artifacts:
+    when: always
+    paths:
+      - code-quality-report.html
+  only:
+    - master
+    - dev
+  allow_failure: true
+
+####################
+# TEST
+####################
+
+dependency_audit:
+  image: $DOCKER_IMG
+  stage: test
+  tags:
+    - gke
+  services:
+    - $DOCKER_SERVICE
+  script:
+    - docker run --env SNYK_TOKEN="$SNYK_TOKEN" --env MONITOR="true" --env GENERATE_REPORT="true" --volume "$CI_PROJECT_DIR":/project
+        "$SNYK_NPM_IMG" test --org="$SNYK_ORG" --trust-policies --severity-threshold=medium --json --project-name="$CI_PROJECT_PATH"
+  cache: {}
+  artifacts:
+    when: always
+    paths:
+      - snyk_report.html
+      - snyk_report.css
+      - snyk-res.json
+      - snyk-error.log
+  allow_failure: true
+
+unit_coverage:
+  image: $NODE_IMG
+  stage: test
+  tags:
+    - gke
+  before_script:
+    - *install_deps
+  script:
+    - yarn test:unit:coverage
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  cache:
+    untracked: true
+    policy: pull
+    key: $CACHE_KEY
+    paths:
+      - .yarn
+  artifacts:
+    paths:
+      - coverage/lcov-report/
+
+####################
+# BUILD
+####################
+
+build:
+  image: $NODE_IMG
+  stage: build
+  tags:
+    - gke
+  before_script:
+    - *install_deps
+  script:
+    - yarn build
+  cache:
+    untracked: true
+    policy: pull
+    key: $CACHE_KEY
+    paths:
+      - .yarn
+  artifacts:
+    paths:
+      - build/
+
+####################
+# VERIFY
+####################
+
+virus_scan:
+  image: $SEC_TOOLS_IMG
+  stage: verify
+  tags:
+    - gke
+  script:
+    - vt-scanner examine build
+  cache: {}
+  only:
+    - master
+  allow_failure: true
