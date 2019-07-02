@@ -4,6 +4,7 @@ import { createHttpLink } from 'apollo-link-http';
 import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
+import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset';
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions';
 import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders';
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances';
@@ -21,8 +22,7 @@ import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
-import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest';
-import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest';
+import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation';
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
@@ -52,7 +52,6 @@ import {
   AccountPortfolio,
   AccountVolume,
   Period,
-  SignMovement,
   CancelledOrder,
   AccountBalance,
   AccountTransaction,
@@ -68,12 +67,13 @@ import {
   CurrencyPrice,
   PaginationCursor,
   OrderStatus,
-  OrderType
+  OrderType,
+  SignMovementResult,
+  Asset
 } from '../types';
 
 import {
-  createDepositRequestParams,
-  createWithdrawalRequestParams,
+  createAddMovementParams,
   createPlaceStopMarketOrderParams,
   createPlaceStopLimitOrderParams,
   createPlaceMarketOrderParams,
@@ -91,7 +91,10 @@ import {
   createListAccountOrdersParams,
   Config,
   CryptoCurrency,
-  WrappedPayload
+  WrappedPayload,
+  movementTypeDeposit,
+  movementTypeWithdrawal,
+  AssetData
 } from '@neon-exchange/crypto-core-ts';
 
 /**
@@ -112,6 +115,7 @@ export class Client {
   private publicKey: string;
   private gql: ApolloClient<any>;
   public marketData: { [key: string]: Market };
+  public assetData: { [key: string]: AssetData};
 
   /**
    * Create a new instance of [[Client]]
@@ -211,6 +215,7 @@ export class Client {
     const encryptedSecretKeyNonce = this.account.encrypted_secret_key_nonce;
     const encryptedSecretKeyTag = this.account.encrypted_secret_key_tag;
     this.marketData = await this.fetchMarketData();
+    this.assetData = await this.fetchAssetData();
 
     this.initParams = {
       chainIndices: { neo: 1, eth: 1 },
@@ -220,7 +225,8 @@ export class Client {
       secretKey: encryptedSecretKey,
       secretNonce: encryptedSecretKeyNonce,
       secretTag: encryptedSecretKeyTag,
-      marketData: mapMarketsForGoClient(this.marketData)
+      marketData: mapMarketsForGoClient(this.marketData),
+      assetData: this.assetData
     };
 
     if (encryptedSecretKey === null) {
@@ -336,6 +342,26 @@ export class Client {
     return tickers;
   }
 
+
+  /**
+   * Fetches as list of all available [[Asset]] that are active on the exchange.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const assets = await nash.listAssets()
+   * console.log(assets)
+   * ```
+   */
+  public async listAssets(): Promise<Asset[]> {
+    const result = await this.gql.query({ query: LIST_ASSETS_QUERY });
+    const assets = result.data.listAssets as Asset[];
+
+    return assets;
+  }
+
+  
   /**
    * List a [[CandleRange]] for the given market.
    *
@@ -1060,20 +1086,20 @@ export class Client {
   public async signDepositRequest(
     address: string,
     quantity: CurrencyAmount
-  ): Promise<SignMovement> {
-    const signMovementParams = createDepositRequestParams(address, quantity);
+  ): Promise<SignMovementResult> {
+    const signMovementParams = createAddMovementParams(address, quantity, movementTypeDeposit);
     const signedPayload = await this.signPayload(signMovementParams);
     const result = await this.gql.mutate({
-      mutation: SIGN_DEPOSIT_REQUEST_MUTATION,
+      mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     });
-
-    const signMovement = result.data.signDepositRequest;
-
-    return signMovement;
+    return {
+      result: result.data.addMovement, 
+      blockchain_data: signedPayload.extra
+    }
   }
 
   /**
@@ -1096,20 +1122,21 @@ export class Client {
   public async signWithdrawRequest(
     address: string,
     quantity: CurrencyAmount
-  ): Promise<SignMovement> {
-    const signMovementParams = createWithdrawalRequestParams(address, quantity);
+  ): Promise<SignMovementResult> {
+    const signMovementParams = createAddMovementParams(address, quantity, movementTypeWithdrawal);
     const signedPayload = await this.signPayload(signMovementParams);
     const result = await this.gql.mutate({
-      mutation: SIGN_WITHDRAW_REQUEST_MUTATION,
+      mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     });
 
-    const signMovement = result.data.signWithdrawRequest;
-
-    return signMovement;
+    return {
+      result: result.data.addMovement, 
+      blockchain_data: signedPayload.extra
+    }
   }
 
   /**
@@ -1217,6 +1244,24 @@ export class Client {
         signedDigest: signedPayload.signature
       }
     };
+  }
+
+  private async fetchAssetData(): Promise<{ [key: string]: AssetData}> {
+    const assetList = {}
+    try {
+      const assets = await this.listAssets()
+      for(const a of assets) {
+        assetList[a.symbol] = {
+          hash: a.hash,
+          precision: 8,
+          blockchain: a.blockchain
+        }
+      }
+    } catch(e) {
+      console.log("Could not get assets: ", e)
+      return null
+    }
+    return assetList
   }
 
   private async fetchMarketData(): Promise<{ [key: string]: Market }> {

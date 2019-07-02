@@ -23,7 +23,8 @@ test('normalizes currency amount', async () => {
     minTickSize: '1.0e-6',
     minTradeSize: '0.01',
     name: 'neo_gas',
-    status: MarketStatus.RUNNING
+    status: MarketStatus.RUNNING,
+    minTradeIncrement: '3'
   };
 
   const currencyAmount = createCurrencyAmount('1', CryptoCurrency.NEO);
@@ -40,7 +41,8 @@ test('normalizes currency price', async () => {
     minTickSize: '1.0e-6',
     minTradeSize: '0.01',
     name: 'neo_gas',
-    status: MarketStatus.RUNNING
+    status: MarketStatus.RUNNING,
+    minTradeIncrement: '3'
   };
 
   const currencyPrice = createCurrencyPrice(
