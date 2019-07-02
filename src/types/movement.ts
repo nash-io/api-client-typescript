@@ -3,10 +3,12 @@ import { CurrencyAmount, DateTime } from '../types';
 
 export enum MovementType {
   DEPOSIT = 'DEPOSIT',
-  WITHDRAWAL = 'WITHDRAWAL'
+  WITHDRAWAL = 'WITHDRAWAL',
+  TRANSFER = 'TRANSFER'
 }
 
 export enum MovementStatus {
+  CREATED = 'CREATED',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   PENDING = 'PENDING'
@@ -20,10 +22,21 @@ export interface Movement {
   quantity: CurrencyAmount;
   receivedAt: DateTime;
   status: MovementStatus;
-}
-
-export interface SignMovement {
-  movement: Movement;
   publicKey: string;
   signature: string;
+}
+
+export interface SignMovementResult {
+  result: Movement;
+  blockchain_data: BlockchainData;
+}
+
+export interface BlockchainData {
+  prefix:string;
+  address: string;
+  asset: string;
+  amount: string;
+  nonce: string;
+  userpubkey: string;
+  usersig: string;
 }

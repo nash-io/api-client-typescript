@@ -25,7 +25,8 @@ export interface Signature {
 
 export interface PayloadAndSignature {
   signature: Signature,
-  payload: WrappedPayload
+  payload: WrappedPayload,
+  extra?: any
 }
 
 export type Payload = Record<string, any>

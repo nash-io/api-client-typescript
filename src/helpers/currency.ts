@@ -118,8 +118,10 @@ export function mapMarketsForGoClient(markets: {
     const market = markets[it];
     marketData[market.name] = {
       minTickSize: getPrecision(market.minTickSize),
-      minTradeSize: getPrecision(market.minTradeSize)
+      minTradeSize: getPrecision(market.minTradeSize),
+      minTradeIncrement: getPrecision(market.minTradeIncrement)
     };
   }
   return marketData;
 }
+
