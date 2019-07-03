@@ -1,6 +1,7 @@
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
+import { setContext } from 'apollo-link-context';
 import { initializeCryptoCore } from '../utils/cryptoCore';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
 import { GET_MARKET_QUERY } from '../queries/market/getMarket';
@@ -114,6 +115,7 @@ export class Client {
   private account: any;
   private publicKey: string;
   private gql: ApolloClient<any>;
+  private apiCookie: string;
   public marketData: { [key: string]: Market };
   public assetData: { [key: string]: AssetData};
 
@@ -136,9 +138,22 @@ export class Client {
    */
   constructor(opts: ClientOptions) {
     this.opts = opts;
+
+
+    const headerLink = setContext((_, { headers }) => {
+      return {
+        headers: {
+          ...headers,
+          'Cookie': this.apiCookie
+        }
+      }
+    });
+
+    const httpLink = createHttpLink({ fetch, uri: this.opts.apiURI })
+
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
-      link: createHttpLink({ fetch, uri: this.opts.apiURI }),
+      link: headerLink.concat(httpLink),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: 'network-only',
@@ -200,7 +215,7 @@ export class Client {
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
     });
-    const casCookie = response.headers.get('set-cookie');
+    this.apiCookie = response.headers.get('set-cookie');
     const result = await response.json();
     if (result.error) {
       throw new Error(result.message);
@@ -236,7 +251,7 @@ export class Client {
         );
       }
       this.initParams.chainIndices = { neo: 1, eth: 1 };
-      await this.createAndUploadKeys(keys.encryptionKey, casCookie);
+      await this.createAndUploadKeys(keys.encryptionKey, this.apiCookie);
       return true;
     }
 
