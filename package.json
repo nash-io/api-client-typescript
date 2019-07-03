@@ -52,6 +52,7 @@
     "@types/request": "^2.48.1",
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
+    "apollo-link-context": "^1.0.18",
     "apollo-link-http": "^1.5.14",
     "array-buffer-to-hex": "^1.0.0",
     "graphql": "^14.2.0",
