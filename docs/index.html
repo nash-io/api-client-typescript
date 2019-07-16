@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>nash-api-client-ts</title>
+	<title>@neon-exchange/api-client-typescript</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">nash-api-client-ts</a>
+					<a href="index.html" class="title">@neon-exchange/api-client-typescript</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -56,7 +56,7 @@
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1> nash-api-client-ts</h1>
+			<h1> @neon-exchange/api-client-typescript</h1>
 		</div>
 	</div>
 </header>
@@ -64,46 +64,54 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<h1 id="nash-api-client-ts">nash-api-client-ts</h1>
-				<p>Official TypeScript client for interacting with the Nash exchange</p>
-				<h2 id="installation">Installation</h2>
-				<p>NPM</p>
-				<pre><code><span class="hljs-selector-tag">npm</span> <span class="hljs-selector-tag">install</span> @<span class="hljs-keyword">neon</span>-<span class="hljs-keyword">exchange</span>/<span class="hljs-keyword">api</span>-<span class="hljs-keyword">client</span>-<span class="hljs-keyword">ts</span> --save</code></pre><p>Yarn</p>
-				<pre><code><span class="hljs-selector-tag">yarn</span> <span class="hljs-selector-tag">add</span> @<span class="hljs-keyword">neon</span>-<span class="hljs-keyword">exchange</span>/<span class="hljs-keyword">api</span>-<span class="hljs-keyword">client</span>-<span class="hljs-keyword">ts</span></code></pre><h2 id="usage">Usage</h2>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>
+				<h1 id="api-client-typescript">api-client-typescript</h1>
+				<p>Official TypeScript client for interacting with the Nash exchange.</p>
+				<h2 id="getting-started">Getting Started</h2>
+				<p>To install, download a release bundle, or install it from NPM:</p>
+				<pre><code><span class="hljs-selector-tag">yarn</span> <span class="hljs-selector-tag">add</span> @<span class="hljs-keyword">neon</span>-<span class="hljs-keyword">exchange</span>/<span class="hljs-keyword">api</span>-<span class="hljs-keyword">client</span>-<span class="hljs-keyword">typescript</span></code></pre><p>If you install it from a release bundle, make install the dependencies and run <code>yarn link</code>, in order to
+				use it just like the module from NPM:</p>
+				<p>  unzip api-client-ts-task-bundle.zip
+					cd api-client-ts-task-bundle
+					yarn install
+					yarn link
+				cd ..</p>
+				<h2 id="usage">Usage</h2>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-typescript'</span>;
 
 <span class="hljs-keyword">const</span> nash = <span class="hljs-keyword">new</span> Client({
   apiURI: <span class="hljs-string">'path_to_nash_api'</span>,
   casURI: <span class="hljs-string">'path_to_nash_cas'</span>,
   debug: <span class="hljs-literal">false</span>
-})
+});
 
-<span class="hljs-keyword">const</span> markets = nash.listMarkets()
-<span class="hljs-built_in">console</span>.log(markets)</code></pre>
+<span class="hljs-keyword">const</span> markets = nash.listMarkets();
+<span class="hljs-built_in">console</span>.log(markets);</code></pre>
 				<h2 id="authentication">Authentication</h2>
-				<p>Most of the Nash API request require the client to be authenticated, this is needed to sign payload that is being send in the request.</p>
-				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client, CryptoCurrency } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-ts'</span>
+				<p>Most of the Nash API requests require the client to be authenticated, this is needed to sign the payloads that are being send over the wire.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">import</span> { Client, CryptoCurrency } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-typescript'</span>;
 
 <span class="hljs-keyword">const</span> nash = <span class="hljs-keyword">new</span> Client({
   apiURI: <span class="hljs-string">'path_to_nash_api'</span>,
   casURI: <span class="hljs-string">'path_to_nash_cas'</span>,
   debug: <span class="hljs-literal">false</span>
-})
-<span class="hljs-keyword">const</span> email = <span class="hljs-string">'user@email.com'</span>
-<span class="hljs-keyword">const</span> password = <span class="hljs-string">'userpassword'</span>
+});
 
-<span class="hljs-keyword">const</span> run = <span class="hljs-keyword">async</span>() =&gt; {
+<span class="hljs-keyword">const</span> email = <span class="hljs-string">'user@email.com'</span>;
+<span class="hljs-keyword">const</span> password = <span class="hljs-string">'userpassword'</span>;
+
+<span class="hljs-keyword">const</span> run = <span class="hljs-keyword">async</span> () =&gt; {
   <span class="hljs-keyword">try</span> {
-    <span class="hljs-keyword">await</span> nash.login(email, password)
+    <span class="hljs-keyword">await</span> nash.login(email, password);
+
+    <span class="hljs-keyword">const</span> balance = <span class="hljs-keyword">await</span> nash.getAccountBalance(CryptoCurrency.NEO);
+    <span class="hljs-built_in">console</span>.log(balance);
   } <span class="hljs-keyword">catch</span> (e) {
-    <span class="hljs-built_in">console</span>.log(e)
+    <span class="hljs-built_in">console</span>.error(e);
   }
+};
 
-  <span class="hljs-keyword">const</span> balance = <span class="hljs-keyword">await</span> nash.getAccountBalance(CryptoCurrency.NEO)
-  <span class="hljs-built_in">console</span>.log(balance)
-}
-
-run()</code></pre>
+run();</code></pre>
+				<h2 id="for-more-function-docs-see-docs-classes-_client_client_-client-html">For more function docs, see <a href="./classes/_client_client_.client.html"><code>docs/classes/_client_client_.client.html</code></a></h2>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -111,9 +119,6 @@ run()</code></pre>
 				<ul>
 					<li class="globals  ">
 						<a href="globals.html"><em>Globals</em></a>
-					</li>
-					<li class="label tsd-is-external">
-						<span>Internals</span>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_client_client_.html">"client/client"</a>
@@ -123,9 +128,6 @@ run()</code></pre>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_client_index_.html">"client/index"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_client_wasm_spec_.html">"client/wasm.spec"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_config_index_.html">"config/index"</a>
@@ -266,6 +268,9 @@ run()</code></pre>
 						<a href="modules/_queries_market_fragments_orderbookfragment_.html">"queries/market/fragments/order<wbr>Book<wbr>Fragment"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_queries_market_fragments_orderbookrecordfragment_.html">"queries/market/fragments/order<wbr>Book<wbr>Record<wbr>Fragment"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_queries_market_fragments_tickerfragment_.html">"queries/market/fragments/ticker<wbr>Fragment"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -351,15 +356,6 @@ run()</code></pre>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_types_transaction_.html">"types/transaction"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_utils_cryptocore_.html">"utils/crypto<wbr>Core"</a>
-					</li>
-					<li class="label tsd-is-external">
-						<span>Externals</span>
-					</li>
-					<li class=" tsd-kind-external-module tsd-is-external">
-						<a href="modules/_queries_market_fragments_orderbookrecordfragment_.html">"queries/market/fragments/orderbook<wbr>Record<wbr>Fragment"</a>
 					</li>
 				</ul>
 			</nav>
