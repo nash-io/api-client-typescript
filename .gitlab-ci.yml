@@ -7,11 +7,7 @@ cache:
 
 stages:
   - test
-#  - release
-
-stages:
-  - test
-#  - release
+ - release
 
 before_script:
   - node -v
@@ -23,16 +19,17 @@ before_script:
 build_and_test:
   stage: test
   script:
-    - yarn build
-    - yarn test:lint
+    - yarn run build
+    - yarn run test:lint
+    - yarn run doc
     # - yarn test
     # - yarn cov:check
 
-# publish_to_npm:
-#   stage: release
-#   only:
-#     - tags
-#   except:
-#     - branches
-#   script:
-#     - npm publish --verbose
+publish_to_npm:
+  stage: release
+  only:
+    - tags
+  except:
+    - branches
+  script:
+    - npm publish --verbose
