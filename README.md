@@ -8,7 +8,7 @@ To install, download a release bundle, or install it from NPM:
 
     yarn add @neon-exchange/api-client-typescript
 
-If you install it from a release bundle, make install the dependencies and run `yarn link`, in order to
+If you install it from a release bundle (or git), install the dependencies and run `yarn link`, in order to
 use it just like the module from NPM:
 
   unzip api-client-ts-task-bundle.zip
@@ -56,7 +56,7 @@ const run = async () => {
     const balance = await nash.getAccountBalance(CryptoCurrency.NEO);
     console.log(balance);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
