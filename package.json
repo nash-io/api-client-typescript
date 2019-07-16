@@ -1,11 +1,11 @@
 {
-  "name": "@neon-exchange/api-client-ts",
+  "name": "@neon-exchange/api-client-typescript",
   "version": "1.0.0",
   "description": "Official TypeScript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
-  "repository": "https://github.com/nash-io/api-client-ts",
+  "repository": "https://github.com/nash-io/api-client-typescript",
   "license": "MIT",
   "keywords": [],
   "scripts": {
@@ -25,6 +25,7 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn",
     "clean": "rm -rf build test",
+    "doc": "./node_modules/.bin/typedoc --ignoreCompilerErrors --out docs src",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
     "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('nash-protocol must be installed with Yarn: https://yarnpkg.com/')\""

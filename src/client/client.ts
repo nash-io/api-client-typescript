@@ -122,7 +122,7 @@ export class Client {
    *
    * Example
    * ```
-   * import { Client } from '@neon-exchange/api-client-ts'
+   * import { Client } from '@neon-exchange/api-client-typescript'
    *
    * const nash = new Client({
    *   apiURI: 'https://pathtoapiurl',
@@ -525,7 +525,7 @@ export class Client {
    *
    * Example
    * ```
-   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   * import { CryptoCurrency } from '@neon-exchange/api-client-typescript'
    *
    * const address = await nash.getDepositAddress(CryptoCurrency.NEO)
    * console.log(address)
@@ -622,7 +622,7 @@ export class Client {
    *
    * Example
    * ```
-   * import { CryptoCurrency } from '@neon-exchange/api-client-ts'
+   * import { CryptoCurrency } from '@neon-exchange/api-client-typescript'
    *
    * const accountBalance = await nash.getAcountBalance(CryptoCurrency.ETH)
    * console.log(accountBalance)
@@ -786,7 +786,7 @@ export class Client {
    *   createCurrencyPrice,
    *   OrderBuyOrSell,
    *   OrderCancellationPolicy
-   * } from '@neon-exchange/api-client-ts'
+   * } from '@neon-exchange/api-client-typescript'
    *
    * const order = await nash.placeLimitOrder(
    *   false,
@@ -852,7 +852,7 @@ export class Client {
    * import {
    *   createCurrencyAmount,
    *   OrderBuyOrSell,
-   * } from '@neon-exchange/api-client-ts'
+   * } from '@neon-exchange/api-client-typescript'
    *
    * const order = await nash.placeMarketOrder(
    *   createCurrencyAmount('1.00', CryptoCurrency.NEO),
@@ -909,7 +909,7 @@ export class Client {
    *   createCurrencyPrice,
    *   OrderBuyOrSell,
    *   OrderCancellationPolicy
-   * } from '@neon-exchange/api-client-ts'
+   * } from '@neon-exchange/api-client-typescript'
    *
    * const order = await nash.placeStopLimitOrder(
    *   false,
@@ -983,7 +983,7 @@ export class Client {
    *   createCurrencyAmount,
    *   createCurrencyPrice,
    *   OrderBuyOrSell,
-   * } from '@neon-exchange/api-client-ts'
+   * } from '@neon-exchange/api-client-typescript'
    *
    * const order = await nash.placeStopLimitOrder(
    *   createCurrencyAmount('1', CryptoCurrency.NEO),
@@ -1037,7 +1037,7 @@ export class Client {
    *
    * Example
    * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-typescript'
    *
    * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
    * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
@@ -1073,7 +1073,7 @@ export class Client {
    *
    * Example
    * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-typescript'
    *
    * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
    * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
