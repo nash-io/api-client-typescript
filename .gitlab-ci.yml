@@ -1,0 +1,38 @@
+image: node:12
+
+cache:
+  paths:
+    - node_modules/
+    - .yarn/
+
+stages:
+  - test
+#  - release
+
+stages:
+  - test
+#  - release
+
+before_script:
+  - node -v
+  - npm -v
+  - yarn -v
+  - yarn --pure-lockfile --cache-folder .yarn
+
+build_and_test:
+  stage: test
+  script:
+    - yarn build
+    - yarn test:lint
+    # - yarn test
+    # - yarn cov:check
+
+# publish_to_npm:
+#   stage: release
+#   only:
+#     - tags
+#   except:
+#     - branches
+#   script:
+#     - npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+#     - npm publish --verbose
