@@ -7,7 +7,7 @@ cache:
 
 stages:
   - test
- - release
+  - release
 
 before_script:
   - node -v
