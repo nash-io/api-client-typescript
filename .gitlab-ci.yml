@@ -17,6 +17,7 @@ before_script:
   - node -v
   - npm -v
   - yarn -v
+  - npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
   - yarn --pure-lockfile --cache-folder .yarn
 
 build_and_test:
@@ -34,5 +35,4 @@ build_and_test:
 #   except:
 #     - branches
 #   script:
-#     - npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
 #     - npm publish --verbose
