@@ -46,7 +46,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@neon-exchange/crypto-core-ts": "^2.2.5",
+    "@neon-exchange/crypto-core-ts": "2.2.11",
     "@neon-exchange/nex-auth-protocol": "^1.7.42",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
