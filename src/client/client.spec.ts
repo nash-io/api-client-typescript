@@ -5,8 +5,7 @@ import { CAS_URL, GQL_URL } from '../config';
 import {
   OrderBuyOrSell,
   OrderStatus,
-  OrderCancellationPolicy,
-  MovementStatus
+  OrderCancellationPolicy
 } from '../types';
 
 const client = new Client({
@@ -183,27 +182,27 @@ test('place stop market order', async () => {
   expect(orderPlaced.status).toBe(OrderStatus.PENDING);
 });
 
-test('sign deposit request', async () => {
-  const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
-  const amount = createCurrencyAmount('1.4', CryptoCurrency.ETH);
-  const signMovement = await client.signDepositRequest(address, amount);
+// test('sign deposit request', async () => {
+//   const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+//   const amount = createCurrencyAmount('1.4', CryptoCurrency.ETH);
+//   const signMovement = await client.signDepositRequest(address, amount);
 
-  const movements = await client.listMovements();
-  expect(movements.length).toBeGreaterThan(0);
+//   const movements = await client.listMovements();
+//   expect(movements.length).toBeGreaterThan(0);
 
-  expect(signMovement.movement.status).toBe(MovementStatus.PENDING);
-});
+//   expect(signMovement.movement.status).toBe(MovementStatus.PENDING);
+// });
 
-test('sign withdraw request', async () => {
-  const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
-  const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
-  const signMovement = await client.signWithdrawRequest(address, amount);
+// test('sign withdraw request', async () => {
+//   const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
+//   const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
+//   const signMovement = await client.signWithdrawRequest(address, amount);
 
-  const movements = await client.listMovements();
-  expect(movements.length).toBeGreaterThan(0);
+//   const movements = await client.listMovements();
+//   expect(movements.length).toBeGreaterThan(0);
 
-  expect(signMovement.movement.status).toBe(MovementStatus.PENDING);
-});
+//   expect(signMovement.movement.status).toBe(MovementStatus.PENDING);
+// });
 
 // PENDING orders cannot be canceled
 // test('cancel order', async () => {

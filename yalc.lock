@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "@neon-exchange/nash-protocol": {
+      "signature": "9797d7454d5e65f2df93963105c2a5ff",
+      "file": true
+    }
+  }
+}

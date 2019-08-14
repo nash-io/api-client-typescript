@@ -10,3 +10,9 @@ export interface Asset {
   symbol: CryptoCurrency;
   withdrawalPrecision: number;
 }
+
+export interface AssetData {
+  blockchain: Blockchain,
+  precision: number,
+  hash: string
+}

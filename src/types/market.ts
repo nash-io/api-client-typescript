@@ -2,12 +2,17 @@ import { CryptoCurrency } from '../constants/currency';
 import { CurrencyAmount, CurrencyPrice } from '../types';
 
 export interface Market {
+  aAsset?: string;
   aUnit: CryptoCurrency;
   aUnitPrecision: number;
+  bAsset?: string;
   bUnit: CryptoCurrency;
   bUnitPrecision: number;
   minTickSize: string;
   minTradeSize: string;
+  minTradeSizeB: string;
+  minTradeIncrement: string;
+  minTradeIncrementB: string;
   name: string;
   status: MarketStatus;
 }

@@ -1,4 +1,5 @@
 import { ApolloClient } from 'apollo-client';
+import { setContext } from 'apollo-link-context';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { createHttpLink } from 'apollo-link-http';
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
@@ -20,11 +21,12 @@ import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
-import { SIGN_DEPOSIT_REQUEST_MUTATION } from '../mutations/movements/signDepositRequest';
-import { SIGN_WITHDRAW_REQUEST_MUTATION } from '../mutations/movements/signWithdrawRequest';
+import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
+import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset';
+import { GetStatesData, GET_STATES_MUTATION, SignStatesData, SIGN_STATES_MUTATION, SYNC_STATES_MUTATION } from '../mutations/stateSyncing';
 import { SALT } from '../config';
 import { FiatCurrency } from '../constants/currency';
 import {
@@ -47,7 +49,6 @@ import {
   AccountPortfolio,
   AccountVolume,
   Period,
-  SignMovement,
   CancelledOrder,
   AccountBalance,
   AccountTransaction,
@@ -62,7 +63,10 @@ import {
   CurrencyPrice,
   PaginationCursor,
   OrderStatus,
-  OrderType
+  OrderType,
+  SignMovementResult,
+  AssetData,
+  Asset
 } from '../types';
 
 import { CryptoCurrency } from '../constants/currency';
@@ -76,8 +80,7 @@ import {
   InitParams,
   Config,
   signPayload,
-  createDepositRequestParams,
-  createWithdrawalRequestParams,
+  createAddMovementParams,
   createPlaceStopMarketOrderParams,
   createPlaceStopLimitOrderParams,
   createPlaceMarketOrderParams,
@@ -92,7 +95,15 @@ import {
   createListMovementsParams,
   createListAccountBalanceParams,
   createListAccountTransactionsParams,
-  createListAccountOrdersParams
+  createListAccountOrdersParams,
+  MovementTypeDeposit,
+  MovementTypeWithdrawal,
+  createGetStatesParams,
+  SignStatesPayload,
+  SigningPayloadID,
+  SyncState,
+  createSyncStatesParams,
+  bufferize
 } from '@neon-exchange/nash-protocol';
 
 /**
@@ -106,13 +117,14 @@ export interface ClientOptions {
 
 export class Client {
   private opts: ClientOptions;
-  private cryptoCore: any;
   private initParams: InitParams;
   private nashCoreConfig: Config;
+  private casCookie: string;
   private account: any;
   private publicKey: string;
   private gql: ApolloClient<any>;
   public marketData: { [key: string]: Market };
+  public assetData: { [key: string]: AssetData }
 
   /**
    * Create a new instance of [[Client]]
@@ -133,16 +145,28 @@ export class Client {
    */
   constructor(opts: ClientOptions) {
     this.opts = opts;
+
+    const headerLink = setContext((_, { headers }) => {
+      return {
+        headers: {
+          ...headers,
+          Cookie: this.casCookie
+        }
+      };
+    });
+
+    const httpLink = createHttpLink({ fetch, uri: this.opts.apiURI });
+
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
-      link: createHttpLink({ fetch, uri: this.opts.apiURI }),
+      link: headerLink.concat(httpLink),
       defaultOptions: {
         watchQuery: {
-          fetchPolicy: 'network-only',
+          fetchPolicy: 'no-cache',
           errorPolicy: 'all'
         },
         query: {
-          fetchPolicy: 'network-only',
+          fetchPolicy: 'no-cache',
           errorPolicy: 'all'
         }
       }
@@ -167,12 +191,12 @@ export class Client {
    * .catch(e => console.log(`login failed ${e}`)
    * ```
    */
-  public async login(email: string, password: string): Promise<boolean> {
+  public async login(email: string, password: string, presetWallets?:object): Promise<boolean> {
     const keys = await getHKDFKeysFromPassword(password, SALT);
     const loginUrl = this.opts.casURI + '/user_login';
     const body = {
       email,
-      password: keys.authKey
+      password: toHex(keys.authKey)
     };
 
     const response = await fetch(loginUrl, {
@@ -181,50 +205,55 @@ export class Client {
       method: 'POST'
     });
 
-    const casCookie = response.headers.get('set-cookie');
+    this.casCookie = response.headers.get('set-cookie');
     const result = await response.json();
     if (result.error) {
       throw new Error(result.message);
     }
 
     this.account = result.account;
-    if (this.opts.debug) {
-      console.log(this.account);
-    }
+    console.log(this.account);
 
     this.marketData = await this.fetchMarketData();
-    const aead = {
-      encryptedSecretKey: this.account.encrypted_secret_key,
-      nonce: this.account.encrypted_secret_key_nonce,
-      tag: this.account.encrypted_secret_key_tag
-    };
+    this.assetData = await this.fetchAssetData()
+    console.log("account: ", this.account)
+    if (this.account.encrypted_secret_key === null) {
+      console.log(
+        'keys not present in the CAS: creating and uploading as we speak.'
+      );
 
-    this.initParams = {
-      walletIndices: { neo: 1, eth: 1 },
-      encryptionKey: keys.encryptionKey,
-      aead,
-      marketData: mapMarketsForGoClient(this.marketData)
-    };
-
-    if (aead.encryptedSecretKey === null) {
-      if (this.opts.debug) {
-        console.log(
-          'keys not present in the CAS: creating and uploading as we speak.'
-        );
-      }
-
-      this.initParams.walletIndices = { neo: 1, eth: 1 };
       await this.createAndUploadKeys(
-        keys.encryptionKey.toString('hex'),
-        casCookie
+        keys.encryptionKey,
+        this.casCookie,
+        presetWallets
       );
 
       return true;
     }
 
+    const aead = {
+      encryptedSecretKey: bufferize(this.account.encrypted_secret_key),
+      nonce: bufferize(this.account.encrypted_secret_key_nonce),
+      tag: bufferize(this.account.encrypted_secret_key_tag)
+    };
+
+    this.initParams = {
+      walletIndices: { neo: 0, eth: 0 },
+      encryptionKey: keys.encryptionKey,
+      aead,
+      marketData: mapMarketsForGoClient(this.marketData),
+      assetData: this.assetData
+    };
+
     this.nashCoreConfig = await initialize(this.initParams);
     if (this.opts.debug) {
       console.log(this.nashCoreConfig);
+    }
+
+    if (presetWallets !== undefined) {
+      const cloned: any = { ...this.nashCoreConfig };
+      cloned.wallets = presetWallets;
+      this.nashCoreConfig = cloned;
     }
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
@@ -324,6 +353,24 @@ export class Client {
   }
 
   /**
+   * Fetches as list of all available [[Asset]] that are active on the exchange.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const assets = await nash.listAssets()
+   * console.log(assets)
+   * ```
+   */
+  public async listAssets(): Promise<Asset[]> {
+    const result = await this.gql.query({ query: LIST_ASSETS_QUERY });
+    const assets = result.data.listAssets as Asset[];
+
+    return assets;
+  }
+  
+  /**
    * List a [[CandleRange]] for the given market.
    *
    * @param marketName
@@ -360,15 +407,21 @@ export class Client {
    *
    * Example
    * ```
-   * const markets = await nash.listMarkets()
+   * const {markets, error} = await nash.listMarkets()
    * console.log(markets)
    * ```
    */
-  public async listMarkets(): Promise<Market[]> {
-    const result = await this.gql.query({ query: LIST_MARKETS_QUERY });
-    const markets = result.data.listMarkets as Market[];
-
-    return markets;
+  public async listMarkets(): Promise<{ markets: Market[]; error: any }> {
+    try {
+      const result = await this.gql.query({ query: LIST_MARKETS_QUERY });
+      if (result.data) {
+        const markets = result.data.listMarkets as Market[];
+        return { markets, error: null };
+      }
+      return { markets: null, error: result };
+    } catch (e) {
+      return { markets: null, error: e };
+    }
   }
 
   /**
@@ -498,13 +551,12 @@ export class Client {
    * ```
    */
   public async listAccountBalances(
-    ignoreLowBalance?: boolean
+    ignoreLowBalance: boolean = false
   ): Promise<AccountBalance[]> {
     const listAccountBalanceParams = createListAccountBalanceParams(
       ignoreLowBalance
     );
     const signedPayload = await this.signPayload(listAccountBalanceParams);
-
     const result = await this.gql.query({
       query: LIST_ACCOUNT_BALANCES,
       variables: {
@@ -740,6 +792,123 @@ export class Client {
   }
 
   /**
+   * List all states and open orders to be signed for settlement
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getStatesData = await nash.getStates()
+   * console.log(getStatesData)
+   * ```
+   */
+  public async getStates(): Promise<GetStatesData> {
+    const getStatesParams = createGetStatesParams();
+    const signedPayload = await this.signPayload(getStatesParams);
+
+    const result = await this.gql.query({
+      query: GET_STATES_MUTATION,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    });
+    const getStatesData = result.data as GetStatesData;
+
+    return getStatesData;
+  }
+
+  /**
+   * Submit all states and open orders to be signed for settlement
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const signStatesResult = await nash.signStates(getStatesResult)
+   * console.log(signStatesResult)
+   * ```
+   */
+  public async signStates(
+    getStatesData: GetStatesData
+  ): Promise<SignStatesData> {
+    const stateList: SyncState[] = getStatesData.getStates.states.map(state => {
+      return {
+        blockchain: state.blockchain,
+        message: state.message
+      }
+    });
+    const orderList: SyncState[] = getStatesData.getStates.recycledOrders.map(
+      state => {
+        return {
+          blockchain: state.blockchain,
+          message: state.message
+        }
+      }
+    );
+
+    const signStateListPayload: SignStatesPayload = {
+      timestamp: 123,
+      states: stateList,
+      recycled_orders: orderList
+    };
+
+    const signedStates: any = await this.signPayload(
+      {kind: SigningPayloadID.signStatesPayload, payload: signStateListPayload}
+    );
+
+    const result = await this.gql.query({
+      query: SIGN_STATES_MUTATION,
+      variables: {
+        payload: signedStates.payload,
+        signature: {
+          publicKey: this.publicKey,
+          signed_digest: signedStates.signature
+        }
+      }
+    });
+    const signStatesData = result.data as SignStatesData;
+    return signStatesData;
+  }
+
+  /**
+   * List all states and open orders to be signed for settlement
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getStatesData = await nash.getStates()
+   * console.log(getStatesData)
+   * ```
+   */
+  public async syncStates(signStatesData: SignStatesData): Promise<boolean> {
+    const stateList: SyncState[] = signStatesData.signStates.serverSignedStates.map(
+      state => {
+        return {
+          blockchain: state.blockchain,
+          message: state.message
+        };
+      }
+    );
+
+    const syncStatesParams = createSyncStatesParams(stateList)
+    const signedPayload = await this.signPayload(syncStatesParams);
+
+    const result = await this.gql.query({
+      query: SYNC_STATES_MUTATION,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    });
+    const syncStatesResult = result.data.syncStates.result;
+    return syncStatesResult;
+  }
+
+
+
+  /**
    * Cancel an order by ID.
    *
    * @param orderID
@@ -751,8 +920,8 @@ export class Client {
    * console.log(cancelledOrder)
    * ```
    */
-  public async cancelOrder(orderID: string): Promise<CancelledOrder> {
-    const cancelOrderParams = createCancelOrderParams(orderID);
+  public async cancelOrder(orderID: string, marketName:string): Promise<CancelledOrder> {
+    const cancelOrderParams = createCancelOrderParams(orderID, marketName);
     const signedPayload = await this.signPayload(cancelOrderParams);
 
     const result = await this.gql.mutate({
@@ -807,7 +976,7 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     cancelAt?: DateTime
-  ): Promise<OrderPlaced> {
+  ): Promise<OrderPlaced>{
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -825,18 +994,22 @@ export class Client {
       marketName,
       cancelAt
     );
+
     const signedPayload = await this.signPayload(placeLimitOrderParams);
 
-    const result = await this.gql.mutate({
-      mutation: PLACE_LIMIT_ORDER_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    });
-    const orderPlaced = result.data.placeLimitOrder as OrderPlaced;
-
-    return orderPlaced;
+    try{
+      const result = await this.gql.mutate({
+        mutation: PLACE_LIMIT_ORDER_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      });
+      const orderPlaced = result.data.placeLimitOrder as OrderPlaced;
+      return orderPlaced;
+    } catch(e) {
+      throw Error(`Could not place order: ${JSON.stringify(e)} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`)
+    }
   }
 
   /**
@@ -877,16 +1050,20 @@ export class Client {
       marketName
     );
     const signedPayload = await this.signPayload(placeMarketOrderParams);
-    const result = await this.gql.mutate({
-      mutation: PLACE_MARKET_ORDER_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    });
-    const orderPlaced = result.data.placeMarketOrder as OrderPlaced;
-
-    return orderPlaced;
+    try {
+      const result = await this.gql.mutate({
+        mutation: PLACE_MARKET_ORDER_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      });
+      const orderPlaced = result.data.placeMarketOrder as OrderPlaced;
+  
+      return orderPlaced;  
+    } catch(e) {
+      throw Error(`Could not place order: ${JSON.stringify(e)} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`)
+    }
   }
 
   /**
@@ -1028,40 +1205,29 @@ export class Client {
     return orderPlaced;
   }
 
-  /**
-   * Sign a deposit request.
-   *
-   * @param address
-   * @param quantity
-   * @returns
-   *
-   * Example
-   * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-typescript'
-   *
-   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
-   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
-   * const signedMovement = await nash.signDepositRequest(address, amount);
-   * console.log(signedMovement)
-   * ```
-   */
   public async signDepositRequest(
     address: string,
-    quantity: CurrencyAmount
-  ): Promise<SignMovement> {
-    const signMovementParams = createDepositRequestParams(address, quantity);
+    quantity: CurrencyAmount,
+    nonce?: number
+  ): Promise<SignMovementResult> {
+    const signMovementParams = createAddMovementParams(
+      address,
+      quantity,
+      MovementTypeDeposit,
+      nonce
+    );
     const signedPayload = await this.signPayload(signMovementParams);
     const result = await this.gql.mutate({
-      mutation: SIGN_DEPOSIT_REQUEST_MUTATION,
+      mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     });
-
-    const signMovement = result.data.signDepositRequest;
-
-    return signMovement;
+    return {
+      result: result.data.addMovement,
+      blockchain_data: signedPayload.blockchain_data
+    };
   }
 
   /**
@@ -1073,7 +1239,7 @@ export class Client {
    *
    * Example
    * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-typescript'
+   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
    *
    * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
    * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
@@ -1083,22 +1249,29 @@ export class Client {
    */
   public async signWithdrawRequest(
     address: string,
-    quantity: CurrencyAmount
-  ): Promise<SignMovement> {
-    const signMovementParams = createWithdrawalRequestParams(address, quantity);
+    quantity: CurrencyAmount,
+    nonce?: number
+  ): Promise<SignMovementResult> {
+    const signMovementParams = createAddMovementParams(
+      address,
+      quantity,
+      MovementTypeWithdrawal,
+      nonce
+    );
     const signedPayload = await this.signPayload(signMovementParams);
     const result = await this.gql.mutate({
-      mutation: SIGN_WITHDRAW_REQUEST_MUTATION,
+      mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     });
 
-    const signMovement = result.data.signWithdrawRequest;
-
-    return signMovement;
-  }
+    return {
+      result: result.data.addMovement,
+      blockchain_data: signedPayload.blockchain_data
+    };
+  }  
 
   /**
    * creates and uploads wallet and encryption keys to the CAS.
@@ -1124,35 +1297,61 @@ export class Client {
    * }
    */
   private async createAndUploadKeys(
-    encryptionKey: string,
-    casCookie: string
+    encryptionKey: Buffer,
+    casCookie: string,
+    presetWallets?: object
   ): Promise<void> {
-    const res = encryptSecretKey(
-      Buffer.from(encryptionKey, 'hex'),
-      getSecretKey()
-    );
 
+    console.log("encryption key:", encryptionKey)
+    const secretKey = getSecretKey()
+    console.log("Secret key: ", secretKey)
+
+    const res = encryptSecretKey(
+      encryptionKey,
+      secretKey
+    );
+    // const params = {
+    //   aead: {
+    //     encryptedSecretKey: bufferize(vector.encryptedSecretKey),
+    //     nonce: bufferize(vector.nonce),
+    //     tag: bufferize(vector.tag)
+    //   },
+    //   assetData: Config.assetData,
+    //   encryptionKey: bufferize(vector.encryptionKey),
+    //   marketData: Config.marketData,
+    //   walletIndices: { neo: 0, eth: 0 }
+    // }
+    console.log("Result: ", res)
     const aead = {
-      encryptedSecretKey: toHex(res.encryptedSecretKey),
-      tag: toHex(res.tag),
-      nonce: toHex(res.nonce)
+      encryptedSecretKey: res.encryptedSecretKey,
+      tag: res.tag,
+      nonce: res.nonce
     };
 
-    const initParams = {
-      walletIndices: { neo: 1, eth: 1 },
+    this.initParams = {
+      walletIndices: { neo: 0, eth: 0 },
       encryptionKey,
       aead,
-      marketData: mapMarketsForGoClient(this.marketData)
+      marketData: mapMarketsForGoClient(this.marketData),
+      assetData: this.assetData
     };
 
-    this.nashCoreConfig = await this.cryptoCore.initialize(initParams);
+    this.nashCoreConfig = await initialize(this.initParams);
+
+    if (presetWallets !== undefined) {
+      const cloned: any = { ...this.nashCoreConfig };
+      cloned.wallets = presetWallets;
+      this.nashCoreConfig = cloned;
+    }
+
+    console.log("nash core config: ", this.nashCoreConfig)
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
 
     const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys';
     const body = {
-      encrypted_secret_key: initParams.aead.encryptedSecretKey,
-      encrypted_secret_key_nonce: initParams.aead.nonce,
-      encrypted_secret_key_tag: initParams.aead.tag,
+      encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
+      encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),
+      encrypted_secret_key_tag: toHex(this.initParams.aead.tag),
       signature_public_key: this.nashCoreConfig.payloadSigningKey.publicKey,
       // TODO(@anthdm): construct the wallets object in more generic way.
       wallets: [
@@ -1209,7 +1408,9 @@ export class Client {
       signature: {
         publicKey: this.publicKey,
         signedDigest: signedPayload.signature
-      }
+      },
+      blockchain_data: signedPayload.blockchainMovement,
+      blockchain_raw: signedPayload.blockchainRaw
     };
   }
 
@@ -1217,16 +1418,37 @@ export class Client {
     if (this.opts.debug) {
       console.log('fetching latest exchange market data');
     }
+    const { markets, error } = await this.listMarkets();
+    if (markets) {
+      const marketData = {};
+      let market: Market;
+      for (const it of Object.keys(markets)) {
+        market = markets[it];
+        marketData[market.name] = market;
+      }
 
-    const markets = await this.listMarkets();
-    const marketData = {};
-    let market: Market;
-
-    for (const it of Object.keys(markets)) {
-      market = markets[it];
-      marketData[market.name] = market;
+      return marketData;
+    } else {
+      return error;
     }
-
-    return marketData;
   }
+
+
+  private async fetchAssetData(): Promise<{ [key: string]: AssetData }> {
+    const assetList = {};
+    try {
+      const assets = await this.listAssets();
+      for (const a of assets) {
+        assetList[a.symbol] = {
+          hash: a.hash,
+          precision: 8,
+          blockchain: a.blockchain
+        };
+      }
+    } catch (e) {
+      console.log('Could not get assets: ', e);
+      return null;
+    }
+    return assetList;
+  }  
 }

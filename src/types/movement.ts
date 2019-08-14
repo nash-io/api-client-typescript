@@ -27,3 +27,8 @@ export interface SignMovement {
   publicKey: string;
   signature: string;
 }
+
+export interface SignMovementResult {
+  result: SignMovement;
+  blockchain_data:any;
+}
