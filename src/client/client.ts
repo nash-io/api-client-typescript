@@ -99,11 +99,10 @@ import {
   MovementTypeDeposit,
   MovementTypeWithdrawal,
   createGetStatesParams,
-  SignStatesPayload,
-  SigningPayloadID,
   SyncState,
   createSyncStatesParams,
-  bufferize
+  bufferize,
+  createSignStatesParams
 } from '@neon-exchange/nash-protocol';
 
 /**
@@ -831,7 +830,7 @@ export class Client {
    */
   public async signStates(
     getStatesData: GetStatesData
-  ): Promise<SignStatesData> {
+  ): Promise<SignStatesData | Error> {
     const stateList: SyncState[] = getStatesData.getStates.states.map(state => {
       return {
         blockchain: state.blockchain,
@@ -846,29 +845,24 @@ export class Client {
         }
       }
     );
+    
 
-    const signStateListPayload: SignStatesPayload = {
-      timestamp: 123,
-      states: stateList,
-      recycled_orders: orderList
-    };
+    const signStateListPayload: PayloadAndKind = createSignStatesParams(
+      stateList,
+      orderList
+    )
 
-    const signedStates: any = await this.signPayload(
-      {kind: SigningPayloadID.signStatesPayload, payload: signStateListPayload}
-    );
+    const signedStates: any = await this.signPayload( signStateListPayload )
 
     const result = await this.gql.query({
       query: SIGN_STATES_MUTATION,
       variables: {
-        payload: signedStates.payload,
-        signature: {
-          publicKey: this.publicKey,
-          signed_digest: signedStates.signature
-        }
+        payload: signedStates.signedPayload,
+        signature: signedStates.signature
       }
     });
     const signStatesData = result.data as SignStatesData;
-    return signStatesData;
+    return signStatesData;  
   }
 
   /**
@@ -891,10 +885,8 @@ export class Client {
         };
       }
     );
-
     const syncStatesParams = createSyncStatesParams(stateList)
     const signedPayload = await this.signPayload(syncStatesParams);
-
     const result = await this.gql.query({
       query: SYNC_STATES_MUTATION,
       variables: {
@@ -1410,7 +1402,8 @@ export class Client {
         signedDigest: signedPayload.signature
       },
       blockchain_data: signedPayload.blockchainMovement,
-      blockchain_raw: signedPayload.blockchainRaw
+      blockchain_raw: signedPayload.blockchainRaw,
+      signedPayload: signedPayload.payload
     };
   }
 
