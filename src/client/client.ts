@@ -26,7 +26,7 @@ import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
-import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces';
+import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces'
 
 import {
   GetStatesData,
@@ -800,7 +800,6 @@ export class Client {
     return movements
   }
 
-
   /**
    * List all current asset nonces
    *
@@ -812,11 +811,13 @@ export class Client {
    * console.log(getNoncesData)
    * ```
    */
-  public async getAssetNonces(assetList:string[]): Promise<GetAssetsNoncesData> {
+  public async getAssetNonces(
+    assetList: string[]
+  ): Promise<GetAssetsNoncesData> {
     const getAssetNoncesParams = createGetAssetsNoncesParams(assetList)
     const signedPayload = await this.signPayload(getAssetNoncesParams)
     const result = await this.gql.query({
-      query: GET_ASSETS_NONCES_QUERY, 
+      query: GET_ASSETS_NONCES_QUERY,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
@@ -1009,7 +1010,6 @@ export class Client {
     nonceTo?: number,
     nonceFrom?: number,
     nonceOrder?: number
-
   ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
