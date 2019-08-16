@@ -1,22 +1,22 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CryptoCurrency, FiatCurrency } from '../../../constants/currency';
+import { CryptoCurrency, FiatCurrency } from '../../../constants/currency'
 
 export interface FiatCurrencyAmount {
-  amount: string;
-  currency: FiatCurrency;
+  amount: string
+  currency: FiatCurrency
 }
 
 export interface CryptoCurrencyAmount {
-  amount: string;
-  currency: CryptoCurrency;
+  amount: string
+  currency: CryptoCurrency
 }
 
-export type CurrencyAmount = CryptoCurrencyAmount | FiatCurrencyAmount;
+export type CurrencyAmount = CryptoCurrencyAmount | FiatCurrencyAmount
 
 export const CURRENCY_AMOUNT_FRAGMENT = gql`
   fragment currencyAmountFields on CurrencyAmount {
     amount
     currency
   }
-`;
+`

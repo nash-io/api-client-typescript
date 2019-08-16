@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ORDER_FRAGMENT } from './fragments';
+import { ORDER_FRAGMENT } from './fragments'
 
 export const GET_ACCOUNT_ORDER = gql`
   query GetAccountOrder(
@@ -13,4 +13,4 @@ export const GET_ACCOUNT_ORDER = gql`
     }
   }
   ${ORDER_FRAGMENT}
-`;
+`

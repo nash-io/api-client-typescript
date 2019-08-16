@@ -1,8 +1,8 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CURRENCY_AMOUNT_PARTIAL_FRAGMENT } from './currencyAmountFragment';
+import { CURRENCY_AMOUNT_PARTIAL_FRAGMENT } from './currencyAmountFragment'
 
-import { CURRENCY_PRICE_PARTIAL_FRAGMENT } from './currencyPriceFragment';
+import { CURRENCY_PRICE_PARTIAL_FRAGMENT } from './currencyPriceFragment'
 
 export const CANDLE_FRAGMENT = gql`
   fragment candleFields on Candle {
@@ -26,4 +26,4 @@ export const CANDLE_FRAGMENT = gql`
   }
   ${CURRENCY_AMOUNT_PARTIAL_FRAGMENT}
   ${CURRENCY_PRICE_PARTIAL_FRAGMENT}
-`;
+`

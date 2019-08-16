@@ -1,125 +1,121 @@
-import { Client } from '../client';
-import { CryptoCurrency } from '../constants/currency';
-import { createCurrencyAmount, createCurrencyPrice } from '../helpers';
-import { CAS_URL, GQL_URL } from '../config';
-import {
-  OrderBuyOrSell,
-  OrderStatus,
-  OrderCancellationPolicy
-} from '../types';
+import { Client } from '../client'
+import { CryptoCurrency } from '../constants/currency'
+import { createCurrencyAmount, createCurrencyPrice } from '../helpers'
+import { CAS_URL, GQL_URL } from '../config'
+import { OrderBuyOrSell, OrderStatus, OrderCancellationPolicy } from '../types'
 
 const client = new Client({
   casURI: CAS_URL,
   apiURI: GQL_URL
-});
+})
 
 beforeAll(async () => {
-  const email = 'test@nash.io';
+  const email = 'test@nash.io'
   const password =
-    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34';
+    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34'
 
-  await client.login(email, password);
-});
+  await client.login(email, password)
+})
 
 test('successfull logs in a user', async () => {
-  const email = 'test@nash.io';
+  const email = 'test@nash.io'
   const password =
-    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34';
+    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34'
 
-  await expect(client.login(email, password)).resolves.toBeTruthy;
-});
+  await expect(client.login(email, password)).resolves.toBeTruthy
+})
 
 test('unsuccessfully logs in a user with invalid credentials', async () => {
-  const email = 'test_invalid@nash.io';
+  const email = 'test_invalid@nash.io'
   const password =
-    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34';
+    'af0782580bb2ec65b72cb184cf729dd16dfd5669ae247c64aa8d6d01b6ed8a34'
 
-  await expect(client.login(email, password)).rejects.toThrow(Error);
-});
+  await expect(client.login(email, password)).rejects.toThrow(Error)
+})
 
 test('get ticker', async () => {
-  const ticker = await client.getTicker('neo_gas');
+  const ticker = await client.getTicker('neo_gas')
 
-  console.log(ticker);
-});
+  console.log(ticker)
+})
 
 test('get orderbook', async () => {
-  const orderBook = await client.getOrderBook('neo_gas');
+  const orderBook = await client.getOrderBook('neo_gas')
 
-  console.log(orderBook);
-});
+  console.log(orderBook)
+})
 
 test('list trades', async () => {
-  const tradeHistory = await client.listTrades('neo_gas');
+  const tradeHistory = await client.listTrades('neo_gas')
 
-  console.log(tradeHistory);
-});
+  console.log(tradeHistory)
+})
 
 test('list tickers', async () => {
-  const tickers = await client.listTickers();
+  const tickers = await client.listTickers()
 
-  expect(tickers.length).toBeGreaterThan(0);
-});
+  expect(tickers.length).toBeGreaterThan(0)
+})
 
 test('list candles', async () => {
-  const candleRange = await client.listCandles('neo_eth');
+  const candleRange = await client.listCandles('neo_eth')
 
-  expect(candleRange.candles).toHaveLength(0);
-});
+  expect(candleRange.candles).toHaveLength(0)
+})
 
 test('list all available markets', async () => {
-  const markets = await client.listMarkets();
-  expect(markets).toHaveLength(12);
-});
+  const markets = await client.listMarkets()
+  expect(markets).toHaveLength(12)
+})
 
 test('get a valid market', async () => {
-  const market = await client.getMarket('eth_neo');
-  expect(market).toBeDefined();
-});
+  const market = await client.getMarket('eth_neo')
+  expect(market).toBeDefined()
+})
 
 test('get a non-existing market throws error', async () => {
-  await expect(client.getMarket('ETH_NASH')).rejects.toThrow(Error);
-});
+  await expect(client.getMarket('ETH_NASH')).rejects.toThrow(Error)
+})
 
 test('list account transactions', async () => {
-  const accountTransactionResponse = await client.listAccountTransactions();
-  expect(accountTransactionResponse.transactions).toHaveLength(0);
-});
+  const accountTransactionResponse = await client.listAccountTransactions()
+  expect(accountTransactionResponse.transactions).toHaveLength(0)
+})
 
 test('list account balances', async () => {
-  const accountBalances = await client.listAccountBalances();
-  expect(accountBalances.length).toBeGreaterThan(0);
-});
+  const accountBalances = await client.listAccountBalances()
+  expect(accountBalances.length).toBeGreaterThan(0)
+})
 
 test('get deposit address', async () => {
-  const depositAddress = await client.getDepositAddress(CryptoCurrency.ETH);
-  expect(depositAddress.currency).toBe('eth');
-  expect(depositAddress.address).toBeDefined();
-});
+  const depositAddress = await client.getDepositAddress(CryptoCurrency.ETH)
+  expect(depositAddress.currency).toBe('eth')
+  expect(depositAddress.address).toBeDefined()
+})
 
 test('get account portfolio', async () => {
-  const accountPortfolio = await client.getAccountPortfolio();
-  expect(accountPortfolio.balances.length).toBeGreaterThan(0);
-});
+  const accountPortfolio = await client.getAccountPortfolio()
+  expect(accountPortfolio.balances.length).toBeGreaterThan(0)
+})
 
 test('get movement that not exist throws', async () => {
-  await expect(client.getMovement(1)).rejects.toThrow(Error);
-});
+  await expect(client.getMovement(1)).rejects.toThrow(Error)
+})
 
 test('get account balance', async () => {
-  const accountBalance = await client.getAccountBalance(CryptoCurrency.GAS);
-  console.log(accountBalance);
-  expect(accountBalance.available.amount).toBeDefined();
-});
+  const accountBalance = await client.getAccountBalance(CryptoCurrency.GAS)
+  console.log(accountBalance)
+  expect(accountBalance.available.amount).toBeDefined()
+})
 
 test('get account order that not exist throws', async () => {
-  await expect(client.getAccountOrder('1')).rejects.toThrow(Error);
-});
+  await expect(client.getAccountOrder('1')).rejects.toThrow(Error)
+})
 
 test('list account volumes', async () => {
-  const accountVolumes = await client.listAccountVolumes();
-  expect(accountVolumes.volumes).toHaveLength(2);
-});
+  const accountVolumes = await client.listAccountVolumes()
+  expect(accountVolumes.volumes).toHaveLength(2)
+})
 
 test('placing an order with not enough funds throws an error', async () => {
   await expect(
@@ -131,8 +127,8 @@ test('placing an order with not enough funds throws an error', async () => {
       createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
       'neo_gas'
     )
-  ).rejects.toThrow(Error);
-});
+  ).rejects.toThrow(Error)
+})
 
 test('place limit order', async () => {
   const orderPlaced = await client.placeLimitOrder(
@@ -142,20 +138,20 @@ test('place limit order', async () => {
     OrderCancellationPolicy.GOOD_TIL_CANCELLED,
     createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas'
-  );
+  )
 
-  expect(orderPlaced.status).toBe(OrderStatus.PENDING);
-});
+  expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
 
 test('place market order', async () => {
   const orderPlaced = await client.placeMarketOrder(
     createCurrencyAmount('1.00', CryptoCurrency.NEO),
     OrderBuyOrSell.SELL,
     'neo_gas'
-  );
+  )
 
-  expect(orderPlaced.status).toBe(OrderStatus.PENDING);
-});
+  expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
 
 test('place stop limit order', async () => {
   const orderPlaced = await client.placeStopLimitOrder(
@@ -166,10 +162,10 @@ test('place stop limit order', async () => {
     createCurrencyPrice('0.010000', CryptoCurrency.GAS, CryptoCurrency.NEO),
     'neo_gas',
     createCurrencyPrice('0.020000', CryptoCurrency.GAS, CryptoCurrency.NEO)
-  );
+  )
 
-  expect(orderPlaced.status).toBe(OrderStatus.PENDING);
-});
+  expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
 
 test('place stop market order', async () => {
   const orderPlaced = await client.placeStopMarketOrder(
@@ -177,10 +173,10 @@ test('place stop market order', async () => {
     OrderBuyOrSell.SELL,
     'neo_gas',
     createCurrencyPrice('1.00', CryptoCurrency.GAS, CryptoCurrency.NEO)
-  );
+  )
 
-  expect(orderPlaced.status).toBe(OrderStatus.PENDING);
-});
+  expect(orderPlaced.status).toBe(OrderStatus.PENDING)
+})
 
 // test('sign deposit request', async () => {
 //   const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';

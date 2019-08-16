@@ -1,5 +1,5 @@
-import { CryptoCurrency } from '../constants/currency';
-import { CurrencyAmount, DateTime } from '../types';
+import { CryptoCurrency } from '../constants/currency'
+import { CurrencyAmount, DateTime } from '../types'
 
 export enum MovementType {
   DEPOSIT = 'DEPOSIT',
@@ -13,22 +13,22 @@ export enum MovementStatus {
 }
 
 export interface Movement {
-  address: string;
-  confirmations: number;
-  id: number;
-  currency: CryptoCurrency;
-  quantity: CurrencyAmount;
-  receivedAt: DateTime;
-  status: MovementStatus;
+  address: string
+  confirmations: number
+  id: number
+  currency: CryptoCurrency
+  quantity: CurrencyAmount
+  receivedAt: DateTime
+  status: MovementStatus
 }
 
 export interface SignMovement {
-  movement: Movement;
-  publicKey: string;
-  signature: string;
+  movement: Movement
+  publicKey: string
+  signature: string
 }
 
 export interface SignMovementResult {
-  result: SignMovement;
-  blockchain_data:any;
+  result: SignMovement
+  blockchain_data: any
 }

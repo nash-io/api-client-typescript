@@ -1,5 +1,5 @@
-import gql from 'graphql-tag';
-import { ORDERBOOK_FRAGMENT } from './fragments';
+import gql from 'graphql-tag'
+import { ORDERBOOK_FRAGMENT } from './fragments'
 
 export const GET_ORDERBOOK = gql`
   query GetOrderBook($marketName: MarketName!) {
@@ -8,4 +8,4 @@ export const GET_ORDERBOOK = gql`
     }
   }
   ${ORDERBOOK_FRAGMENT}
-`;
+`

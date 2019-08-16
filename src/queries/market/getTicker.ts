@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { TICKER_FRAGMENT } from './fragments';
+import { TICKER_FRAGMENT } from './fragments'
 
 export const GET_TICKER = gql`
   query GetTicker($marketName: MarketName!) {
@@ -9,4 +9,4 @@ export const GET_TICKER = gql`
     }
   }
   ${TICKER_FRAGMENT}
-`;
+`

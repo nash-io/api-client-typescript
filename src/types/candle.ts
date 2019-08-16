@@ -1,13 +1,13 @@
-import { CurrencyAmount, CurrencyPrice } from '../types';
+import { CurrencyAmount, CurrencyPrice } from '../types'
 
 export interface Candle {
-  aVolume: CurrencyAmount;
-  closePrice: CurrencyPrice;
-  highPrice: CurrencyPrice;
-  interval: CandleInterval;
-  intervalStartingAt: string;
-  lowPrice: CurrencyPrice;
-  openPrice: CurrencyPrice;
+  aVolume: CurrencyAmount
+  closePrice: CurrencyPrice
+  highPrice: CurrencyPrice
+  interval: CandleInterval
+  intervalStartingAt: string
+  lowPrice: CurrencyPrice
+  openPrice: CurrencyPrice
 }
 
 export enum CandleInterval {
@@ -23,5 +23,5 @@ export enum CandleInterval {
 }
 
 export interface CandleRange {
-  candles: Candle[];
+  candles: Candle[]
 }

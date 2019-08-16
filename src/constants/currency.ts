@@ -177,14 +177,14 @@ export enum CryptoCurrency {
   ZRX = 'zrx'
 }
 
-export const NEO_SYSTEM_ASSETS = [CryptoCurrency.NEO, CryptoCurrency.GAS];
+export const NEO_SYSTEM_ASSETS = [CryptoCurrency.NEO, CryptoCurrency.GAS]
 
-export type CryptoCurrencies = CryptoCurrency[];
+export type CryptoCurrencies = CryptoCurrency[]
 
-const { NEO, NEX, ETH, GAS, ACAT, QLC, PHX, DBC, BTC } = CryptoCurrency;
+const { NEO, NEX, ETH, GAS, ACAT, QLC, PHX, DBC, BTC } = CryptoCurrency
 
 interface CryptoCurrencyDefinition {
-  companyName: string;
+  companyName: string
 }
 
 // TODO: Deprecate asset definition (this information is now available on the backend)
@@ -221,9 +221,9 @@ export const CRYPTO_CURRENCY_DEFINITION: Partial<
   [BTC]: {
     companyName: 'Bitcoin'
   }
-};
+}
 
-export const basePairTokens = [NEX, ETH, NEX];
+export const basePairTokens = [NEX, ETH, NEX]
 
 export enum FiatCurrency {
   USD = 'USD',

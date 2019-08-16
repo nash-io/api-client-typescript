@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ADD_MOVEMENT_FRAGMENT } from './fragments/index';
+import { ADD_MOVEMENT_FRAGMENT } from './fragments/index'
 
 export const ADD_MOVEMENT_MUTATION = gql`
   mutation addMovement($payload: AddMovementParams!, $signature: Signature!) {
@@ -9,4 +9,4 @@ export const ADD_MOVEMENT_MUTATION = gql`
     }
   }
   ${ADD_MOVEMENT_FRAGMENT}
-`;
+`

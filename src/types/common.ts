@@ -5,29 +5,29 @@
 /*
   Useful Apollo types
  */
-export type SubscribeToFn = () => () => void;
+export type SubscribeToFn = () => () => void
 
 /*
   Common type aliases
  */
-export type DateTime = string;
-export type PaginationCursor = string;
+export type DateTime = string
+export type PaginationCursor = string
 
 /*
   Common types
  */
 export interface Signature {
-  publicKey: string;
-  signedDigest: string;
+  publicKey: string
+  signedDigest: string
 }
 
-export type Payload = Record<string, any>;
+export type Payload = Record<string, any>
 
 export interface PayloadWithTimestamp extends Payload {
-  timestamp: number;
+  timestamp: number
 }
 
-export type InputPayload = Record<string, any>;
+export type InputPayload = Record<string, any>
 
 export enum Blockchain {
   NEO = 'neo',

@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { TICKER_FRAGMENT } from './fragments';
+import { TICKER_FRAGMENT } from './fragments'
 
 export const LIST_TICKERS = gql`
   query Tickers {
@@ -9,4 +9,4 @@ export const LIST_TICKERS = gql`
     }
   }
   ${TICKER_FRAGMENT}
-`;
+`

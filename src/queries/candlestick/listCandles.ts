@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CANDLE_FRAGMENT } from './fragments/candleFragment';
+import { CANDLE_FRAGMENT } from './fragments/candleFragment'
 
 export const LIST_CANDLES = gql`
   query listCandles(
@@ -21,4 +21,4 @@ export const LIST_CANDLES = gql`
     }
   }
   ${CANDLE_FRAGMENT}
-`;
+`

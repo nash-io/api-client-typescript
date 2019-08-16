@@ -1,9 +1,9 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
 import {
   CURRENCY_PRICE_FRAGMENT,
   CURRENCY_AMOUNT_FRAGMENT
-} from '../../../queries/currency/fragments';
+} from '../../../queries/currency/fragments'
 
 export const TRADE_FRAGMENT = gql`
   fragment tradeFields on Trade {
@@ -18,4 +18,4 @@ export const TRADE_FRAGMENT = gql`
   }
   ${CURRENCY_PRICE_FRAGMENT}
   ${CURRENCY_AMOUNT_FRAGMENT}
-`;
+`

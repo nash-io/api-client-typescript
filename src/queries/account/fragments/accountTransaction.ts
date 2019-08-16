@@ -1,7 +1,7 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CONFIRMATIONS_FRAGMENT } from './confirmations';
-import { CURRENCY_AMOUNT_FRAGMENT } from '../../currency/fragments';
+import { CONFIRMATIONS_FRAGMENT } from './confirmations'
+import { CURRENCY_AMOUNT_FRAGMENT } from '../../currency/fragments'
 
 export const ACCOUNT_TRANSACTION_FRAGMENT = gql`
   fragment accountTransactionFields on AccountTransaction {
@@ -22,4 +22,4 @@ export const ACCOUNT_TRANSACTION_FRAGMENT = gql`
   }
   ${CONFIRMATIONS_FRAGMENT}
   ${CURRENCY_AMOUNT_FRAGMENT}
-`;
+`

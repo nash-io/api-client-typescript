@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ORDERBOOK_RECORD_FRAGMENT } from './orderBookRecordFragment';
+import { ORDERBOOK_RECORD_FRAGMENT } from './orderBookRecordFragment'
 
 export const ORDERBOOK_FRAGMENT = gql`
   fragment marketOrderbookFields on OrderBook {
@@ -12,4 +12,4 @@ export const ORDERBOOK_FRAGMENT = gql`
     }
   }
   ${ORDERBOOK_RECORD_FRAGMENT}
-`;
+`

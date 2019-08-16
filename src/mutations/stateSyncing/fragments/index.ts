@@ -1,1 +1,1 @@
-export * from './signStatesFragment';
+export * from './signStatesFragment'

@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ASSET_FRAGMENT } from '../../asset/fragments';
+import { ASSET_FRAGMENT } from '../../asset/fragments'
 
 export const ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT = gql`
   fragment portfolioBalanceFields on AccountPortfolioBalance {
@@ -16,4 +16,4 @@ export const ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT = gql`
     totalFiatPriceChange
   }
   ${ASSET_FRAGMENT}
-`;
+`

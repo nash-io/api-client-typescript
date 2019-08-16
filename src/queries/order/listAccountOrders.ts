@@ -1,7 +1,7 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ORDER_FRAGMENT } from './fragments';
-import { TRADE_FRAGMENT } from '../market/fragments';
+import { ORDER_FRAGMENT } from './fragments'
+import { TRADE_FRAGMENT } from '../market/fragments'
 
 export const LIST_ACCOUNT_ORDERS = gql`
   query ListAccountOrders(
@@ -21,4 +21,4 @@ export const LIST_ACCOUNT_ORDERS = gql`
   }
   ${ORDER_FRAGMENT}
   ${TRADE_FRAGMENT}
-`;
+`

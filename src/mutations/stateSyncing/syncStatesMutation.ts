@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { SignStatesFields } from './fragments';
+import { SignStatesFields } from './fragments'
 
 export const SYNC_STATES_MUTATION = gql`
   mutation syncStates($payload: SyncStatesParams!, $signature: String!) {
@@ -8,19 +8,19 @@ export const SYNC_STATES_MUTATION = gql`
       result
     }
   }
-`;
+`
 
 export interface SyncStatesData {
   syncStates: {
-    result: boolean;
-  };
+    result: boolean
+  }
 }
 
 export interface SyncStatesVariables {
   payload: {
-    timestamp: number;
-    serverSignedStates: SignStatesFields[];
-  };
-  publicKey: string;
-  signature: string;
+    timestamp: number
+    serverSignedStates: SignStatesFields[]
+  }
+  publicKey: string
+  signature: string
 }

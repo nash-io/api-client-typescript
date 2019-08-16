@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CANCELED_ORDER_FRAGMENT } from '../orders/fragments';
+import { CANCELED_ORDER_FRAGMENT } from '../orders/fragments'
 
 export const CANCEL_ORDER_MUTATION = gql`
   mutation cancelOrder($payload: CancelOrderParams!, $signature: Signature!) {
@@ -9,4 +9,4 @@ export const CANCEL_ORDER_MUTATION = gql`
     }
   }
   ${CANCELED_ORDER_FRAGMENT}
-`;
+`

@@ -1,6 +1,4 @@
-import gql from 'graphql-tag';
-
-import { ASSET_FRAGMENT } from '../../asset/fragments';
+import gql from 'graphql-tag'
 
 export const MARKET_FRAGMENT = gql`
   fragment marketFields on Market {
@@ -15,6 +13,6 @@ export const MARKET_FRAGMENT = gql`
     minTradeIncrementB
     name
     status
+    priceGranularity
   }
-  ${ASSET_FRAGMENT}
-`;
+`

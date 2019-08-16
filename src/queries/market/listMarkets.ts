@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { MARKET_FRAGMENT } from './fragments';
+import { MARKET_FRAGMENT } from './fragments'
 
 export const LIST_MARKETS_QUERY = gql`
   query ListMarkets {
@@ -9,4 +9,4 @@ export const LIST_MARKETS_QUERY = gql`
     }
   }
   ${MARKET_FRAGMENT}
-`;
+`

@@ -1,8 +1,8 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { CURRENCY_AMOUNT_FRAGMENT } from '../../../queries/currency/fragments';
-import { CryptoCurrency } from 'constants/currency';
-import { DateTime, CurrencyAmount } from '../../../types';
+import { CURRENCY_AMOUNT_FRAGMENT } from '../../../queries/currency/fragments'
+import { CryptoCurrency } from 'constants/currency'
+import { DateTime, CurrencyAmount } from '../../../types'
 
 export enum MovementType {
   DEPOSIT = 'DEPOSIT',
@@ -18,15 +18,15 @@ export enum MovementStatus {
 }
 
 export interface AddMovement {
-  address: string;
-  confirmations: number;
-  id: number;
-  currency: CryptoCurrency;
-  quantity: CurrencyAmount;
-  receivedAt: DateTime;
-  status: MovementStatus;
-  publicKey: string;
-  signature: string;
+  address: string
+  confirmations: number
+  id: number
+  currency: CryptoCurrency
+  quantity: CurrencyAmount
+  receivedAt: DateTime
+  status: MovementStatus
+  publicKey: string
+  signature: string
 }
 
 export const ADD_MOVEMENT_FRAGMENT = gql`
@@ -45,4 +45,4 @@ export const ADD_MOVEMENT_FRAGMENT = gql`
     signature
   }
   ${CURRENCY_AMOUNT_FRAGMENT}
-`;
+`

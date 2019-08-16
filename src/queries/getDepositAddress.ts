@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
 export const GET_DEPOSIT_ADDRESS = gql`
   query getDepositAddress(
@@ -11,4 +11,4 @@ export const GET_DEPOSIT_ADDRESS = gql`
       currency
     }
   }
-`;
+`

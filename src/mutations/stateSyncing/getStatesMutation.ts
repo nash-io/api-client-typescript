@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { ClientSignableStates, States } from './fragments';
+import { ClientSignableStates, States } from './fragments'
 
 export const GET_STATES_MUTATION = gql`
   mutation getStates($payload: GetStatesParams!, $signature: String!) {
@@ -21,19 +21,19 @@ export const GET_STATES_MUTATION = gql`
       }
     }
   }
-`;
+`
 
 export interface GetStatesData {
   getStates: {
-    states: States;
-    recycledOrders: ClientSignableStates;
-  };
+    states: States
+    recycledOrders: ClientSignableStates
+  }
 }
 
 export interface GetStatesVariables {
   payload: {
-    timestamp: number;
-  };
-  publicKey: string;
-  signature: string;
+    timestamp: number
+  }
+  publicKey: string
+  signature: string
 }

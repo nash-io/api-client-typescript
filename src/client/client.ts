@@ -1,41 +1,47 @@
-import { ApolloClient } from 'apollo-client';
-import { setContext } from 'apollo-link-context';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { createHttpLink } from 'apollo-link-http';
-import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets';
-import { GET_MARKET_QUERY } from '../queries/market/getMarket';
-import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions';
-import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders';
-import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances';
-import { LIST_MOVEMENTS } from '../queries/movement/listMovements';
-import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance';
-import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder';
-import { GET_MOVEMENT } from '../queries/movement/getMovement';
-import { GET_TICKER } from '../queries/market/getTicker';
-import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder';
-import { LIST_CANDLES } from '../queries/candlestick/listCandles';
-import { LIST_TICKERS } from '../queries/market/listTickers';
-import { LIST_TRADES } from '../queries/market/listTrades';
-import { GET_ORDERBOOK } from '../queries/market/getOrderBook';
-import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder';
-import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder';
-import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder';
-import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder';
+import { ApolloClient } from 'apollo-client'
+import { setContext } from 'apollo-link-context'
+import { InMemoryCache } from 'apollo-cache-inmemory'
+import { createHttpLink } from 'apollo-link-http'
+import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
+import { GET_MARKET_QUERY } from '../queries/market/getMarket'
+import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
+import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders'
+import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
+import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
+import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance'
+import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder'
+import { GET_MOVEMENT } from '../queries/movement/getMovement'
+import { GET_TICKER } from '../queries/market/getTicker'
+import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder'
+import { LIST_CANDLES } from '../queries/candlestick/listCandles'
+import { LIST_TICKERS } from '../queries/market/listTickers'
+import { LIST_TRADES } from '../queries/market/listTrades'
+import { GET_ORDERBOOK } from '../queries/market/getOrderBook'
+import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
+import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder'
+import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder'
+import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder'
 import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
-import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress';
-import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio';
-import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes';
-import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset';
-import { GetStatesData, GET_STATES_MUTATION, SignStatesData, SIGN_STATES_MUTATION, SYNC_STATES_MUTATION } from '../mutations/stateSyncing';
-import { SALT } from '../config';
-import { FiatCurrency } from '../constants/currency';
+import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
+import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
+import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
+import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
+import {
+  GetStatesData,
+  GET_STATES_MUTATION,
+  SignStatesData,
+  SIGN_STATES_MUTATION,
+  SYNC_STATES_MUTATION
+} from '../mutations/stateSyncing'
+import { SALT } from '../config'
+import { FiatCurrency } from '../constants/currency'
 import {
   mapMarketsForGoClient,
   normalizePriceForMarket,
   normalizeAmountForMarket
-} from '../helpers';
-import toHex from 'array-buffer-to-hex';
-import fetch from 'node-fetch';
+} from '../helpers'
+import toHex from 'array-buffer-to-hex'
+import fetch from 'node-fetch'
 import {
   OrderBook,
   TradeHistory,
@@ -67,9 +73,9 @@ import {
   SignMovementResult,
   AssetData,
   Asset
-} from '../types';
+} from '../types'
 
-import { CryptoCurrency } from '../constants/currency';
+import { CryptoCurrency } from '../constants/currency'
 
 import {
   getSecretKey,
@@ -90,7 +96,7 @@ import {
   createGetDepositAddressParams,
   createGetAccountOrderParams,
   createGetAccountBalanceParams,
-  createListAccountVolumesParams,
+  createGetAccountVolumesParams,
   createAccountPortfolioParams,
   createListMovementsParams,
   createListAccountBalanceParams,
@@ -103,26 +109,27 @@ import {
   createSyncStatesParams,
   bufferize,
   createSignStatesParams
-} from '@neon-exchange/nash-protocol';
+} from '@neon-exchange/nash-protocol'
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 export interface ClientOptions {
-  apiURI: string;
-  casURI: string;
-  debug?: boolean;
+  apiURI: string
+  casURI: string
+  debug?: boolean
 }
 
 export class Client {
-  private opts: ClientOptions;
-  private initParams: InitParams;
-  private nashCoreConfig: Config;
-  private casCookie: string;
-  private account: any;
-  private publicKey: string;
-  private gql: ApolloClient<any>;
-  public marketData: { [key: string]: Market };
+  private opts: ClientOptions
+  private initParams: InitParams
+  private nashCoreConfig: Config
+  private casCookie: string
+  private account: any
+  private publicKey: string
+  private gql: ApolloClient<any>
+  private walletIndices: { [key: string]: number }
+  public marketData: { [key: string]: Market }
   public assetData: { [key: string]: AssetData }
 
   /**
@@ -143,7 +150,7 @@ export class Client {
    * ```
    */
   constructor(opts: ClientOptions) {
-    this.opts = opts;
+    this.opts = opts
 
     const headerLink = setContext((_, { headers }) => {
       return {
@@ -151,10 +158,10 @@ export class Client {
           ...headers,
           Cookie: this.casCookie
         }
-      };
-    });
+      }
+    })
 
-    const httpLink = createHttpLink({ fetch, uri: this.opts.apiURI });
+    const httpLink = createHttpLink({ fetch, uri: this.opts.apiURI })
 
     this.gql = new ApolloClient({
       cache: new InMemoryCache(),
@@ -169,7 +176,7 @@ export class Client {
           errorPolicy: 'all'
         }
       }
-    });
+    })
   }
 
   /**
@@ -190,74 +197,79 @@ export class Client {
    * .catch(e => console.log(`login failed ${e}`)
    * ```
    */
-  public async login(email: string, password: string, presetWallets?:object): Promise<boolean> {
-    const keys = await getHKDFKeysFromPassword(password, SALT);
-    const loginUrl = this.opts.casURI + '/user_login';
+  public async login(
+    email: string,
+    password: string,
+    walletIndices: { [key: string]: number } = { neo: 1, eth: 1 },
+    presetWallets?: object
+  ): Promise<boolean> {
+    this.walletIndices = walletIndices
+    const keys = await getHKDFKeysFromPassword(password, SALT)
+    const loginUrl = this.opts.casURI + '/user_login'
     const body = {
       email,
       password: toHex(keys.authKey)
-    };
+    }
 
     const response = await fetch(loginUrl, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
       method: 'POST'
-    });
+    })
 
-    this.casCookie = response.headers.get('set-cookie');
-    const result = await response.json();
+    this.casCookie = response.headers.get('set-cookie')
+    const result = await response.json()
     if (result.error) {
-      throw new Error(result.message);
+      throw new Error(result.message)
     }
 
-    this.account = result.account;
-    console.log(this.account);
+    this.account = result.account
 
-    this.marketData = await this.fetchMarketData();
+    this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
-    console.log("account: ", this.account)
+
     if (this.account.encrypted_secret_key === null) {
       console.log(
         'keys not present in the CAS: creating and uploading as we speak.'
-      );
+      )
 
       await this.createAndUploadKeys(
         keys.encryptionKey,
         this.casCookie,
         presetWallets
-      );
+      )
 
-      return true;
+      return true
     }
 
     const aead = {
       encryptedSecretKey: bufferize(this.account.encrypted_secret_key),
       nonce: bufferize(this.account.encrypted_secret_key_nonce),
       tag: bufferize(this.account.encrypted_secret_key_tag)
-    };
+    }
 
     this.initParams = {
-      walletIndices: { neo: 0, eth: 0 },
+      walletIndices: this.walletIndices,
       encryptionKey: keys.encryptionKey,
       aead,
       marketData: mapMarketsForGoClient(this.marketData),
       assetData: this.assetData
-    };
+    }
 
-    this.nashCoreConfig = await initialize(this.initParams);
+    this.nashCoreConfig = await initialize(this.initParams)
     if (this.opts.debug) {
-      console.log(this.nashCoreConfig);
+      console.log(this.nashCoreConfig)
     }
 
     if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig };
-      cloned.wallets = presetWallets;
-      this.nashCoreConfig = cloned;
+      const cloned: any = { ...this.nashCoreConfig }
+      cloned.wallets = presetWallets
+      this.nashCoreConfig = cloned
     }
 
-    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
 
-    return true;
+    return true
   }
 
   /**
@@ -276,10 +288,10 @@ export class Client {
     const result = await this.gql.query({
       query: GET_TICKER,
       variables: { marketName }
-    });
-    const ticker = result.data.getTicker as Ticker;
+    })
+    const ticker = result.data.getTicker as Ticker
 
-    return ticker;
+    return ticker
   }
 
   /**
@@ -298,10 +310,10 @@ export class Client {
     const result = await this.gql.query({
       query: GET_ORDERBOOK,
       variables: { marketName }
-    });
-    const orderBook = result.data.getOrderBook as OrderBook;
+    })
+    const orderBook = result.data.getOrderBook as OrderBook
 
-    return orderBook;
+    return orderBook
   }
 
   /**
@@ -326,11 +338,11 @@ export class Client {
     const result = await this.gql.query({
       query: LIST_TRADES,
       variables: { marketName, limit, before }
-    });
+    })
 
-    const tradeHistory = result.data.listTrades as TradeHistory;
+    const tradeHistory = result.data.listTrades as TradeHistory
 
-    return tradeHistory;
+    return tradeHistory
   }
 
   /**
@@ -345,10 +357,10 @@ export class Client {
    * ```
    */
   public async listTickers(): Promise<Ticker[]> {
-    const result = await this.gql.query({ query: LIST_TICKERS });
-    const tickers = result.data.listTickers as Ticker[];
+    const result = await this.gql.query({ query: LIST_TICKERS })
+    const tickers = result.data.listTickers as Ticker[]
 
-    return tickers;
+    return tickers
   }
 
   /**
@@ -363,12 +375,12 @@ export class Client {
    * ```
    */
   public async listAssets(): Promise<Asset[]> {
-    const result = await this.gql.query({ query: LIST_ASSETS_QUERY });
-    const assets = result.data.listAssets as Asset[];
+    const result = await this.gql.query({ query: LIST_ASSETS_QUERY })
+    const assets = result.data.listAssets as Asset[]
 
-    return assets;
+    return assets
   }
-  
+
   /**
    * List a [[CandleRange]] for the given market.
    *
@@ -393,10 +405,10 @@ export class Client {
     const result = await this.gql.query({
       query: LIST_CANDLES,
       variables: { marketName, before, interval, limit }
-    });
-    const candleRange = result.data.listCandles as CandleRange;
+    })
+    const candleRange = result.data.listCandles as CandleRange
 
-    return candleRange;
+    return candleRange
   }
 
   /**
@@ -412,14 +424,14 @@ export class Client {
    */
   public async listMarkets(): Promise<{ markets: Market[]; error: any }> {
     try {
-      const result = await this.gql.query({ query: LIST_MARKETS_QUERY });
+      const result = await this.gql.query({ query: LIST_MARKETS_QUERY })
       if (result.data) {
-        const markets = result.data.listMarkets as Market[];
-        return { markets, error: null };
+        const markets = result.data.listMarkets as Market[]
+        return { markets, error: null }
       }
-      return { markets: null, error: result };
+      return { markets: null, error: result }
     } catch (e) {
-      return { markets: null, error: e };
+      return { markets: null, error: e }
     }
   }
 
@@ -439,10 +451,10 @@ export class Client {
     const result = await this.gql.query({
       query: GET_MARKET_QUERY,
       variables: { marketName }
-    });
-    const market = result.data.getMarket as Market;
+    })
+    const market = result.data.getMarket as Market
 
-    return market;
+    return market
   }
 
   /**
@@ -483,19 +495,19 @@ export class Client {
       rangeStop,
       status,
       type
-    );
+    )
 
-    const signedPayload = await this.signPayload(listAccountOrdersParams);
+    const signedPayload = await this.signPayload(listAccountOrdersParams)
     const result = await this.gql.query({
       query: LIST_ACCOUNT_ORDERS,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const accountOrder = result.data.listAccountOrders as AccountOrder;
+    })
+    const accountOrder = result.data.listAccountOrders as AccountOrder
 
-    return accountOrder;
+    return accountOrder
   }
 
   /**
@@ -521,8 +533,8 @@ export class Client {
       cursor,
       fiatSymbol,
       limit
-    );
-    const signedPayload = await this.signPayload(listAccountTransactionsParams);
+    )
+    const signedPayload = await this.signPayload(listAccountTransactionsParams)
 
     const result = await this.gql.query({
       query: LIST_ACCOUNT_TRANSACTIONS,
@@ -530,11 +542,11 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
+    })
     const accountTransactions = result.data
-      .listAccountTransactions as AccountTransaction;
+      .listAccountTransactions as AccountTransaction
 
-    return accountTransactions;
+    return accountTransactions
   }
 
   /**
@@ -554,18 +566,18 @@ export class Client {
   ): Promise<AccountBalance[]> {
     const listAccountBalanceParams = createListAccountBalanceParams(
       ignoreLowBalance
-    );
-    const signedPayload = await this.signPayload(listAccountBalanceParams);
+    )
+    const signedPayload = await this.signPayload(listAccountBalanceParams)
     const result = await this.gql.query({
       query: LIST_ACCOUNT_BALANCES,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const accountBalances = result.data.listAccountBalances as AccountBalance[];
+    })
+    const accountBalances = result.data.listAccountBalances as AccountBalance[]
 
-    return accountBalances;
+    return accountBalances
   }
 
   /**
@@ -585,8 +597,8 @@ export class Client {
   public async getDepositAddress(
     currency: CryptoCurrency
   ): Promise<AccountDepositAddress> {
-    const getDepositAddressParams = createGetDepositAddressParams(currency);
-    const signedPayload = await this.signPayload(getDepositAddressParams);
+    const getDepositAddressParams = createGetDepositAddressParams(currency)
+    const signedPayload = await this.signPayload(getDepositAddressParams)
 
     const result = await this.gql.query({
       query: GET_DEPOSIT_ADDRESS,
@@ -594,11 +606,11 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
+    })
     const depositAddress = result.data
-      .getDepositAddress as AccountDepositAddress;
+      .getDepositAddress as AccountDepositAddress
 
-    return depositAddress;
+    return depositAddress
   }
 
   /**
@@ -621,8 +633,8 @@ export class Client {
     const getAccountPortfolioParams = createAccountPortfolioParams(
       fiatSymbol,
       period
-    );
-    const signedPayload = await this.signPayload(getAccountPortfolioParams);
+    )
+    const signedPayload = await this.signPayload(getAccountPortfolioParams)
 
     const result = await this.gql.query({
       query: GET_ACCOUNT_PORTFOLIO,
@@ -630,11 +642,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const accountPortfolio = result.data
-      .getAccountPortfolio as AccountPortfolio;
+    })
+    const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
 
-    return accountPortfolio;
+    return accountPortfolio
   }
 
   /**
@@ -650,8 +661,8 @@ export class Client {
    * ```
    */
   public async getMovement(movementID: number): Promise<Movement> {
-    const getMovemementParams = createGetMovementParams(movementID);
-    const signedPayload = await this.signPayload(getMovemementParams);
+    const getMovemementParams = createGetMovementParams(movementID)
+    const signedPayload = await this.signPayload(getMovemementParams)
 
     const result = await this.gql.query({
       query: GET_MOVEMENT,
@@ -659,10 +670,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const movement = result.data.getMovement as Movement;
+    })
+    const movement = result.data.getMovement as Movement
 
-    return movement;
+    return movement
   }
 
   /**
@@ -682,8 +693,8 @@ export class Client {
   public async getAccountBalance(
     currency: CryptoCurrency
   ): Promise<AccountBalance> {
-    const getAccountBalanceParams = createGetAccountBalanceParams(currency);
-    const signedPayload = await this.signPayload(getAccountBalanceParams);
+    const getAccountBalanceParams = createGetAccountBalanceParams(currency)
+    const signedPayload = await this.signPayload(getAccountBalanceParams)
 
     const result = await this.gql.query({
       query: GET_ACCOUNT_BALANCE,
@@ -691,10 +702,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const accountBalance = result.data.getAccountBalance as AccountBalance;
+    })
+    const accountBalance = result.data.getAccountBalance as AccountBalance
 
-    return accountBalance;
+    return accountBalance
   }
 
   /**
@@ -710,8 +721,8 @@ export class Client {
    * ```
    */
   public async getAccountOrder(orderID: string): Promise<Order> {
-    const getAccountOrderParams = createGetAccountOrderParams(orderID);
-    const signedPayload = await this.signPayload(getAccountOrderParams);
+    const getAccountOrderParams = createGetAccountOrderParams(orderID)
+    const signedPayload = await this.signPayload(getAccountOrderParams)
 
     const result = await this.gql.query({
       query: GET_ACCOUNT_ORDER,
@@ -719,10 +730,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const order = result.data.getAccountOrder as Order;
+    })
+    const order = result.data.getAccountOrder as Order
 
-    return order;
+    return order
   }
 
   /**
@@ -737,8 +748,8 @@ export class Client {
    * ```
    */
   public async listAccountVolumes(): Promise<AccountVolume> {
-    const listAccountVolumesParams = createListAccountVolumesParams();
-    const signedPayload = await this.signPayload(listAccountVolumesParams);
+    const listAccountVolumesParams = createGetAccountVolumesParams()
+    const signedPayload = await this.signPayload(listAccountVolumesParams)
 
     const result = await this.gql.query({
       query: LIST_ACCOUNT_VOLUMES,
@@ -746,10 +757,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const accountVolumes = result.data.listAccountVolumes as AccountVolume;
+    })
+    const accountVolumes = result.data.listAccountVolumes as AccountVolume
 
-    return accountVolumes;
+    return accountVolumes
   }
 
   /**
@@ -771,12 +782,8 @@ export class Client {
     status?: MovementStatus,
     type?: MovementType
   ): Promise<Movement[]> {
-    const listMovementParams = createListMovementsParams(
-      currency,
-      status,
-      type
-    );
-    const signedPayload = await this.signPayload(listMovementParams);
+    const listMovementParams = createListMovementsParams(currency, status, type)
+    const signedPayload = await this.signPayload(listMovementParams)
 
     const result = await this.gql.query({
       query: LIST_MOVEMENTS,
@@ -784,10 +791,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const movements = result.data.listMovements as Movement[];
+    })
+    const movements = result.data.listMovements as Movement[]
 
-    return movements;
+    return movements
   }
 
   /**
@@ -802,8 +809,8 @@ export class Client {
    * ```
    */
   public async getStates(): Promise<GetStatesData> {
-    const getStatesParams = createGetStatesParams();
-    const signedPayload = await this.signPayload(getStatesParams);
+    const getStatesParams = createGetStatesParams()
+    const signedPayload = await this.signPayload(getStatesParams)
 
     const result = await this.gql.query({
       query: GET_STATES_MUTATION,
@@ -811,10 +818,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const getStatesData = result.data as GetStatesData;
+    })
+    const getStatesData = result.data as GetStatesData
 
-    return getStatesData;
+    return getStatesData
   }
 
   /**
@@ -836,7 +843,7 @@ export class Client {
         blockchain: state.blockchain,
         message: state.message
       }
-    });
+    })
     const orderList: SyncState[] = getStatesData.getStates.recycledOrders.map(
       state => {
         return {
@@ -844,15 +851,14 @@ export class Client {
           message: state.message
         }
       }
-    );
-    
+    )
 
     const signStateListPayload: PayloadAndKind = createSignStatesParams(
       stateList,
       orderList
     )
 
-    const signedStates: any = await this.signPayload( signStateListPayload )
+    const signedStates: any = await this.signPayload(signStateListPayload)
 
     const result = await this.gql.query({
       query: SIGN_STATES_MUTATION,
@@ -860,9 +866,9 @@ export class Client {
         payload: signedStates.signedPayload,
         signature: signedStates.signature
       }
-    });
-    const signStatesData = result.data as SignStatesData;
-    return signStatesData;  
+    })
+    const signStatesData = result.data as SignStatesData
+    return signStatesData
   }
 
   /**
@@ -882,23 +888,21 @@ export class Client {
         return {
           blockchain: state.blockchain,
           message: state.message
-        };
+        }
       }
-    );
+    )
     const syncStatesParams = createSyncStatesParams(stateList)
-    const signedPayload = await this.signPayload(syncStatesParams);
+    const signedPayload = await this.signPayload(syncStatesParams)
     const result = await this.gql.query({
       query: SYNC_STATES_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const syncStatesResult = result.data.syncStates.result;
-    return syncStatesResult;
+    })
+    const syncStatesResult = result.data.syncStates.result
+    return syncStatesResult
   }
-
-
 
   /**
    * Cancel an order by ID.
@@ -912,9 +916,12 @@ export class Client {
    * console.log(cancelledOrder)
    * ```
    */
-  public async cancelOrder(orderID: string, marketName:string): Promise<CancelledOrder> {
-    const cancelOrderParams = createCancelOrderParams(orderID, marketName);
-    const signedPayload = await this.signPayload(cancelOrderParams);
+  public async cancelOrder(
+    orderID: string,
+    marketName: string
+  ): Promise<CancelledOrder> {
+    const cancelOrderParams = createCancelOrderParams(orderID, marketName)
+    const signedPayload = await this.signPayload(cancelOrderParams)
 
     const result = await this.gql.mutate({
       mutation: CANCEL_ORDER_MUTATION,
@@ -922,10 +929,10 @@ export class Client {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const cancelledOrder = result.data.cancelOrder as CancelledOrder;
+    })
+    const cancelledOrder = result.data.cancelOrder as CancelledOrder
 
-    return cancelledOrder;
+    return cancelledOrder
   }
 
   /**
@@ -968,15 +975,15 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     cancelAt?: DateTime
-  ): Promise<OrderPlaced>{
+  ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
-    );
+    )
     const normalizedLimitPrice = normalizePriceForMarket(
       limitPrice,
       this.marketData[marketName]
-    );
+    )
     const placeLimitOrderParams = createPlaceLimitOrderParams(
       allowTaker,
       normalizedAmount,
@@ -985,22 +992,26 @@ export class Client {
       normalizedLimitPrice,
       marketName,
       cancelAt
-    );
+    )
 
-    const signedPayload = await this.signPayload(placeLimitOrderParams);
-
-    try{
+    const signedPayload = await this.signPayload(placeLimitOrderParams)
+    console.log('Signed payload: ', signedPayload.payload.blockchainSignatures)
+    try {
       const result = await this.gql.mutate({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
           payload: signedPayload.payload,
           signature: signedPayload.signature
         }
-      });
-      const orderPlaced = result.data.placeLimitOrder as OrderPlaced;
-      return orderPlaced;
-    } catch(e) {
-      throw Error(`Could not place order: ${JSON.stringify(e)} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`)
+      })
+      const orderPlaced = result.data.placeLimitOrder as OrderPlaced
+      return orderPlaced
+    } catch (e) {
+      throw Error(
+        `Could not place order: ${JSON.stringify(
+          e
+        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+      )
     }
   }
 
@@ -1035,13 +1046,13 @@ export class Client {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
-    );
+    )
     const placeMarketOrderParams = createPlaceMarketOrderParams(
       normalizedAmount,
       buyOrSell,
       marketName
-    );
-    const signedPayload = await this.signPayload(placeMarketOrderParams);
+    )
+    const signedPayload = await this.signPayload(placeMarketOrderParams)
     try {
       const result = await this.gql.mutate({
         mutation: PLACE_MARKET_ORDER_MUTATION,
@@ -1049,12 +1060,16 @@ export class Client {
           payload: signedPayload.payload,
           signature: signedPayload.signature
         }
-      });
-      const orderPlaced = result.data.placeMarketOrder as OrderPlaced;
-  
-      return orderPlaced;  
-    } catch(e) {
-      throw Error(`Could not place order: ${JSON.stringify(e)} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`)
+      })
+      const orderPlaced = result.data.placeMarketOrder as OrderPlaced
+
+      return orderPlaced
+    } catch (e) {
+      throw Error(
+        `Could not place order: ${JSON.stringify(
+          e
+        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+      )
     }
   }
 
@@ -1105,15 +1120,15 @@ export class Client {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
-    );
+    )
     const normalizedLimitPrice = normalizePriceForMarket(
       limitPrice,
       this.marketData[marketName]
-    );
+    )
     const normalizedStopPrice = normalizePriceForMarket(
       stopPrice,
       this.marketData[marketName]
-    );
+    )
     const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
       allowTaker,
       normalizedAmount,
@@ -1123,18 +1138,18 @@ export class Client {
       marketName,
       normalizedStopPrice,
       cancelAt
-    );
-    const signedPayload = await this.signPayload(placeStopLimitOrderParams);
+    )
+    const signedPayload = await this.signPayload(placeStopLimitOrderParams)
     const result = await this.gql.mutate({
       mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced;
+    })
+    const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
 
-    return orderPlaced;
+    return orderPlaced
   }
 
   /**
@@ -1172,29 +1187,29 @@ export class Client {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
-    );
+    )
     const normalizedStopPrice = normalizePriceForMarket(
       stopPrice,
       this.marketData[marketName]
-    );
+    )
 
     const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
       normalizedAmount,
       buyOrSell,
       marketName,
       normalizedStopPrice
-    );
-    const signedPayload = await this.signPayload(placeStopMarketOrderParams);
+    )
+    const signedPayload = await this.signPayload(placeStopMarketOrderParams)
     const result = await this.gql.mutate({
       mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
-    const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced;
+    })
+    const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced
 
-    return orderPlaced;
+    return orderPlaced
   }
 
   public async signDepositRequest(
@@ -1207,19 +1222,19 @@ export class Client {
       quantity,
       MovementTypeDeposit,
       nonce
-    );
-    const signedPayload = await this.signPayload(signMovementParams);
+    )
+    const signedPayload = await this.signPayload(signMovementParams)
     const result = await this.gql.mutate({
       mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
+    })
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
-    };
+    }
   }
 
   /**
@@ -1249,21 +1264,21 @@ export class Client {
       quantity,
       MovementTypeWithdrawal,
       nonce
-    );
-    const signedPayload = await this.signPayload(signMovementParams);
+    )
+    const signedPayload = await this.signPayload(signMovementParams)
     const result = await this.gql.mutate({
       mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
-    });
+    })
 
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
-    };
-  }  
+    }
+  }
 
   /**
    * creates and uploads wallet and encryption keys to the CAS.
@@ -1293,53 +1308,33 @@ export class Client {
     casCookie: string,
     presetWallets?: object
   ): Promise<void> {
-
-    console.log("encryption key:", encryptionKey)
     const secretKey = getSecretKey()
-    console.log("Secret key: ", secretKey)
-
-    const res = encryptSecretKey(
-      encryptionKey,
-      secretKey
-    );
-    // const params = {
-    //   aead: {
-    //     encryptedSecretKey: bufferize(vector.encryptedSecretKey),
-    //     nonce: bufferize(vector.nonce),
-    //     tag: bufferize(vector.tag)
-    //   },
-    //   assetData: Config.assetData,
-    //   encryptionKey: bufferize(vector.encryptionKey),
-    //   marketData: Config.marketData,
-    //   walletIndices: { neo: 0, eth: 0 }
-    // }
-    console.log("Result: ", res)
+    const res = encryptSecretKey(encryptionKey, secretKey)
     const aead = {
       encryptedSecretKey: res.encryptedSecretKey,
       tag: res.tag,
       nonce: res.nonce
-    };
+    }
 
     this.initParams = {
-      walletIndices: { neo: 0, eth: 0 },
+      walletIndices: this.walletIndices,
       encryptionKey,
       aead,
       marketData: mapMarketsForGoClient(this.marketData),
       assetData: this.assetData
-    };
-
-    this.nashCoreConfig = await initialize(this.initParams);
-
-    if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig };
-      cloned.wallets = presetWallets;
-      this.nashCoreConfig = cloned;
     }
 
-    console.log("nash core config: ", this.nashCoreConfig)
-    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey;
+    this.nashCoreConfig = await initialize(this.initParams)
 
-    const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys';
+    if (presetWallets !== undefined) {
+      const cloned: any = { ...this.nashCoreConfig }
+      cloned.wallets = presetWallets
+      this.nashCoreConfig = cloned
+    }
+
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
+
+    const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys'
     const body = {
       encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
       encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),
@@ -1358,20 +1353,20 @@ export class Client {
           public_key: this.nashCoreConfig.wallets.eth.publicKey
         }
       ]
-    };
+    }
 
     const response = await fetch(url, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json', cookie: casCookie },
       method: 'POST'
-    });
+    })
 
-    const result = await response.json();
+    const result = await response.json()
     if (result.error) {
-      throw new Error(result.message);
+      throw new Error(result.message)
     }
     if (this.opts.debug) {
-      console.log('successfully uploaded wallet keys to the CAS');
+      console.log('successfully uploaded wallet keys to the CAS')
     }
   }
 
@@ -1387,13 +1382,13 @@ export class Client {
     const privateKey = Buffer.from(
       this.nashCoreConfig.payloadSigningKey.privateKey,
       'hex'
-    );
+    )
 
     const signedPayload = signPayload(
       privateKey,
       payloadAndKind,
       this.nashCoreConfig
-    );
+    )
 
     return {
       payload: payloadAndKind.payload,
@@ -1404,44 +1399,43 @@ export class Client {
       blockchain_data: signedPayload.blockchainMovement,
       blockchain_raw: signedPayload.blockchainRaw,
       signedPayload: signedPayload.payload
-    };
+    }
   }
 
   private async fetchMarketData(): Promise<{ [key: string]: Market }> {
     if (this.opts.debug) {
-      console.log('fetching latest exchange market data');
+      console.log('fetching latest exchange market data')
     }
-    const { markets, error } = await this.listMarkets();
+    const { markets, error } = await this.listMarkets()
     if (markets) {
-      const marketData = {};
-      let market: Market;
+      const marketData = {}
+      let market: Market
       for (const it of Object.keys(markets)) {
-        market = markets[it];
-        marketData[market.name] = market;
+        market = markets[it]
+        marketData[market.name] = market
       }
 
-      return marketData;
+      return marketData
     } else {
-      return error;
+      return error
     }
   }
 
-
   private async fetchAssetData(): Promise<{ [key: string]: AssetData }> {
-    const assetList = {};
+    const assetList = {}
     try {
-      const assets = await this.listAssets();
+      const assets = await this.listAssets()
       for (const a of assets) {
         assetList[a.symbol] = {
           hash: a.hash,
           precision: 8,
           blockchain: a.blockchain
-        };
+        }
       }
     } catch (e) {
-      console.log('Could not get assets: ', e);
-      return null;
+      console.log('Could not get assets: ', e)
+      return null
     }
-    return assetList;
-  }  
+    return assetList
+  }
 }

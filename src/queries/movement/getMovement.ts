@@ -1,6 +1,6 @@
-import gql from 'graphql-tag';
+import gql from 'graphql-tag'
 
-import { MOVEMENT_FRAGMENT } from './fragments';
+import { MOVEMENT_FRAGMENT } from './fragments'
 
 export const GET_MOVEMENT = gql`
   query getMovement($payload: GetMovementParams!, $signature: Signature) {
@@ -9,4 +9,4 @@ export const GET_MOVEMENT = gql`
     }
   }
   ${MOVEMENT_FRAGMENT}
-`;
+`

@@ -1,29 +1,29 @@
-import { CurrencyAmount, CurrencyPrice } from './currency';
-import { Market } from './market';
-import { DateTime } from './common';
+import { CurrencyAmount, CurrencyPrice } from './currency'
+import { Market } from './market'
+import { DateTime } from './common'
 
 export interface AccountOrder {
-  orders: Order[];
-  next: DateTime;
+  orders: Order[]
+  next: DateTime
 }
 
 export interface CancelledOrder {
-  orderId: string;
+  orderId: string
 }
 
 export interface Order {
-  amount: CurrencyAmount;
-  amountRemaining: CurrencyAmount;
-  buyOrSell: OrderBuyOrSell;
-  cancelAt: number;
-  cancellationPolicy: OrderCancellationPolicy;
-  id: string;
-  limitPrice: CurrencyPrice;
-  market: Market;
-  placedAt: string;
-  status: OrderStatus;
-  stopPrice: CurrencyPrice;
-  type: OrderType;
+  amount: CurrencyAmount
+  amountRemaining: CurrencyAmount
+  buyOrSell: OrderBuyOrSell
+  cancelAt: number
+  cancellationPolicy: OrderCancellationPolicy
+  id: string
+  limitPrice: CurrencyPrice
+  market: Market
+  placedAt: string
+  status: OrderStatus
+  stopPrice: CurrencyPrice
+  type: OrderType
 }
 
 export enum OrderBuyOrSell {
@@ -53,6 +53,6 @@ export enum OrderType {
 }
 
 export interface OrderPlaced {
-  id: string;
-  status: OrderStatus;
+  id: string
+  status: OrderStatus
 }
