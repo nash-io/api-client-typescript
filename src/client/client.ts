@@ -867,6 +867,7 @@ export class Client {
         signature: signedStates.signature
       }
     })
+
     const signStatesData = result.data as SignStatesData
     return signStatesData
   }
@@ -995,7 +996,7 @@ export class Client {
     )
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
-    console.log('Signed payload: ', signedPayload.payload.blockchainSignatures)
+
     try {
       const result = await this.gql.mutate({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
@@ -1140,16 +1141,24 @@ export class Client {
       cancelAt
     )
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
-    const result = await this.gql.mutate({
-      mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-    const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
+    try {
+      const result = await this.gql.mutate({
+        mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      })
+      const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
 
-    return orderPlaced
+      return orderPlaced
+    } catch (e) {
+      throw Error(
+        `Could not place order: ${JSON.stringify(
+          e
+        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+      )
+    }
   }
 
   /**
@@ -1200,16 +1209,24 @@ export class Client {
       normalizedStopPrice
     )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
-    const result = await this.gql.mutate({
-      mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-    const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced
+    try {
+      const result = await this.gql.mutate({
+        mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      })
+      const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced
 
-    return orderPlaced
+      return orderPlaced
+    } catch (e) {
+      throw Error(
+        `Could not place order: ${JSON.stringify(
+          e
+        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+      )
+    }
   }
 
   public async signDepositRequest(
