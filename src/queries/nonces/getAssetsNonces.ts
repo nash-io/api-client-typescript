@@ -8,6 +8,7 @@ export const GET_ASSETS_NONCES_QUERY = gql`
     $signature: Signature!
   ) {
     getAssetsNonces(payload: $payload, signature: $signature)
+      @connection(key: "getAssetsNonces") {
       asset
       nonces
     }

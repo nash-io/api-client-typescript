@@ -26,6 +26,8 @@ import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
+import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces';
+
 import {
   GetStatesData,
   GET_STATES_MUTATION,
@@ -97,6 +99,7 @@ import {
   createGetAccountOrderParams,
   createGetAccountBalanceParams,
   createGetAccountVolumesParams,
+  createGetAssetsNoncesParams,
   createAccountPortfolioParams,
   createListMovementsParams,
   createListAccountBalanceParams,
@@ -797,6 +800,33 @@ export class Client {
     return movements
   }
 
+
+  /**
+   * List all current asset nonces
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getNoncesData = await nash.getAssetNonces()
+   * console.log(getNoncesData)
+   * ```
+   */
+  public async getAssetNonces(assetList:string[]): Promise<GetAssetsNoncesData> {
+    const getAssetNoncesParams = createGetAssetsNoncesParams(assetList)
+    const signedPayload = await this.signPayload(getAssetNoncesParams)
+    const result = await this.gql.query({
+      query: GET_ASSETS_NONCES_QUERY, 
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+    const getNoncesData = result.data as GetAssetsNoncesData
+
+    return getNoncesData
+  }
+
   /**
    * List all states and open orders to be signed for settlement
    *
@@ -975,7 +1005,11 @@ export class Client {
     cancellationPolicy: OrderCancellationPolicy,
     limitPrice: CurrencyPrice,
     marketName: string,
-    cancelAt?: DateTime
+    cancelAt?: DateTime,
+    nonceTo?: number,
+    nonceFrom?: number,
+    nonceOrder?: number
+
   ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -992,7 +1026,10 @@ export class Client {
       cancellationPolicy,
       normalizedLimitPrice,
       marketName,
-      cancelAt
+      cancelAt,
+      nonceFrom,
+      nonceOrder,
+      nonceTo
     )
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
@@ -1042,7 +1079,10 @@ export class Client {
   public async placeMarketOrder(
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
-    marketName: string
+    marketName: string,
+    nonceTo?: number,
+    nonceFrom?: number,
+    nonceOrder?: number
   ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1051,7 +1091,10 @@ export class Client {
     const placeMarketOrderParams = createPlaceMarketOrderParams(
       normalizedAmount,
       buyOrSell,
-      marketName
+      marketName,
+      nonceFrom,
+      nonceOrder,
+      nonceTo
     )
     const signedPayload = await this.signPayload(placeMarketOrderParams)
     try {
@@ -1116,7 +1159,10 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     stopPrice: CurrencyPrice,
-    cancelAt?: DateTime
+    cancelAt?: DateTime,
+    nonceTo?: number,
+    nonceFrom?: number,
+    nonceOrder?: number
   ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1138,7 +1184,10 @@ export class Client {
       normalizedLimitPrice,
       marketName,
       normalizedStopPrice,
-      cancelAt
+      cancelAt,
+      nonceFrom,
+      nonceOrder,
+      nonceTo
     )
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
     try {
@@ -1191,7 +1240,10 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string,
-    stopPrice: CurrencyPrice
+    stopPrice: CurrencyPrice,
+    nonceTo?: number,
+    nonceFrom?: number,
+    nonceOrder?: number
   ): Promise<OrderPlaced> {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1206,7 +1258,10 @@ export class Client {
       normalizedAmount,
       buyOrSell,
       marketName,
-      normalizedStopPrice
+      normalizedStopPrice,
+      nonceFrom,
+      nonceOrder,
+      nonceTo
     )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
     try {
