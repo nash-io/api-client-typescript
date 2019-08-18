@@ -27,6 +27,7 @@ import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces'
+import { GET_ORDERS_FOR_MOVEMENT_QUERY, GetOrdersForMovementData } from '../queries/movement/getOrdersForMovementQuery'
 
 import {
   GetStatesData,
@@ -111,8 +112,10 @@ import {
   SyncState,
   createSyncStatesParams,
   bufferize,
-  createSignStatesParams
+  createSignStatesParams,
+  createGetOrdersForMovementParams
 } from '@neon-exchange/nash-protocol'
+
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
@@ -827,6 +830,36 @@ export class Client {
 
     return getNoncesData
   }
+
+  /**
+   * List all current pending orders for a unit, and return them to be resigned along with a nonce
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getOrdersForMovementData = await nash.getOrdersForMovement()
+   * console.log(getOrdersForMovementData)
+   * ```
+   */
+  public async getOrdersForMovement(
+    currency: string
+  ): Promise<GetOrdersForMovementData> {
+    const getOrdersForMovementParams = createGetOrdersForMovementParams(currency)
+    const signedPayload = await this.signPayload(getOrdersForMovementParams)
+    const result = await this.gql.query({
+      query: GET_ORDERS_FOR_MOVEMENT_QUERY,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+    const getOrdersForMovementData = result.data as GetOrdersForMovementData
+
+    return getOrdersForMovementData
+  }
+
+
 
   /**
    * List all states and open orders to be signed for settlement
