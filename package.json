@@ -47,7 +47,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@neon-exchange/nash-protocol": "^2.1.1",
+    "@neon-exchange/nash-protocol": "2.1.10",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
     "apollo-cache-inmemory": "^1.5.1",

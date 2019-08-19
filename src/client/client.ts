@@ -123,6 +123,12 @@ export interface ClientOptions {
   debug?: boolean
 }
 
+export interface NonceSet {
+  nonceFrom: number 
+  nonceTo: number 
+  nonceOrder: number
+}
+
 export class Client {
   private opts: ClientOptions
   private initParams: InitParams
@@ -134,6 +140,9 @@ export class Client {
   private walletIndices: { [key: string]: number }
   public marketData: { [key: string]: Market }
   public assetData: { [key: string]: AssetData }
+
+  private tradedAssets: string[]
+  private assetNonces: { [key: string]: number };
 
   /**
    * Create a new instance of [[Client]]
@@ -1006,11 +1015,22 @@ export class Client {
     cancellationPolicy: OrderCancellationPolicy,
     limitPrice: CurrencyPrice,
     marketName: string,
-    cancelAt?: DateTime,
-    nonceTo?: number,
     nonceFrom?: number,
-    nonceOrder?: number
+    nonceTo?: number,
+    nonceOrder?: number,
+    cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+
+    if(nonceOrder === undefined) {
+      nonceOrder = this.createTimestamp32()
+    }
+    if(nonceTo  === undefined || nonceTo === undefined) {
+      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
+      nonceFrom = nonceSet.nonceFrom
+      nonceTo = nonceSet.nonceTo
+      nonceOrder = nonceSet.nonceOrder
+    }
+
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1026,10 +1046,10 @@ export class Client {
       cancellationPolicy,
       normalizedLimitPrice,
       marketName,
-      cancelAt,
       nonceFrom,
+      nonceTo,
       nonceOrder,
-      nonceTo
+      cancelAt
     )
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
@@ -1080,10 +1100,21 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string,
-    nonceTo?: number,
     nonceFrom?: number,
-    nonceOrder?: number
+    nonceTo?: number,
+    nonceOrder?: number,
   ): Promise<OrderPlaced> {
+
+    if(nonceOrder === undefined) {
+      nonceOrder = this.createTimestamp32()
+    }
+    if(nonceTo  === undefined || nonceTo === undefined) {
+      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
+      nonceFrom = nonceSet.nonceFrom
+      nonceTo = nonceSet.nonceTo
+      nonceOrder = nonceSet.nonceOrder
+    }
+
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1093,8 +1124,8 @@ export class Client {
       buyOrSell,
       marketName,
       nonceFrom,
-      nonceOrder,
-      nonceTo
+      nonceTo,
+      nonceOrder
     )
     const signedPayload = await this.signPayload(placeMarketOrderParams)
     try {
@@ -1159,11 +1190,22 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     stopPrice: CurrencyPrice,
-    cancelAt?: DateTime,
-    nonceTo?: number,
     nonceFrom?: number,
-    nonceOrder?: number
+    nonceTo?: number,
+    nonceOrder?: number,
+    cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+
+    if(nonceOrder === undefined) {
+      nonceOrder = this.createTimestamp32()
+    }
+    if(nonceTo  === undefined || nonceTo === undefined) {
+      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
+      nonceFrom = nonceSet.nonceFrom
+      nonceTo = nonceSet.nonceTo
+      nonceOrder = nonceSet.nonceOrder
+    }
+
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1184,10 +1226,10 @@ export class Client {
       normalizedLimitPrice,
       marketName,
       normalizedStopPrice,
-      cancelAt,
       nonceFrom,
+      nonceTo,
       nonceOrder,
-      nonceTo
+      cancelAt
     )
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
     try {
@@ -1245,6 +1287,17 @@ export class Client {
     nonceFrom?: number,
     nonceOrder?: number
   ): Promise<OrderPlaced> {
+
+    if(nonceOrder === undefined) {
+      nonceOrder = this.createTimestamp32()
+    }
+    if(nonceTo  === undefined || nonceTo === undefined) {
+      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
+      nonceFrom = nonceSet.nonceFrom
+      nonceTo = nonceSet.nonceTo
+      nonceOrder = nonceSet.nonceOrder
+    }
+
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1260,8 +1313,8 @@ export class Client {
       marketName,
       normalizedStopPrice,
       nonceFrom,
-      nonceOrder,
-      nonceTo
+      nonceTo,
+      nonceOrder
     )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
     try {
@@ -1471,6 +1524,62 @@ export class Client {
       blockchain_data: signedPayload.blockchainMovement,
       blockchain_raw: signedPayload.blockchainRaw,
       signedPayload: signedPayload.payload
+    }
+  }
+
+  private async updateTradedAssetNonces():Promise<boolean> {
+    try{
+      const nonces = await this.getAssetNonces(this.tradedAssets);
+      const assetNonces = {};
+      nonces.getAssetsNonces.forEach(item => {
+        const nonceVal = item.nonces[0];
+        assetNonces[item.asset] = nonceVal;
+      });
+      this.assetNonces = assetNonces;
+  
+      return true
+  
+    } catch(e) {
+      console.log(`Could not update traded asset nonces: ${JSON.stringify(e)}`)
+      return false
+    }    
+  }
+
+  private createTimestamp32(): number  {
+    return Math.trunc(new Date().getTime() / 10) - 155000000000;
+  };
+
+  private async getNoncesForTrade(marketName: string, direction:OrderBuyOrSell): Promise<NonceSet> {
+    try {
+      const pairs = marketName.split('_')
+      const unitA = pairs[0]
+      const unitB = pairs[1]
+
+      if(! this.tradedAssets.includes(unitA)) {
+        this.tradedAssets.push(unitA)
+      }
+      if(! this.tradedAssets.includes(unitB)) {
+        this.tradedAssets.push(unitB)
+      }
+
+      await this.updateTradedAssetNonces()
+
+      let nonceTo = this.assetNonces[unitA]
+      let nonceFrom = this.assetNonces[unitB]
+
+      if( direction === OrderBuyOrSell.BUY) {
+        nonceTo = this.assetNonces[unitB]
+        nonceFrom = this.assetNonces[unitA]
+      }
+
+      return {
+        nonceTo,
+        nonceFrom,
+        nonceOrder: this.createTimestamp32()
+      }
+    } catch(e) {
+      console.log(`Could not get nonce set: ${e}`)
+      return e
     }
   }
 
