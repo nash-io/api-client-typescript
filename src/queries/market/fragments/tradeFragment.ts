@@ -15,6 +15,7 @@ export const TRADE_FRAGMENT = gql`
     amount {
       ...currencyAmountFields
     }
+    direction
   }
   ${CURRENCY_PRICE_FRAGMENT}
   ${CURRENCY_AMOUNT_FRAGMENT}
