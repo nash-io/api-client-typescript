@@ -27,6 +27,10 @@ import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces'
+import {
+  GET_ORDERS_FOR_MOVEMENT_QUERY,
+  GetOrdersForMovementData
+} from '../queries/movement/getOrdersForMovementQuery'
 
 import {
   GetStatesData,
@@ -74,7 +78,9 @@ import {
   OrderType,
   SignMovementResult,
   AssetData,
-  Asset
+  Asset,
+  MissingNonceError,
+  InsufficientFundsError
 } from '../types'
 
 import { CryptoCurrency } from '../constants/currency'
@@ -100,6 +106,7 @@ import {
   createGetAccountBalanceParams,
   createGetAccountVolumesParams,
   createGetAssetsNoncesParams,
+  createGetOrdersForMovementParams,
   createAccountPortfolioParams,
   createListMovementsParams,
   createListAccountBalanceParams,
@@ -124,8 +131,8 @@ export interface ClientOptions {
 }
 
 export interface NonceSet {
-  nonceFrom: number 
-  nonceTo: number 
+  nonceFrom: number
+  nonceTo: number
   nonceOrder: number
 }
 
@@ -141,8 +148,9 @@ export class Client {
   public marketData: { [key: string]: Market }
   public assetData: { [key: string]: AssetData }
 
-  private tradedAssets: string[]
-  private assetNonces: { [key: string]: number };
+  private tradedAssets: string[] = []
+  private assetNonces: { [key: string]: number }
+  private noncesDirty: boolean = true
 
   /**
    * Create a new instance of [[Client]]
@@ -810,6 +818,34 @@ export class Client {
   }
 
   /**
+   * List all orders for a given movement
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getOrdersForMovementData = await nash.getOrdersForMovement(unit)
+   * console.log(getOrdersForMovementData)
+   * ```
+   */
+  public async getOrdersForMovement(
+    asset: string
+  ): Promise<GetOrdersForMovementData> {
+    const getOrdersForMovementParams = createGetOrdersForMovementParams(asset)
+    const signedPayload = await this.signPayload(getOrdersForMovementParams)
+    const result = await this.gql.query({
+      query: GET_ORDERS_FOR_MOVEMENT_QUERY,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+    const getOrdersForMovementData = result.data as GetOrdersForMovementData
+
+    return getOrdersForMovementData
+  }
+
+  /**
    * List all current asset nonces
    *
    * @returns
@@ -942,6 +978,8 @@ export class Client {
       }
     })
     const syncStatesResult = result.data.syncStates.result
+
+    this.noncesDirty = true
     return syncStatesResult
   }
 
@@ -1020,11 +1058,10 @@ export class Client {
     nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-
-    if(nonceOrder === undefined) {
+    if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if(nonceTo  === undefined || nonceTo === undefined) {
+    if (nonceTo === undefined || nonceTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
       nonceFrom = nonceSet.nonceFrom
       nonceTo = nonceSet.nonceTo
@@ -1065,11 +1102,7 @@ export class Client {
       const orderPlaced = result.data.placeLimitOrder as OrderPlaced
       return orderPlaced
     } catch (e) {
-      throw Error(
-        `Could not place order: ${JSON.stringify(
-          e
-        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
-      )
+      return this.handleOrderError(e, signedPayload)
     }
   }
 
@@ -1102,13 +1135,12 @@ export class Client {
     marketName: string,
     nonceFrom?: number,
     nonceTo?: number,
-    nonceOrder?: number,
+    nonceOrder?: number
   ): Promise<OrderPlaced> {
-
-    if(nonceOrder === undefined) {
+    if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if(nonceTo  === undefined || nonceTo === undefined) {
+    if (nonceTo === undefined || nonceTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
       nonceFrom = nonceSet.nonceFrom
       nonceTo = nonceSet.nonceTo
@@ -1140,11 +1172,7 @@ export class Client {
 
       return orderPlaced
     } catch (e) {
-      throw Error(
-        `Could not place order: ${JSON.stringify(
-          e
-        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
-      )
+      return this.handleOrderError(e, signedPayload)
     }
   }
 
@@ -1195,11 +1223,10 @@ export class Client {
     nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-
-    if(nonceOrder === undefined) {
+    if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if(nonceTo  === undefined || nonceTo === undefined) {
+    if (nonceTo === undefined || nonceTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
       nonceFrom = nonceSet.nonceFrom
       nonceTo = nonceSet.nonceTo
@@ -1241,14 +1268,9 @@ export class Client {
         }
       })
       const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
-
       return orderPlaced
     } catch (e) {
-      throw Error(
-        `Could not place order: ${JSON.stringify(
-          e
-        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
-      )
+      return this.handleOrderError(e, signedPayload)
     }
   }
 
@@ -1287,11 +1309,10 @@ export class Client {
     nonceFrom?: number,
     nonceOrder?: number
   ): Promise<OrderPlaced> {
-
-    if(nonceOrder === undefined) {
+    if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if(nonceTo  === undefined || nonceTo === undefined) {
+    if (nonceTo === undefined || nonceTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
       nonceFrom = nonceSet.nonceFrom
       nonceTo = nonceSet.nonceTo
@@ -1329,12 +1350,24 @@ export class Client {
 
       return orderPlaced
     } catch (e) {
-      throw Error(
-        `Could not place order: ${JSON.stringify(
-          e
-        )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
-      )
+      return this.handleOrderError(e, signedPayload)
     }
+  }
+
+  private handleOrderError(error: Error, signedPayload: any): any {
+    // if order fails, we set the nonces to dirty in case the nonces caused failure
+
+    if (error.message.includes('missing_asset_nonces')) {
+      this.noncesDirty = true
+      throw new MissingNonceError(error.message, signedPayload)
+    } else if (error.message.includes('Insufficient Funds')) {
+      throw new InsufficientFundsError(error.message, signedPayload)
+    }
+    throw new Error(
+      `Could not place order: ${JSON.stringify(
+        error
+      )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+    )
   }
 
   public async signDepositRequest(
@@ -1356,6 +1389,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
+    this.noncesDirty = true
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1398,7 +1432,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-
+    this.noncesDirty = true
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1527,38 +1561,46 @@ export class Client {
     }
   }
 
-  private async updateTradedAssetNonces():Promise<boolean> {
-    try{
-      const nonces = await this.getAssetNonces(this.tradedAssets);
-      const assetNonces = {};
-      nonces.getAssetsNonces.forEach(item => {
-        const nonceVal = item.nonces[0];
-        assetNonces[item.asset] = nonceVal;
-      });
-      this.assetNonces = assetNonces;
-  
+  private async updateTradedAssetNonces(): Promise<boolean> {
+    if (this.noncesDirty === false) {
       return true
-  
-    } catch(e) {
+    }
+
+    try {
+      const nonces = await this.getAssetNonces(this.tradedAssets)
+      const assetNonces = {}
+      nonces.getAssetsNonces.forEach(item => {
+        const nonceVal = item.nonces[0]
+        assetNonces[item.asset] = nonceVal
+      })
+      this.assetNonces = assetNonces
+      this.noncesDirty = false
+      return true
+    } catch (e) {
       console.log(`Could not update traded asset nonces: ${JSON.stringify(e)}`)
       return false
-    }    
+    }
   }
 
-  private createTimestamp32(): number  {
-    return Math.trunc(new Date().getTime() / 10) - 155000000000;
-  };
+  private createTimestamp32(): number {
+    return Math.trunc(new Date().getTime() / 10) - 155000000000
+  }
 
-  private async getNoncesForTrade(marketName: string, direction:OrderBuyOrSell): Promise<NonceSet> {
+  private async getNoncesForTrade(
+    marketName: string,
+    direction: OrderBuyOrSell
+  ): Promise<NonceSet> {
     try {
       const pairs = marketName.split('_')
       const unitA = pairs[0]
       const unitB = pairs[1]
 
-      if(! this.tradedAssets.includes(unitA)) {
+      if (!this.tradedAssets.includes(unitA)) {
+        this.noncesDirty = true
         this.tradedAssets.push(unitA)
       }
-      if(! this.tradedAssets.includes(unitB)) {
+      if (!this.tradedAssets.includes(unitB)) {
+        this.noncesDirty = true
         this.tradedAssets.push(unitB)
       }
 
@@ -1567,7 +1609,7 @@ export class Client {
       let nonceTo = this.assetNonces[unitA]
       let nonceFrom = this.assetNonces[unitB]
 
-      if( direction === OrderBuyOrSell.BUY) {
+      if (direction === OrderBuyOrSell.SELL) {
         nonceTo = this.assetNonces[unitB]
         nonceFrom = this.assetNonces[unitA]
       }
@@ -1577,7 +1619,7 @@ export class Client {
         nonceFrom,
         nonceOrder: this.createTimestamp32()
       }
-    } catch(e) {
+    } catch (e) {
       console.log(`Could not get nonce set: ${e}`)
       return e
     }
