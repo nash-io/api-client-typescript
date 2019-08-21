@@ -31,6 +31,10 @@ import {
   GET_ORDERS_FOR_MOVEMENT_QUERY,
   GetOrdersForMovementData
 } from '../queries/movement/getOrdersForMovementQuery'
+import {
+  USER_2FA_LOGIN_MUTATION,
+  TwoFactorLoginResponse
+} from '../mutations/account/twoFactorLoginMutation'
 
 import {
   GetStatesData,
@@ -205,6 +209,7 @@ export class Client {
    *
    * @param email
    * @param password
+   * @param twoFaCode (optional)
    * @returns
    *
    * Example
@@ -220,6 +225,7 @@ export class Client {
   public async login(
     email: string,
     password: string,
+    twoFaCode?: string,
     walletIndices: { [key: string]: number } = { neo: 1, eth: 1 },
     presetWallets?: object
   ): Promise<boolean> {
@@ -230,7 +236,6 @@ export class Client {
       email,
       password: toHex(keys.authKey)
     }
-
     const response = await fetch(loginUrl, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
@@ -247,6 +252,10 @@ export class Client {
 
     this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
+
+    if (twoFaCode !== undefined) {
+      this.account = await this.doTwoFactorLogin(twoFaCode)
+    }
 
     if (this.account.encrypted_secret_key === null) {
       console.log(
@@ -290,6 +299,31 @@ export class Client {
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
 
     return true
+  }
+
+  private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
+    const twoFaResult = await this.gql.query({
+      query: USER_2FA_LOGIN_MUTATION,
+      variables: { code: twoFaCode }
+    })
+    try {
+      const result = twoFaResult.data.twoFactorLogin as TwoFactorLoginResponse
+      const twoFAaccount = result.account
+      const wallets = {}
+      twoFAaccount.wallets.forEach(wallet => {
+        wallets[wallet.blockchain.toLowerCase()] = wallet.chainIndex
+      })
+      this.walletIndices = wallets
+      return {
+        encrypted_secret_key: twoFAaccount.encryptedSecretKey,
+        encrypted_secret_key_nonce: twoFAaccount.encryptedSecretKeyNonce,
+        encrypted_secret_key_tag: twoFAaccount.encryptedSecretKeyTag
+      }
+    } catch (e) {
+      throw new Error(
+        `Could not login with 2fa: ${JSON.stringify(twoFaResult.errors)}`
+      )
+    }
   }
 
   /**

@@ -1,6 +1,27 @@
 import { Asset, CurrencyAccountVolume } from '../types'
 import { CryptoCurrency } from '../constants/currency'
 
+export interface AccountWallet {
+  address: string
+  blockchain: string
+  chainIndex: number
+  publicKey: string
+}
+
+export interface TwoFactorLoginAccount {
+  creatingAccount: boolean
+  email: string
+  encryptedSecretKey: string
+  encryptedSecretKeyTag: string
+  encryptedSecretKeyNonce: string
+  id: string
+  loginErrorCount: number
+  twoFactor: boolean
+  twoFactorErrorCount: number
+  verified: boolean
+  wallets: AccountWallet[]
+}
+
 export interface AccountPortfolioBalance {
   allocation: number
   asset: Asset
