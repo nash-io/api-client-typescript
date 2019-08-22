@@ -94,10 +94,14 @@ export function normalizeAmountForMarket(
   market: Market
 ): CurrencyAmount {
   const precision = getPrecision(market.minTradeSize)
-  const normalizedAmount = normalizeAmountForMarketPrecision(
+  let normalizedAmount = normalizeAmountForMarketPrecision(
     amount.amount,
     precision
   )
+  if (normalizedAmount.substr(-1) === '.') {
+    normalizedAmount = normalizedAmount.slice(0, -1)
+  }
+
   return createCurrencyAmount(normalizedAmount, amount.currency)
 }
 
@@ -106,10 +110,14 @@ export function normalizePriceForMarket(
   market: Market
 ): CurrencyPrice {
   const precision = getPrecision(market.minTickSize)
-  const normalizedPrice = normalizeAmountForMarketPrecision(
+  let normalizedPrice = normalizeAmountForMarketPrecision(
     price.amount,
     precision
   )
+  if (normalizedPrice.substr(-1) === '.') {
+    normalizedPrice = normalizedPrice.slice(0, -1)
+  }
+
   return createCurrencyPrice(normalizedPrice, price.currencyA, price.currencyB)
 }
 

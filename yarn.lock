@@ -657,10 +657,10 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/nash-protocol@2.1.20":
-  version "2.1.20"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-2.1.20.tgz#efea651d9bd75a478a4838aa0f407fc7770ab746"
-  integrity sha512-E0a/ZuOFQcl5Kjnbj+nt1g1ZAjxiCRy/Qq0EK2gqONoEM+c08ovQLleySnEElAtZl4KNZovv5dkclMP+/mSXEQ==
+"@neon-exchange/nash-protocol@2.1.26":
+  version "2.1.26"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-2.1.26.tgz#5d01599419de8d86beae51ffaaa9e621a76f7020"
+  integrity sha512-x9Vs4zBK8YWsGGH6/jmm2SO/hIhk9TeKjWuUgdOYv8DSP0EOpOx6UYLVbMrV1dJKM3IHExEgX5BAaZm16XOGfw==
   dependencies:
     "@cityofzion/neon-core" "^4.5.2"
     "@cityofzion/neon-js" "^4.5.2"

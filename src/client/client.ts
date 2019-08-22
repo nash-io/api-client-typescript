@@ -1124,12 +1124,11 @@ export class Client {
     )
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
-
     try {
       const result = await this.gql.mutate({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1182,7 +1181,6 @@ export class Client {
       nonceOrder = nonceSet.nonceOrder
     }
 
-
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1200,7 +1198,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_MARKET_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1269,7 +1267,6 @@ export class Client {
       nonceOrder = nonceSet.nonceOrder
     }
 
-
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1300,7 +1297,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1379,7 +1376,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
