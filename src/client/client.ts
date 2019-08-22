@@ -13,6 +13,7 @@ import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder'
 import { GET_MOVEMENT } from '../queries/movement/getMovement'
 import { GET_TICKER } from '../queries/market/getTicker'
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder'
+import { CANCEL_ALL_ORDERS_MUTATION } from '../mutations/orders/cancelAllOrders'
 import { LIST_CANDLES } from '../queries/candlestick/listCandles'
 import { LIST_TICKERS } from '../queries/market/listTickers'
 import { LIST_TRADES } from '../queries/market/listTrades'
@@ -122,7 +123,9 @@ import {
   SyncState,
   createSyncStatesParams,
   bufferize,
-  createSignStatesParams
+  createSignStatesParams,
+  createTimestamp,
+  SigningPayloadID
 } from '@neon-exchange/nash-protocol'
 
 /**
@@ -1044,6 +1047,46 @@ export class Client {
       }
     })
     const cancelledOrder = result.data.cancelOrder as CancelledOrder
+
+    return cancelledOrder
+  }
+
+  /**
+   * Cancel all orders by market name
+   *
+   * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const result = await nash.cancelAllOrders('neo_gas')
+   * console.log(result)
+   * ```
+   */
+  public async cancelAllOrders(marketName?: string): Promise<boolean> {
+    let cancelAllOrderParams: any = {
+      timestamp: createTimestamp()
+    }
+
+    if (marketName !== undefined) {
+      cancelAllOrderParams = {
+        marketName,
+        timestamp: createTimestamp()
+      }
+    }
+    const payloadAndKind = {
+      kind: SigningPayloadID.cancelAllOrdersPayload,
+      payload: cancelAllOrderParams
+    }
+    const signedPayload = await this.signPayload(payloadAndKind)
+    const result = await this.gql.mutate({
+      mutation: CANCEL_ALL_ORDERS_MUTATION,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+    const cancelledOrder = result.data.cancelAllOrders.accepted
 
     return cancelledOrder
   }
