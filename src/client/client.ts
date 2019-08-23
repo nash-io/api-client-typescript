@@ -138,8 +138,8 @@ export interface ClientOptions {
 }
 
 export interface NonceSet {
-  nonceFrom: number
-  nonceTo: number
+  noncesFrom: number[]
+  noncesTo: number[]
   nonceOrder: number
 }
 
@@ -156,7 +156,7 @@ export class Client {
   public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []
-  private assetNonces: { [key: string]: number }
+  private assetNonces: { [key: string]: number[] }
   private noncesDirty: boolean = true
 
   /**
@@ -911,6 +911,35 @@ export class Client {
   }
 
   /**
+   * Gets Balance States, Signs Balance States, then Syncs Balance states to the server
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getSignSyncStates = await nash.getSignAndSyncStates()
+   * console.log(getSignSyncStates)
+   * ```
+   */
+  public async getSignAndSyncStates(): Promise<boolean> {
+    const states: GetStatesData = await this.getStates()
+    if (
+      states.getStates.recycledOrders.length === 0 &&
+      states.getStates.states.length === 0
+    ) {
+      return true
+    }
+    const signResult = (await this.signStates(states)) as SignStatesData
+    if (signResult.signStates === null) {
+      console.error('Error submitting signed states')
+      return true
+    }
+
+    const syncResult = await this.syncStates(signResult)
+    return syncResult
+  }
+
+  /**
    * List all states and open orders to be signed for settlement
    *
    * @returns
@@ -1130,18 +1159,18 @@ export class Client {
     cancellationPolicy: OrderCancellationPolicy,
     limitPrice: CurrencyPrice,
     marketName: string,
-    nonceFrom?: number,
-    nonceTo?: number,
+    noncesFrom?: number[],
+    noncesTo?: number[],
     nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
     if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if (nonceTo === undefined || nonceTo === undefined) {
+    if (noncesFrom === undefined || noncesTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      nonceFrom = nonceSet.nonceFrom
-      nonceTo = nonceSet.nonceTo
+      noncesFrom = nonceSet.noncesFrom
+      noncesTo = nonceSet.noncesTo
       nonceOrder = nonceSet.nonceOrder
     }
 
@@ -1160,19 +1189,18 @@ export class Client {
       cancellationPolicy,
       normalizedLimitPrice,
       marketName,
-      nonceFrom,
-      nonceTo,
+      noncesFrom,
+      noncesTo,
       nonceOrder,
       cancelAt
     )
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
-
     try {
       const result = await this.gql.mutate({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1210,17 +1238,18 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string,
-    nonceFrom?: number,
-    nonceTo?: number,
+    noncesFrom?: number[],
+    noncesTo?: number[],
     nonceOrder?: number
   ): Promise<OrderPlaced> {
     if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if (nonceTo === undefined || nonceTo === undefined) {
+
+    if (noncesFrom === undefined || noncesTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      nonceFrom = nonceSet.nonceFrom
-      nonceTo = nonceSet.nonceTo
+      noncesFrom = nonceSet.noncesFrom
+      noncesTo = nonceSet.noncesTo
       nonceOrder = nonceSet.nonceOrder
     }
 
@@ -1232,8 +1261,8 @@ export class Client {
       normalizedAmount,
       buyOrSell,
       marketName,
-      nonceFrom,
-      nonceTo,
+      noncesFrom,
+      noncesTo,
       nonceOrder
     )
     const signedPayload = await this.signPayload(placeMarketOrderParams)
@@ -1241,7 +1270,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_MARKET_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1295,18 +1324,18 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     stopPrice: CurrencyPrice,
-    nonceFrom?: number,
-    nonceTo?: number,
+    noncesFrom?: number[],
+    noncesTo?: number[],
     nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
     if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if (nonceTo === undefined || nonceTo === undefined) {
+    if (noncesFrom === undefined || noncesTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      nonceFrom = nonceSet.nonceFrom
-      nonceTo = nonceSet.nonceTo
+      noncesFrom = nonceSet.noncesFrom
+      noncesTo = nonceSet.noncesTo
       nonceOrder = nonceSet.nonceOrder
     }
 
@@ -1330,8 +1359,8 @@ export class Client {
       normalizedLimitPrice,
       marketName,
       normalizedStopPrice,
-      nonceFrom,
-      nonceTo,
+      noncesFrom,
+      noncesTo,
       nonceOrder,
       cancelAt
     )
@@ -1340,7 +1369,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1382,17 +1411,17 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string,
     stopPrice: CurrencyPrice,
-    nonceTo?: number,
-    nonceFrom?: number,
+    noncesTo?: number[],
+    noncesFrom?: number[],
     nonceOrder?: number
   ): Promise<OrderPlaced> {
     if (nonceOrder === undefined) {
       nonceOrder = this.createTimestamp32()
     }
-    if (nonceTo === undefined || nonceTo === undefined) {
+    if (noncesFrom === undefined || noncesTo === undefined) {
       const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      nonceFrom = nonceSet.nonceFrom
-      nonceTo = nonceSet.nonceTo
+      noncesFrom = nonceSet.noncesFrom
+      noncesTo = nonceSet.noncesTo
       nonceOrder = nonceSet.nonceOrder
     }
 
@@ -1410,8 +1439,8 @@ export class Client {
       buyOrSell,
       marketName,
       normalizedStopPrice,
-      nonceFrom,
-      nonceTo,
+      noncesFrom,
+      noncesTo,
       nonceOrder
     )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
@@ -1419,7 +1448,7 @@ export class Client {
       const result = await this.gql.mutate({
         mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
         variables: {
-          payload: signedPayload.payload,
+          payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
@@ -1647,8 +1676,7 @@ export class Client {
       const nonces = await this.getAssetNonces(this.tradedAssets)
       const assetNonces = {}
       nonces.getAssetsNonces.forEach(item => {
-        const nonceVal = item.nonces[0]
-        assetNonces[item.asset] = nonceVal
+        assetNonces[item.asset] = item.nonces
       })
       this.assetNonces = assetNonces
       this.noncesDirty = false
@@ -1683,17 +1711,17 @@ export class Client {
 
       await this.updateTradedAssetNonces()
 
-      let nonceTo = this.assetNonces[unitA]
-      let nonceFrom = this.assetNonces[unitB]
+      let noncesTo = this.assetNonces[unitA]
+      let noncesFrom = this.assetNonces[unitB]
 
       if (direction === OrderBuyOrSell.SELL) {
-        nonceTo = this.assetNonces[unitB]
-        nonceFrom = this.assetNonces[unitA]
+        noncesTo = this.assetNonces[unitB]
+        noncesFrom = this.assetNonces[unitA]
       }
 
       return {
-        nonceTo,
-        nonceFrom,
+        noncesTo,
+        noncesFrom,
         nonceOrder: this.createTimestamp32()
       }
     } catch (e) {
