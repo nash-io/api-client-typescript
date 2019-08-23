@@ -908,6 +908,35 @@ export class Client {
   }
 
   /**
+   * Gets Balance States, Signs Balance States, then Syncs Balance states to the server
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const getSignSyncStates = await nash.getSignAndSyncStates()
+   * console.log(getSignSyncStates)
+   * ```
+   */
+  public async getSignAndSyncStates(): Promise<boolean> {
+    const states: GetStatesData = await this.getStates()
+    if (
+      states.getStates.recycledOrders.length === 0 &&
+      states.getStates.states.length === 0
+    ) {
+      return true
+    }
+    const signResult = (await this.signStates(states)) as SignStatesData
+    if (signResult.signStates === null) {
+      console.error('Error submitting signed states')
+      return true
+    }
+
+    const syncResult = await this.syncStates(signResult)
+    return syncResult
+  }
+
+  /**
    * List all states and open orders to be signed for settlement
    *
    * @returns
