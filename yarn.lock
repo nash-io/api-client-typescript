@@ -657,10 +657,10 @@
     "@types/istanbul-lib-coverage" "^2.0.0"
     "@types/yargs" "^12.0.9"
 
-"@neon-exchange/nash-protocol@2.1.28":
-  version "2.1.28"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-2.1.28.tgz#35fd4a0d32d3a2c8be69a938cbb87a2bb937ebcc"
-  integrity sha512-aC9hYcorf8aPbYCYljOPr1HOgN7uCgNpdAK6kYTFvFLbC8IpNWdp+0vzj9BzFpV7hzXdYgQ5rnkjc2PJwqNMjA==
+"@neon-exchange/nash-protocol@2.1.31":
+  version "2.1.31"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-2.1.31.tgz#825852fb689c693f0db5cbbc5b1cf999a9dbc23b"
+  integrity sha512-jb5n6B8HSvdak8mudgbd6jfZjkOzF9x4CBFZN36hF7bYAAlSF+00mu3aijBslnK1ih9Gd9tn5+qY7+hCz5gKDg==
   dependencies:
     "@cityofzion/neon-core" "^4.5.2"
     "@cityofzion/neon-js" "^4.5.2"
@@ -1528,10 +1528,10 @@ bindings@^1.2.1, bindings@^1.3.0, bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bip174@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/bip174/-/bip174-1.0.0.tgz#c2061ae192064a419498d57a96a47287f75f0343"
-  integrity sha512-AaoWrkYtv6A2y8H+qzs6NvRWypzNbADT8PQGpM9rnP+jLzeol+uzhe3Myeuq/dwrHYtmsW8V71HmX2oXhQGagw==
+bip174@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/bip174/-/bip174-1.0.1.tgz#858a587f9529e22ee9b0572fd884e5783696824d"
+  integrity sha512-Mq2aFs1TdMfxBpYPg7uzjhsiXbAtoVq44TNjEWtvuZBiBgc3m7+n55orYMtTAxdg7jWbL4DtH0MKocJER4xERQ==
 
 bip32@^2.0.3, bip32@^2.0.4:
   version "2.0.4"
@@ -1570,13 +1570,13 @@ bitcoin-ops@^1.3.0, bitcoin-ops@^1.4.0:
   integrity sha512-pef6gxZFztEhaE9RY9HmWVmiIHqCb2OyS4HPKkpc6CIiiOa3Qmuoylxc5P2EkU3w+5eTSifI9SEZC88idAIGow==
 
 bitcoinjs-lib@^5.0.5:
-  version "5.1.3"
-  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-5.1.3.tgz#d3810ca2935c75d8a8189c9e92c2c574059153ba"
-  integrity sha512-lvFQGWv9CMFetWewhfpUIbcYThRwo80rzhjPztorS4uMo27DwcdPAMKs9dYSkKpJvEZwPuIrUYSuT/+Hs1pZjg==
+  version "5.1.5"
+  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-5.1.5.tgz#726ba73d2b4976512d70a538cb03288acfcbe757"
+  integrity sha512-VAcdXH7cNocWwEF2dAVTozOZtDHB+FVZH9tc9OLbUKzRLiYxb3C5lvAzBmd1QJR3CtPRJELgw049MvM5fs2dow==
   dependencies:
     "@types/node" "10.12.18"
     bech32 "^1.1.2"
-    bip174 "^1.0.0"
+    bip174 "^1.0.1"
     bip32 "^2.0.4"
     bip66 "^1.1.0"
     bitcoin-ops "^1.4.0"
@@ -1722,10 +1722,10 @@ buffer-xor@^1.0.3:
   resolved "https://registry.yarnpkg.com/buffer-xor/-/buffer-xor-1.0.3.tgz#26e61ed1422fb70dd42e6e36729ed51d855fe8d9"
   integrity sha1-JuYe0UIvtw3ULm42cp7VHYVf6Nk=
 
-buffer@5.2.1:
-  version "5.2.1"
-  resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.2.1.tgz#dd57fa0f109ac59c602479044dca7b8b3d0b71d6"
-  integrity sha512-c+Ko0loDaFfuPWiL02ls9Xd3GO3cPVmUobQ6t3rXNUk304u6hGq+8N/kFi+QEIKhzK3uwolVhLzszmfLmMLnqg==
+buffer@5.4.0:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/buffer/-/buffer-5.4.0.tgz#33294f5c1f26e08461e528b69fa06de3c45cbd8c"
+  integrity sha512-Xpgy0IwHK2N01ncykXTy6FpCWuM+CJSHoPVBLyNqyrWxsedpLvwsYUhf0ME3WRFNUhos0dMamz9cOS/xRDtU5g==
   dependencies:
     base64-js "^1.0.2"
     ieee754 "^1.1.4"
@@ -6552,11 +6552,11 @@ sha.js@^2.4.0, sha.js@^2.4.11, sha.js@^2.4.8:
     safe-buffer "^5.0.1"
 
 sha3@^2.0.4:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/sha3/-/sha3-2.0.6.tgz#bba49db667d151b76fb17b98757cd9a659fc53eb"
-  integrity sha512-bXF1+bl5Lw7EdxDJx/bJsDMnREPmKySMJdOa5j1xv66+prKuTnflAE5wrGXZ9UfdfvjBaVEA0LcAkKJHKXTF/A==
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/sha3/-/sha3-2.0.7.tgz#02ed270099647cbcc681b064ba091af72f561f35"
+  integrity sha512-7Qsj/0J3pxCWfmyuDbTZWoKNSKY/rg2eecNRvTYE4EAPJ11Uh6xuEObyCG295AqgrtOjzdDbfwtGLDY52h11tA==
   dependencies:
-    buffer "5.2.1"
+    buffer "5.4.0"
 
 shebang-command@^1.2.0:
   version "1.2.0"
@@ -7545,9 +7545,9 @@ validate-npm-package-license@^3.0.1:
     spdx-expression-parse "^3.0.0"
 
 varuint-bitcoin@^1.0.4:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/varuint-bitcoin/-/varuint-bitcoin-1.1.0.tgz#7a343f50537607af6a3059312b9782a170894540"
-  integrity sha512-jCEPG+COU/1Rp84neKTyDJQr478/hAfVp5xxYn09QEH0yBjbmPeMfuuQIrp+BUD83hybtYZKhr5elV3bvdV1bA==
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/varuint-bitcoin/-/varuint-bitcoin-1.1.2.tgz#e76c138249d06138b480d4c5b40ef53693e24e92"
+  integrity sha512-4EVb+w4rx+YfVM32HQX42AbbT7/1f5zwAYhIujKXKk8NQK+JfRVl3pqT3hjNn/L+RstigmGGKVwHA/P0wgITZw==
   dependencies:
     safe-buffer "^5.1.1"
 
