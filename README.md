@@ -2,7 +2,7 @@
 
 Official TypeScript client for interacting with the Nash exchange.
 
-To test your integrations Nash provides the public sandbox environment at https://app.sandbox.nash.io .
+To test your integrations Nash provides the public sandbox environment at https://app.sandbox.nash.io, when creating an account on sandbox use the referral code DEMORC.
 
 NOTE: In the sandbox testnet funds are sent to new accounts automatically, the environment is auto-reset every 4 days.
 
