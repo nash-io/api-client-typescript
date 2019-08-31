@@ -2,7 +2,9 @@
 
 Official TypeScript client for interacting with the Nash exchange.
 
-To test your integrations Nash provides the public sandbox environment.
+To test your integrations Nash provides the public sandbox environment at https://app.sandbox.nash.io .
+
+NOTE: In the sandbox testnet funds are sent to new accounts automatically, the environment is auto-reset every 4 days.
 
 ```typescript
   apiURI: 'https://app.sandbox.nash.io/api',
