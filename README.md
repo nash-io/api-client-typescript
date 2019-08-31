@@ -2,6 +2,13 @@
 
 Official TypeScript client for interacting with the Nash exchange.
 
+To test your integrations Nash provides the public sandbox environment.
+
+```typescript
+  apiURI: 'https://app.sandbox.nash.io/api',
+  casURI: 'https://app.sandbox.nash.io/api/graphql'
+```
+
 ## Getting Started
 
 To install, download a release bundle, or install it from NPM:
