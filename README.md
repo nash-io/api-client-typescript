@@ -1,24 +1,23 @@
 # api-client-typescript
 
-Official TypeScript client for interacting with the Nash exchange.
+Official TypeScript client for interacting with the Nash Exchange.
 
-To test your integrations Nash provides the public sandbox environment at https://app.sandbox.nash.io, when creating an account on sandbox use the referral code DEMORC.
+To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io. When creating an account on the sandbox, use the referral code `DEMORC`.
 
-NOTE: In the sandbox testnet funds are sent to new accounts automatically, the environment is auto-reset every 4 days.
+NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The environment is automatically reset every four days.
 
 ```typescript
   apiURI: 'https://app.sandbox.nash.io/api',
   casURI: 'https://app.sandbox.nash.io/api/graphql'
 ```
 
-## Getting Started
+## Getting started
 
-To install, download a release bundle, or install it from NPM:
+To install, download a release bundle or install it from NPM:
 
     yarn add @neon-exchange/api-client-typescript
 
-If you install it from a release bundle (or git), install the dependencies and run `yarn link`, in order to
-use it just like the module from NPM:
+If you install it from a release bundle (or Git), install the dependencies and run `yarn link` in order to use it just like the module from NPM:
 
   unzip api-client-ts-task-bundle.zip
   cd api-client-ts-task-bundle
@@ -44,7 +43,7 @@ console.log(markets);
 
 ## Authentication
 
-Most of the Nash API requests require the client to be authenticated, this is needed to sign the payloads that are being send over the wire.
+Most of Nash API requests require the client to be authenticated. This is needed to sign the payloads being sent over the wire.
 
 ```typescript
 import { Client, CryptoCurrency } from '@neon-exchange/api-client-typescript';
@@ -72,4 +71,4 @@ const run = async () => {
 run();
 ```
 
-## For more function docs, see [`docs/classes/_client_client_.client.html`](./classes/_client_client_.client.html)
+## For more function documentation, see [`docs/classes/_client_client_.client.html`](./classes/_client_client_.client.html)
