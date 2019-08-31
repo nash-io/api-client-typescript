@@ -43,7 +43,7 @@ console.log(markets);
 
 ## Authentication
 
-Most of Nash API requests require the client to be authenticated. This is needed to sign the payloads being sent over the wire.
+Most Nash API requests require the client to be authenticated. This is needed to sign the payloads being sent over the wire.
 
 ```typescript
 import { Client, CryptoCurrency } from '@neon-exchange/api-client-typescript';
