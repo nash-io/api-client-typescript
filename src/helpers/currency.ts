@@ -39,12 +39,24 @@ export function createCurrencyPrice(
 }
 
 /*
-  Input: '1.0e-6' | '0.0001
+  Input: '1.0e-6' | '0.000001'
   Output: 6
-  Zero is special case because log10(0) is -Infinity
  */
-export const getPrecision = (exp: string): number =>
-  +exp === 0 ? 0 : Math.abs(Math.log10(+exp))
+export const getPrecisionFromMarketString = (exp: string): number => {
+  let stringValue: string = exp
+  if (exp.indexOf('e') > -1) {
+    // coerce to number to deal with scientific notation
+    const numberValue: number = +exp
+    // now back to string. this is so dirty
+    stringValue = numberValue + ''
+  }
+
+  const split = stringValue.split('.')
+  if (split.length === 1) {
+    return 0
+  }
+  return split[1].length
+}
 
 /**
  * Normalizes the given amount based on the given trade size.
@@ -93,13 +105,32 @@ export function normalizeAmountForMarket(
   amount: CurrencyAmount,
   market: Market
 ): CurrencyAmount {
-  const precision = getPrecision(market.minTradeSize)
+  let precision = getPrecisionFromMarketString(market.minTradeIncrement)
+  let minAmount = market.minTradeSize
+
+  if (amount.currency === market.bUnit) {
+    precision = getPrecisionFromMarketString(market.minTradeIncrementB)
+    minAmount = market.minTradeSizeB
+  }
+
   let normalizedAmount = normalizeAmountForMarketPrecision(
     amount.amount,
     precision
   )
   if (normalizedAmount.substr(-1) === '.') {
     normalizedAmount = normalizedAmount.slice(0, -1)
+  }
+
+  if (parseFloat(normalizedAmount) < parseFloat(minAmount)) {
+    console.warn(
+      `Amount ${normalizedAmount} for currency ${
+        amount.currency
+      } is less than min amount for market: ${minAmount}.  Defaulting to min amount`
+    )
+    normalizedAmount = normalizeAmountForMarketPrecision(
+      minAmount + '',
+      precision
+    )
   }
 
   return createCurrencyAmount(normalizedAmount, amount.currency)
@@ -109,7 +140,12 @@ export function normalizePriceForMarket(
   price: CurrencyPrice,
   market: Market
 ): CurrencyPrice {
-  const precision = getPrecision(market.minTickSize)
+  let minTradeIncrementToUse = market.minTradeIncrement
+  if (price.currencyA === market.bUnit) {
+    minTradeIncrementToUse = market.minTradeIncrementB
+  }
+
+  const precision = getPrecisionFromMarketString(minTradeIncrementToUse)
   let normalizedPrice = normalizeAmountForMarketPrecision(
     price.amount,
     precision
@@ -121,16 +157,21 @@ export function normalizePriceForMarket(
   return createCurrencyPrice(normalizedPrice, price.currencyA, price.currencyB)
 }
 
-export function mapMarketsForGoClient(markets: {
+export function mapMarketsForNashProtocol(markets: {
   [key: string]: Market
 }): MarketData {
   const marketData = {}
   for (const it of Object.keys(markets)) {
     const market = markets[it]
     marketData[market.name] = {
-      minTickSize: getPrecision(market.minTickSize),
-      minTradeSize: getPrecision(market.minTradeSize),
-      minTradeIncrement: getPrecision(market.minTradeSize)
+      minTickSize: getPrecisionFromMarketString(market.minTickSize),
+      minTradeSize: getPrecisionFromMarketString(market.minTradeSize),
+      minTradeIncrementA: getPrecisionFromMarketString(
+        market.minTradeIncrement
+      ),
+      minTradeIncrementB: getPrecisionFromMarketString(
+        market.minTradeIncrementB
+      )
     }
   }
 

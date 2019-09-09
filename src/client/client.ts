@@ -47,9 +47,9 @@ import {
 import { SALT } from '../config'
 import { FiatCurrency } from '../constants/currency'
 import {
-  mapMarketsForGoClient,
   normalizePriceForMarket,
-  normalizeAmountForMarket
+  normalizeAmountForMarket,
+  mapMarketsForNashProtocol
 } from '../helpers'
 import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
@@ -284,7 +284,7 @@ export class Client {
       walletIndices: this.walletIndices,
       encryptionKey: keys.encryptionKey,
       aead,
-      marketData: mapMarketsForGoClient(this.marketData),
+      marketData: mapMarketsForNashProtocol(this.marketData),
       assetData: this.assetData
     }
 
@@ -922,21 +922,26 @@ export class Client {
    * ```
    */
   public async getSignAndSyncStates(): Promise<boolean> {
-    const states: GetStatesData = await this.getStates()
-    if (
-      states.getStates.recycledOrders.length === 0 &&
-      states.getStates.states.length === 0
-    ) {
-      return true
-    }
-    const signResult = (await this.signStates(states)) as SignStatesData
-    if (signResult.signStates === null) {
-      console.error('Error submitting signed states')
-      return true
-    }
+    try {
+      const states: GetStatesData = await this.getStates()
+      if (
+        states.getStates.recycledOrders.length === 0 &&
+        states.getStates.states.length === 0
+      ) {
+        return true
+      }
+      const signResult = (await this.signStates(states)) as SignStatesData
+      if (signResult.signStates === null) {
+        console.error('Error submitting signed states')
+        return true
+      }
 
-    const syncResult = await this.syncStates(signResult)
-    return syncResult
+      const syncResult = await this.syncStates(signResult)
+      return syncResult
+    } catch (error) {
+      console.error(`Could not get/sign/sync states: ${error}`)
+      return false
+    }
   }
 
   /**
@@ -954,16 +959,21 @@ export class Client {
     const getStatesParams = createGetStatesParams()
     const signedPayload = await this.signPayload(getStatesParams)
 
-    const result = await this.gql.query({
-      query: GET_STATES_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-    const getStatesData = result.data as GetStatesData
-
-    return getStatesData
+    try {
+      const result = await this.gql.query({
+        query: GET_STATES_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      })
+      const getStatesData = result.data as GetStatesData
+  
+      return getStatesData  
+    } catch(e) {
+      console.error("Could not get states: ", e)
+      return e
+    }
   }
 
   /**
@@ -1002,16 +1012,21 @@ export class Client {
 
     const signedStates: any = await this.signPayload(signStateListPayload)
 
-    const result = await this.gql.query({
-      query: SIGN_STATES_MUTATION,
-      variables: {
-        payload: signedStates.signedPayload,
-        signature: signedStates.signature
-      }
-    })
-
-    const signStatesData = result.data as SignStatesData
-    return signStatesData
+    try {
+      const result = await this.gql.query({
+        query: SIGN_STATES_MUTATION,
+        variables: {
+          payload: signedStates.signedPayload,
+          signature: signedStates.signature
+        }
+      })
+  
+      const signStatesData = result.data as SignStatesData
+      return signStatesData  
+    } catch(e) {
+      console.error("Could not submit sign states data to graphql: ", e)
+      return e
+    }
   }
 
   /**
@@ -1036,17 +1051,23 @@ export class Client {
     )
     const syncStatesParams = createSyncStatesParams(stateList)
     const signedPayload = await this.signPayload(syncStatesParams)
-    const result = await this.gql.query({
-      query: SYNC_STATES_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-    const syncStatesResult = result.data.syncStates.result
 
-    this.noncesDirty = true
-    return syncStatesResult
+    try {
+      const result = await this.gql.query({
+        query: SYNC_STATES_MUTATION,
+        variables: {
+          payload: signedPayload.payload,
+          signature: signedPayload.signature
+        }
+      })
+      const syncStatesResult = result.data.syncStates.result
+  
+      this.noncesDirty = true
+      return syncStatesResult  
+    } catch(e) {
+      console.error("Could not query graphql for sync states: ", e)
+      return e
+    }
   }
 
   /**
@@ -1159,20 +1180,12 @@ export class Client {
     cancellationPolicy: OrderCancellationPolicy,
     limitPrice: CurrencyPrice,
     marketName: string,
-    noncesFrom?: number[],
-    noncesTo?: number[],
-    nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    if (nonceOrder === undefined) {
-      nonceOrder = this.createTimestamp32()
-    }
-    if (noncesFrom === undefined || noncesTo === undefined) {
-      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      noncesFrom = nonceSet.noncesFrom
-      noncesTo = nonceSet.noncesTo
-      nonceOrder = nonceSet.nonceOrder
-    }
+    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+      marketName,
+      buyOrSell
+    )
 
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1237,21 +1250,12 @@ export class Client {
   public async placeMarketOrder(
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
-    marketName: string,
-    noncesFrom?: number[],
-    noncesTo?: number[],
-    nonceOrder?: number
+    marketName: string
   ): Promise<OrderPlaced> {
-    if (nonceOrder === undefined) {
-      nonceOrder = this.createTimestamp32()
-    }
-
-    if (noncesFrom === undefined || noncesTo === undefined) {
-      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      noncesFrom = nonceSet.noncesFrom
-      noncesTo = nonceSet.noncesTo
-      nonceOrder = nonceSet.nonceOrder
-    }
+    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+      marketName,
+      buyOrSell
+    )
 
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1324,20 +1328,12 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     stopPrice: CurrencyPrice,
-    noncesFrom?: number[],
-    noncesTo?: number[],
-    nonceOrder?: number,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    if (nonceOrder === undefined) {
-      nonceOrder = this.createTimestamp32()
-    }
-    if (noncesFrom === undefined || noncesTo === undefined) {
-      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      noncesFrom = nonceSet.noncesFrom
-      noncesTo = nonceSet.noncesTo
-      nonceOrder = nonceSet.nonceOrder
-    }
+    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+      marketName,
+      buyOrSell
+    )
 
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1410,20 +1406,12 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string,
-    stopPrice: CurrencyPrice,
-    noncesTo?: number[],
-    noncesFrom?: number[],
-    nonceOrder?: number
+    stopPrice: CurrencyPrice
   ): Promise<OrderPlaced> {
-    if (nonceOrder === undefined) {
-      nonceOrder = this.createTimestamp32()
-    }
-    if (noncesFrom === undefined || noncesTo === undefined) {
-      const nonceSet = await this.getNoncesForTrade(marketName, buyOrSell)
-      noncesFrom = nonceSet.noncesFrom
-      noncesTo = nonceSet.noncesTo
-      nonceOrder = nonceSet.nonceOrder
-    }
+    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+      marketName,
+      buyOrSell
+    )
 
     const normalizedAmount = normalizeAmountForMarket(
       amount,
@@ -1585,7 +1573,7 @@ export class Client {
       walletIndices: this.walletIndices,
       encryptionKey,
       aead,
-      marketData: mapMarketsForGoClient(this.marketData),
+      marketData: mapMarketsForNashProtocol(this.marketData),
       assetData: this.assetData
     }
 
