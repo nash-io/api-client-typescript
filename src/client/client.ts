@@ -1301,9 +1301,6 @@ export class Client {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
         if (updateNoncesOk) {
-          console.info(
-            'Updated nonces due to missing nonces, now retrying order'
-          )
           return await this.placeMarketOrder(amount, buyOrSell, marketName)
         }
       }
@@ -1400,9 +1397,6 @@ export class Client {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
         if (updateNoncesOk) {
-          console.info(
-            'Updated nonces due to missing nonces, now retrying order'
-          )
           return await this.placeStopLimitOrder(
             allowTaker,
             amount,
@@ -1491,9 +1485,6 @@ export class Client {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
         if (updateNoncesOk) {
-          console.info(
-            'Updated nonces due to missing nonces, now retrying order'
-          )
           return await this.placeStopMarketOrder(
             amount,
             buyOrSell,
@@ -1508,8 +1499,6 @@ export class Client {
   }
 
   private handleOrderError(error: Error, signedPayload: any): any {
-    // if order fails, we set the nonces to dirty in case the nonces caused failure
-
     if (error.message.includes(MISSING_NONCES)) {
       this.updateTradedAssetNonces()
       throw new MissingNonceError(error.message, signedPayload)
