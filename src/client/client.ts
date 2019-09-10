@@ -143,6 +143,8 @@ export interface NonceSet {
   nonceOrder: number
 }
 
+export const MISSING_NONCES = 'missing_asset_nonces'
+
 export class Client {
   private opts: ClientOptions
   private initParams: InitParams
@@ -157,8 +159,7 @@ export class Client {
 
   private tradedAssets: string[] = []
   private assetNonces: { [key: string]: number[] }
-  private noncesDirty: boolean = true
-
+  private queryingNonces: boolean
   /**
    * Create a new instance of [[Client]]
    *
@@ -255,6 +256,7 @@ export class Client {
 
     this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
+    this.assetNonces = {}
 
     if (twoFaCode !== undefined) {
       this.account = await this.doTwoFactorLogin(twoFaCode)
@@ -968,10 +970,10 @@ export class Client {
         }
       })
       const getStatesData = result.data as GetStatesData
-  
-      return getStatesData  
-    } catch(e) {
-      console.error("Could not get states: ", e)
+
+      return getStatesData
+    } catch (e) {
+      console.error('Could not get states: ', e)
       return e
     }
   }
@@ -1020,11 +1022,11 @@ export class Client {
           signature: signedStates.signature
         }
       })
-  
+
       const signStatesData = result.data as SignStatesData
-      return signStatesData  
-    } catch(e) {
-      console.error("Could not submit sign states data to graphql: ", e)
+      return signStatesData
+    } catch (e) {
+      console.error('Could not submit sign states data to graphql: ', e)
       return e
     }
   }
@@ -1061,11 +1063,10 @@ export class Client {
         }
       })
       const syncStatesResult = result.data.syncStates.result
-  
-      this.noncesDirty = true
-      return syncStatesResult  
-    } catch(e) {
-      console.error("Could not query graphql for sync states: ", e)
+
+      return syncStatesResult
+    } catch (e) {
+      console.error('Could not query graphql for sync states: ', e)
       return e
     }
   }
@@ -1220,6 +1221,21 @@ export class Client {
       const orderPlaced = result.data.placeLimitOrder as OrderPlaced
       return orderPlaced
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        const updateNoncesOk = await this.updateTradedAssetNonces()
+        if (updateNoncesOk) {
+          return await this.placeLimitOrder(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            cancelAt
+          )
+        }
+      }
+
       return this.handleOrderError(e, signedPayload)
     }
   }
@@ -1282,6 +1298,15 @@ export class Client {
 
       return orderPlaced
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        const updateNoncesOk = await this.updateTradedAssetNonces()
+        if (updateNoncesOk) {
+          console.info(
+            'Updated nonces due to missing nonces, now retrying order'
+          )
+          return await this.placeMarketOrder(amount, buyOrSell, marketName)
+        }
+      }
       return this.handleOrderError(e, signedPayload)
     }
   }
@@ -1372,6 +1397,25 @@ export class Client {
       const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
       return orderPlaced
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        const updateNoncesOk = await this.updateTradedAssetNonces()
+        if (updateNoncesOk) {
+          console.info(
+            'Updated nonces due to missing nonces, now retrying order'
+          )
+          return await this.placeStopLimitOrder(
+            allowTaker,
+            amount,
+            buyOrSell,
+            cancellationPolicy,
+            limitPrice,
+            marketName,
+            stopPrice,
+            cancelAt
+          )
+        }
+      }
+
       return this.handleOrderError(e, signedPayload)
     }
   }
@@ -1444,6 +1488,21 @@ export class Client {
 
       return orderPlaced
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        const updateNoncesOk = await this.updateTradedAssetNonces()
+        if (updateNoncesOk) {
+          console.info(
+            'Updated nonces due to missing nonces, now retrying order'
+          )
+          return await this.placeStopMarketOrder(
+            amount,
+            buyOrSell,
+            marketName,
+            stopPrice
+          )
+        }
+      }
+
       return this.handleOrderError(e, signedPayload)
     }
   }
@@ -1451,8 +1510,8 @@ export class Client {
   private handleOrderError(error: Error, signedPayload: any): any {
     // if order fails, we set the nonces to dirty in case the nonces caused failure
 
-    if (error.message.includes('missing_asset_nonces')) {
-      this.noncesDirty = true
+    if (error.message.includes(MISSING_NONCES)) {
+      this.updateTradedAssetNonces()
       throw new MissingNonceError(error.message, signedPayload)
     } else if (error.message.includes('Insufficient Funds')) {
       throw new InsufficientFundsError(error.message, signedPayload)
@@ -1483,7 +1542,6 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    this.noncesDirty = true
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1526,7 +1584,6 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    this.noncesDirty = true
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1656,10 +1713,7 @@ export class Client {
   }
 
   private async updateTradedAssetNonces(): Promise<boolean> {
-    if (this.noncesDirty === false) {
-      return true
-    }
-
+    this.queryingNonces = true
     try {
       const nonces = await this.getAssetNonces(this.tradedAssets)
       const assetNonces = {}
@@ -1667,10 +1721,11 @@ export class Client {
         assetNonces[item.asset] = item.nonces
       })
       this.assetNonces = assetNonces
-      this.noncesDirty = false
+      this.queryingNonces = false
       return true
     } catch (e) {
       console.log(`Could not update traded asset nonces: ${JSON.stringify(e)}`)
+      this.queryingNonces = false
       return false
     }
   }
@@ -1689,15 +1744,24 @@ export class Client {
       const unitB = pairs[1]
 
       if (!this.tradedAssets.includes(unitA)) {
-        this.noncesDirty = true
         this.tradedAssets.push(unitA)
       }
       if (!this.tradedAssets.includes(unitB)) {
-        this.noncesDirty = true
         this.tradedAssets.push(unitB)
       }
 
-      await this.updateTradedAssetNonces()
+      if (
+        this.assetNonces[unitA] === undefined ||
+        this.assetNonces[unitB] === undefined
+      ) {
+        // if already querying, wait a bit
+        if (this.queryingNonces) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          return await this.getNoncesForTrade(marketName, direction)
+        } else {
+          await this.updateTradedAssetNonces()
+        }
+      }
 
       let noncesTo = this.assetNonces[unitA]
       let noncesFrom = this.assetNonces[unitB]
@@ -1713,7 +1777,7 @@ export class Client {
         nonceOrder: this.createTimestamp32()
       }
     } catch (e) {
-      console.log(`Could not get nonce set: ${e}`)
+      console.info(`Could not get nonce set: ${e}`)
       return e
     }
   }
