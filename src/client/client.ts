@@ -1024,6 +1024,15 @@ export class Client {
       })
 
       const signStatesData = result.data as SignStatesData
+
+      if (signStatesData.signStates === null) {
+        console.error(
+          'No states found from sign states submission.  Response is: ',
+          result
+        )
+        console.error('dumped result is: ', JSON.stringify(result))
+      }
+
       return signStatesData
     } catch (e) {
       console.error('Could not submit sign states data to graphql: ', e)
