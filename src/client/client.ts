@@ -159,7 +159,8 @@ export class Client {
 
   private tradedAssets: string[] = []
   private assetNonces: { [key: string]: number[] }
-  private queryingNonces: boolean
+  private currentOrderNonce: number
+
   /**
    * Create a new instance of [[Client]]
    *
@@ -257,6 +258,7 @@ export class Client {
     this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
     this.assetNonces = {}
+    this.currentOrderNonce = this.createTimestamp32()
 
     if (twoFaCode !== undefined) {
       this.account = await this.doTwoFactorLogin(twoFaCode)
@@ -302,6 +304,9 @@ export class Client {
     }
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
+
+    // after login we should always try to get asset nonces
+    await this.updateTradedAssetNonces()
 
     return true
   }
@@ -962,8 +967,8 @@ export class Client {
     const signedPayload = await this.signPayload(getStatesParams)
 
     try {
-      const result = await this.gql.query({
-        query: GET_STATES_MUTATION,
+      const result = await this.gql.mutate({
+        mutation: GET_STATES_MUTATION,
         variables: {
           payload: signedPayload.payload,
           signature: signedPayload.signature
@@ -1015,8 +1020,8 @@ export class Client {
     const signedStates: any = await this.signPayload(signStateListPayload)
 
     try {
-      const result = await this.gql.query({
-        query: SIGN_STATES_MUTATION,
+      const result = await this.gql.mutate({
+        mutation: SIGN_STATES_MUTATION,
         variables: {
           payload: signedStates.signedPayload,
           signature: signedStates.signature
@@ -1064,14 +1069,17 @@ export class Client {
     const signedPayload = await this.signPayload(syncStatesParams)
 
     try {
-      const result = await this.gql.query({
-        query: SYNC_STATES_MUTATION,
+      const result = await this.gql.mutate({
+        mutation: SYNC_STATES_MUTATION,
         variables: {
           payload: signedPayload.payload,
           signature: signedPayload.signature
         }
       })
       const syncStatesResult = result.data.syncStates.result
+
+      // after syncing states, we should always update asset nonces
+      await this.updateTradedAssetNonces()
 
       return syncStatesResult
     } catch (e) {
@@ -1192,7 +1200,7 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+    const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
@@ -1277,7 +1285,7 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string
   ): Promise<OrderPlaced> {
-    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+    const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
@@ -1361,7 +1369,7 @@ export class Client {
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+    const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
@@ -1455,7 +1463,7 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice
   ): Promise<OrderPlaced> {
-    const { nonceOrder, noncesFrom, noncesTo } = await this.getNoncesForTrade(
+    const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
@@ -1540,6 +1548,10 @@ export class Client {
         signature: signedPayload.signature
       }
     })
+
+    // after deposit or withdrawal we want to update nonces
+    await this.updateTradedAssetNonces()
+
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1582,6 +1594,10 @@ export class Client {
         signature: signedPayload.signature
       }
     })
+
+    // after deposit or withdrawal we want to update nonces
+    await this.updateTradedAssetNonces()
+
     return {
       result: result.data.addMovement,
       blockchain_data: signedPayload.blockchain_data
@@ -1711,7 +1727,6 @@ export class Client {
   }
 
   private async updateTradedAssetNonces(): Promise<boolean> {
-    this.queryingNonces = true
     try {
       const nonces = await this.getAssetNonces(this.tradedAssets)
       const assetNonces = {}
@@ -1719,11 +1734,9 @@ export class Client {
         assetNonces[item.asset] = item.nonces
       })
       this.assetNonces = assetNonces
-      this.queryingNonces = false
       return true
     } catch (e) {
       console.log(`Could not update traded asset nonces: ${JSON.stringify(e)}`)
-      this.queryingNonces = false
       return false
     }
   }
@@ -1732,34 +1745,15 @@ export class Client {
     return Math.trunc(new Date().getTime() / 10) - 155000000000
   }
 
-  private async getNoncesForTrade(
+  private getNoncesForTrade(
     marketName: string,
     direction: OrderBuyOrSell
-  ): Promise<NonceSet> {
+  ): NonceSet {
     try {
       const pairs = marketName.split('_')
       const unitA = pairs[0]
       const unitB = pairs[1]
-
-      if (!this.tradedAssets.includes(unitA)) {
-        this.tradedAssets.push(unitA)
-      }
-      if (!this.tradedAssets.includes(unitB)) {
-        this.tradedAssets.push(unitB)
-      }
-
-      if (
-        this.assetNonces[unitA] === undefined ||
-        this.assetNonces[unitB] === undefined
-      ) {
-        // if already querying, wait a bit
-        if (this.queryingNonces) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          return await this.getNoncesForTrade(marketName, direction)
-        } else {
-          await this.updateTradedAssetNonces()
-        }
-      }
+      this.currentOrderNonce = this.currentOrderNonce + 1
 
       let noncesTo = this.assetNonces[unitA]
       let noncesFrom = this.assetNonces[unitB]
@@ -1772,7 +1766,7 @@ export class Client {
       return {
         noncesTo,
         noncesFrom,
-        nonceOrder: this.createTimestamp32()
+        nonceOrder: this.currentOrderNonce
       }
     } catch (e) {
       console.info(`Could not get nonce set: ${e}`)
@@ -1785,14 +1779,22 @@ export class Client {
       console.log('fetching latest exchange market data')
     }
     const { markets, error } = await this.listMarkets()
+    const marketAssets = []
     if (markets) {
       const marketData = {}
       let market: Market
       for (const it of Object.keys(markets)) {
         market = markets[it]
         marketData[market.name] = market
+        if (!marketAssets.includes(market.aUnit)) {
+          marketAssets.push(market.aUnit)
+        }
+        if (!marketAssets.includes(market.bUnit)) {
+          marketAssets.push(market.bUnit)
+        }
       }
 
+      this.tradedAssets = marketAssets
       return marketData
     } else {
       return error
