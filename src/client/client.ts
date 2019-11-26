@@ -6,6 +6,7 @@ import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
 import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders'
+import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance'
@@ -117,6 +118,7 @@ import {
   createListAccountBalanceParams,
   createListAccountTransactionsParams,
   createListAccountOrdersParams,
+  createListAccountTradesParams,
   MovementTypeDeposit,
   MovementTypeWithdrawal,
   createGetStatesParams,
@@ -572,6 +574,44 @@ export class Client {
     const accountOrder = result.data.listAccountOrders as AccountOrder
 
     return accountOrder
+  }
+
+  /**
+   * list available trades for the current authenticated account.
+   *
+   * @param before
+   * @param limit
+   * @param marketName
+   * @returns
+   *
+   * Example
+   * ```
+   * const tradeHistory = await nash.listAccountTrades(undefined, 10, 'neo_eth')
+   * console.log(tradeHistory.trades)
+   * ```
+   */
+  public async listAccountTrades(
+    before?: PaginationCursor,
+    limit?: number,
+    marketName?: string,
+  ): Promise<TradeHistory> {
+    const listAccountTradeParams = createListAccountTradesParams(
+      before,
+      limit,
+      marketName
+    )
+
+    const signedPayload = await this.signPayload(listAccountTradeParams)
+    const result = await this.gql.query({
+      query: LIST_ACCOUNT_TRADES,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+    const tradeHistory = result.data.listAccountTrades as TradeHistory
+
+    return tradeHistory
   }
 
   /**
