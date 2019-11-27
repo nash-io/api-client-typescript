@@ -151,6 +151,17 @@ interface ListAccountTradeParams {
   marketName?: string,
 }
 
+interface ListAccountOrderParams {
+  before?: PaginationCursor,
+  buyOrSell?: OrderBuyOrSell,
+  limit?: number,
+  marketName?: string,
+  rangeStart?: DateTime,
+  rangeStop?: DateTime,
+  status?: [OrderStatus],
+  type?: [OrderType],
+  shouldIncludeTrades?: boolean
+}
 
 export const MISSING_NONCES = 'missing_asset_nonces'
 
@@ -549,17 +560,18 @@ export class Client {
    * console.log(accountOrder.orders)
    * ```
    */
-  public async listAccountOrders(
-    before?: PaginationCursor,
-    buyOrSell?: OrderBuyOrSell,
-    limit?: number,
-    marketName?: string,
-    rangeStart?: DateTime,
-    rangeStop?: DateTime,
-    status?: [OrderStatus],
-    type?: [OrderType],
-    shouldIncludeTrades?: boolean,
-  ): Promise<AccountOrder> {
+  public async listAccountOrders(params: ListAccountOrderParams = {}): Promise<AccountOrder> {
+    const {
+      before,
+      buyOrSell,
+      limit,
+      marketName,
+      rangeStart,
+      rangeStop,
+      status,
+      type,
+      shouldIncludeTrades
+    } = params
     const listAccountOrdersParams = createListAccountOrdersParams(
       before,
       buyOrSell,
@@ -570,7 +582,6 @@ export class Client {
       status,
       type
     )
-
 
     const query = shouldIncludeTrades ? LIST_ACCOUNT_ORDERS_WITH_TRADES : LIST_ACCOUNT_ORDERS;
 
