@@ -145,6 +145,13 @@ export interface NonceSet {
   nonceOrder: number
 }
 
+interface ListAccountTradeParams {
+  before?: PaginationCursor,
+  limit?: number,
+  marketName?: string,
+}
+
+
 export const MISSING_NONCES = 'missing_asset_nonces'
 
 export class Client {
@@ -583,9 +590,7 @@ export class Client {
   /**
    * list available trades for the current authenticated account.
    *
-   * @param before
-   * @param limit
-   * @param marketName
+   * @param {ListAccountTradeParams} params
    * @returns
    *
    * Example
@@ -594,11 +599,8 @@ export class Client {
    * console.log(tradeHistory.trades)
    * ```
    */
-  public async listAccountTrades(
-    before?: PaginationCursor,
-    limit?: number,
-    marketName?: string,
-  ): Promise<TradeHistory> {
+  public async listAccountTrades(params: ListAccountTradeParams = {}): Promise<TradeHistory> {
+    const {before, limit, marketName} = params
     const listAccountTradeParams = createListAccountTradesParams(
       before,
       limit,
