@@ -5,7 +5,7 @@ import { createHttpLink } from 'apollo-link-http'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
-import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders'
+import { LIST_ACCOUNT_ORDERS, LIST_ACCOUNT_ORDERS_WITH_TRADES } from '../queries/order/listAccountOrders'
 import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
@@ -550,7 +550,8 @@ export class Client {
     rangeStart?: DateTime,
     rangeStop?: DateTime,
     status?: [OrderStatus],
-    type?: [OrderType]
+    type?: [OrderType],
+    shouldIncludeTrades?: boolean,
   ): Promise<AccountOrder> {
     const listAccountOrdersParams = createListAccountOrdersParams(
       before,
@@ -563,9 +564,12 @@ export class Client {
       type
     )
 
+
+    const query = shouldIncludeTrades ? LIST_ACCOUNT_ORDERS_WITH_TRADES : LIST_ACCOUNT_ORDERS;
+
     const signedPayload = await this.signPayload(listAccountOrdersParams)
     const result = await this.gql.query({
-      query: LIST_ACCOUNT_ORDERS,
+      query,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
@@ -609,6 +613,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
+
     const tradeHistory = result.data.listAccountTrades as TradeHistory
 
     return tradeHistory
