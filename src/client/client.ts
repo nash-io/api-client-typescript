@@ -5,7 +5,8 @@ import { createHttpLink } from 'apollo-link-http'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
-import { LIST_ACCOUNT_ORDERS } from '../queries/order/listAccountOrders'
+import { LIST_ACCOUNT_ORDERS, LIST_ACCOUNT_ORDERS_WITH_TRADES } from '../queries/order/listAccountOrders'
+import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance'
@@ -117,6 +118,7 @@ import {
   createListAccountBalanceParams,
   createListAccountTransactionsParams,
   createListAccountOrdersParams,
+  createListAccountTradesParams,
   MovementTypeDeposit,
   MovementTypeWithdrawal,
   createGetStatesParams,
@@ -141,6 +143,24 @@ export interface NonceSet {
   noncesFrom: number[]
   noncesTo: number[]
   nonceOrder: number
+}
+
+interface ListAccountTradeParams {
+  before?: PaginationCursor,
+  limit?: number,
+  marketName?: string,
+}
+
+interface ListAccountOrderParams {
+  before?: PaginationCursor,
+  buyOrSell?: OrderBuyOrSell,
+  limit?: number,
+  marketName?: string,
+  rangeStart?: DateTime,
+  rangeStop?: DateTime,
+  status?: [OrderStatus],
+  type?: [OrderType],
+  shouldIncludeTrades?: boolean
 }
 
 export const MISSING_NONCES = 'missing_asset_nonces'
@@ -540,16 +560,18 @@ export class Client {
    * console.log(accountOrder.orders)
    * ```
    */
-  public async listAccountOrders(
-    before?: PaginationCursor,
-    buyOrSell?: OrderBuyOrSell,
-    limit?: number,
-    marketName?: string,
-    rangeStart?: DateTime,
-    rangeStop?: DateTime,
-    status?: [OrderStatus],
-    type?: [OrderType]
-  ): Promise<AccountOrder> {
+  public async listAccountOrders(params: ListAccountOrderParams = {}): Promise<AccountOrder> {
+    const {
+      before,
+      buyOrSell,
+      limit,
+      marketName,
+      rangeStart,
+      rangeStop,
+      status,
+      type,
+      shouldIncludeTrades
+    } = params
     const listAccountOrdersParams = createListAccountOrdersParams(
       before,
       buyOrSell,
@@ -561,9 +583,11 @@ export class Client {
       type
     )
 
+    const query = shouldIncludeTrades ? LIST_ACCOUNT_ORDERS_WITH_TRADES : LIST_ACCOUNT_ORDERS;
+
     const signedPayload = await this.signPayload(listAccountOrdersParams)
     const result = await this.gql.query({
-      query: LIST_ACCOUNT_ORDERS,
+      query,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
@@ -572,6 +596,40 @@ export class Client {
     const accountOrder = result.data.listAccountOrders as AccountOrder
 
     return accountOrder
+  }
+
+  /**
+   * list available trades for the current authenticated account.
+   *
+   * @param {ListAccountTradeParams} params
+   * @returns
+   *
+   * Example
+   * ```
+   * const tradeHistory = await nash.listAccountTrades(undefined, 10, 'neo_eth')
+   * console.log(tradeHistory.trades)
+   * ```
+   */
+  public async listAccountTrades(params: ListAccountTradeParams = {}): Promise<TradeHistory> {
+    const {before, limit, marketName} = params
+    const listAccountTradeParams = createListAccountTradesParams(
+      before,
+      limit,
+      marketName
+    )
+
+    const signedPayload = await this.signPayload(listAccountTradeParams)
+    const result = await this.gql.query({
+      query: LIST_ACCOUNT_TRADES,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+
+    const tradeHistory = result.data.listAccountTrades as TradeHistory
+
+    return tradeHistory
   }
 
   /**

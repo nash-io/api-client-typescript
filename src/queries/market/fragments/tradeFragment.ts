@@ -8,6 +8,8 @@ import {
 export const TRADE_FRAGMENT = gql`
   fragment tradeFields on Trade {
     id
+    makerOrderId
+    takerOrderId
     executedAt
     limitPrice {
       ...currencyPriceFields
@@ -16,6 +18,24 @@ export const TRADE_FRAGMENT = gql`
       ...currencyAmountFields
     }
     direction
+    makerGave {
+      ...currencyAmountFields
+    }
+    takerGave {
+      ...currencyAmountFields
+    }
+    makerReceived {
+      ...currencyAmountFields
+    }
+    takerReceived {
+      ...currencyAmountFields
+    }
+    makerFee {
+      ...currencyAmountFields
+    }
+    takerFee {
+      ...currencyAmountFields
+    }
   }
   ${CURRENCY_PRICE_FRAGMENT}
   ${CURRENCY_AMOUNT_FRAGMENT}

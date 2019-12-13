@@ -13,6 +13,22 @@ export const LIST_ACCOUNT_ORDERS = gql`
       next
       orders {
         ...orderFields
+      }
+    }
+  }
+  ${ORDER_FRAGMENT}
+`
+
+export const LIST_ACCOUNT_ORDERS_WITH_TRADES = gql`
+  query ListAccountOrders(
+    $payload: ListAccountOrdersParams!
+    $signature: Signature
+  ) {
+    listAccountOrders(payload: $payload, signature: $signature)
+      @connection(key: "listAccountOrders") {
+      next
+      orders {
+        ...orderFields
         trades {
           ...tradeFields
         }
