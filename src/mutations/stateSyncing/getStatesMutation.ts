@@ -24,10 +24,8 @@ export const GET_STATES_MUTATION = gql`
 `
 
 export interface GetStatesData {
-  getStates: {
-    states: States
-    recycledOrders: ClientSignableStates
-  }
+  recycledOrders: ClientSignableStates
+  states: States
 }
 
 export interface GetStatesVariables {
