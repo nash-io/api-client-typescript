@@ -1,11 +1,14 @@
-import { ApolloClient } from 'apollo-client'
+import { ApolloClient, ApolloQueryResult } from 'apollo-client'
 import { setContext } from 'apollo-link-context'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import { createHttpLink } from 'apollo-link-http'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
-import { LIST_ACCOUNT_ORDERS, LIST_ACCOUNT_ORDERS_WITH_TRADES } from '../queries/order/listAccountOrders'
+import {
+  LIST_ACCOUNT_ORDERS,
+  LIST_ACCOUNT_ORDERS_WITH_TRADES
+} from '../queries/order/listAccountOrders'
 import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
@@ -28,16 +31,21 @@ import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
-import { GetAssetsNoncesData, GET_ASSETS_NONCES_QUERY } from '../queries/nonces'
+import {
+  GetAssetsNoncesData,
+  GET_ASSETS_NONCES_QUERY,
+  AssetsNoncesData
+} from '../queries/nonces'
 import {
   GET_ORDERS_FOR_MOVEMENT_QUERY,
-  GetOrdersForMovementData
+  OrdersForMovementData
 } from '../queries/movement/getOrdersForMovementQuery'
 import {
   USER_2FA_LOGIN_MUTATION,
   TwoFactorLoginResponse
 } from '../mutations/account/twoFactorLoginMutation'
-
+import { checkMandatoryParams, formatPayload } from './utils'
+import { Result } from '../types'
 import {
   GetStatesData,
   GET_STATES_MUTATION,
@@ -146,20 +154,58 @@ export interface NonceSet {
 }
 
 interface ListAccountTradeParams {
-  before?: PaginationCursor,
-  limit?: number,
-  marketName?: string,
+  before?: PaginationCursor
+  limit?: number
+  marketName?: string
+}
+
+interface ListAccountTransactionsParams {
+  cursor?: string
+  fiatSymbol?: string
+  limit?: number
+}
+
+interface GetAccountPortfolioParams {
+  fiatSymbol?: FiatCurrency
+  period?: Period
+}
+
+interface LoginParams {
+  email: string
+  password: string
+  twoFaCode?: string
+  walletIndices: { [key: string]: number }
+  presetWallets?: object
+}
+
+interface ListTradeParams {
+  marketName: string
+  limit?: number
+  before?: PaginationCursor
+}
+
+interface ListCandlesParams {
+  marketName: string
+  before?: DateTime
+  interval?: CandleInterval
+  limit?: number
+}
+
+interface ListMovementsParams {
+  currency?: CryptoCurrency
+  status?: MovementStatus
+  type?: MovementType
 }
 
 interface ListAccountOrderParams {
-  before?: PaginationCursor,
-  buyOrSell?: OrderBuyOrSell,
-  limit?: number,
-  marketName?: string,
-  rangeStart?: DateTime,
-  rangeStop?: DateTime,
-  status?: [OrderStatus],
-  type?: [OrderType],
+  before?: PaginationCursor
+  buyOrSell?: OrderBuyOrSell
+  limit?: number
+  marketName?: string
+  rangeStart?: DateTime
+  rangeStop?: DateTime
+  status?: [OrderStatus]
+  type?: [OrderType]
   shouldIncludeTrades?: boolean
 }
 
@@ -231,7 +277,7 @@ export class Client {
   /**
    * Login against the central account service. A login is required for all signed
    * request.
-   *
+   * @returns
    * @param email
    * @param password
    * @param twoFaCode (optional)
@@ -242,18 +288,34 @@ export class Client {
    * const email = 'user@nash.io`
    * const password = `yourpassword`
    *
-   * nash.login(email, password)
+   * nash.login({
+   *   email,
+   *   password
+   * })
    * .then(_ => console.log('login success'))
    * .catch(e => console.log(`login failed ${e}`)
    * ```
    */
-  public async login(
-    email: string,
-    password: string,
-    twoFaCode?: string,
-    walletIndices: { [key: string]: number } = { neo: 1, eth: 1 },
-    presetWallets?: object
-  ): Promise<boolean> {
+  public async login({
+    email,
+    password,
+    twoFaCode,
+    walletIndices = { neo: 1, eth: 1 },
+    presetWallets
+  }: LoginParams): Promise<Result<boolean>> {
+    // const validParams = checkMandatoryParams(
+    //      )
+    // if (validParams.type === 'error') {
+    //   return validParams
+    // }
+    const validParams = checkMandatoryParams({
+      email,
+      password,
+      Type: 'string'
+    })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, SALT)
     const loginUrl = this.opts.casURI + '/user_login'
@@ -261,6 +323,7 @@ export class Client {
       email,
       password: toHex(keys.authKey)
     }
+
     const response = await fetch(loginUrl, {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' },
@@ -269,21 +332,33 @@ export class Client {
 
     this.casCookie = response.headers.get('set-cookie')
     const result = await response.json()
-    if (result.error) {
-      throw new Error(result.message)
+    if (result.error || result.message === 'Two factor required') {
+      return {
+        type: 'error',
+        message: result.message
+      }
     }
 
     this.account = result.account
-
-    this.marketData = await this.fetchMarketData()
-    this.assetData = await this.fetchAssetData()
+    const marketPayload = await this.fetchMarketData()
+    if (marketPayload.type === 'error') {
+      return marketPayload
+    }
+    this.marketData = marketPayload.data
+    const assetPayload = await this.fetchAssetData()
+    if (assetPayload.type === 'error') {
+      return assetPayload
+    }
+    this.assetData = assetPayload.data
     this.assetNonces = {}
     this.currentOrderNonce = this.createTimestamp32()
 
     if (twoFaCode !== undefined) {
       this.account = await this.doTwoFactorLogin(twoFaCode)
+      if (this.account.type === 'error') {
+        return this.account
+      }
     }
-
     if (this.account.encrypted_secret_key === null) {
       console.log(
         'keys not present in the CAS: creating and uploading as we speak.'
@@ -294,8 +369,7 @@ export class Client {
         this.casCookie,
         presetWallets
       )
-
-      return true
+      return { type: 'ok' }
     }
 
     const aead = {
@@ -328,12 +402,12 @@ export class Client {
     // after login we should always try to get asset nonces
     await this.updateTradedAssetNonces()
 
-    return true
+    return { type: 'ok' }
   }
 
   private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
-    const twoFaResult = await this.gql.query({
-      query: USER_2FA_LOGIN_MUTATION,
+    const twoFaResult = await this.gql.mutate({
+      mutation: USER_2FA_LOGIN_MUTATION,
       variables: { code: twoFaCode }
     })
     try {
@@ -350,9 +424,10 @@ export class Client {
         encrypted_secret_key_tag: twoFAaccount.encryptedSecretKeyTag
       }
     } catch (e) {
-      throw new Error(
-        `Could not login with 2fa: ${JSON.stringify(twoFaResult.errors)}`
-      )
+      return {
+        type: 'error',
+        message: twoFaResult.errors
+      }
     }
   }
 
@@ -368,14 +443,21 @@ export class Client {
    * console.log(ticker)
    * ```
    */
-  public async getTicker(marketName: string): Promise<Ticker> {
-    const result = await this.gql.query({
+  public async getTicker(marketName: string): Promise<Result<Ticker>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+
+    const result = await this.gql.query<{ getTicker: Ticker }>({
       query: GET_TICKER,
       variables: { marketName }
     })
-    const ticker = result.data.getTicker as Ticker
+    const payload = formatPayload('getTicker', result)
+    return payload
+    // if(payload.type === "error") return payload
 
-    return ticker
+    // return ticker
   }
 
   /**
@@ -390,14 +472,17 @@ export class Client {
    * console.log(orderBook.bids)
    * ```
    */
-  public async getOrderBook(marketName: string): Promise<OrderBook> {
-    const result = await this.gql.query({
+  public async getOrderBook(marketName: string): Promise<Result<OrderBook>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+    const result = await this.gql.query<{ getOrderBook: OrderBook }>({
       query: GET_ORDERBOOK,
       variables: { marketName }
     })
-    const orderBook = result.data.getOrderBook as OrderBook
-
-    return orderBook
+    const payload = formatPayload('getOrderBook', result)
+    return payload
   }
 
   /**
@@ -410,23 +495,26 @@ export class Client {
    *
    * Example
    * ```
-   * const tradeHistory = await nash.listTrades('neo_gas')
+   * const tradeHistory = await nash.listTrades({
+   *   marketname : 'neo_gas'
+   * })
    * console.log(tradeHistory.trades)
    * ```
    */
-  public async listTrades(
-    marketName: string,
-    limit?: number,
-    before?: PaginationCursor
-  ): Promise<TradeHistory> {
-    const result = await this.gql.query({
+  public async listTrades({
+    marketName,
+    limit,
+    before
+  }: ListTradeParams): Promise<Result<TradeHistory>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+    const result = await this.gql.query<{ listTrades: TradeHistory }>({
       query: LIST_TRADES,
       variables: { marketName, limit, before }
     })
-
-    const tradeHistory = result.data.listTrades as TradeHistory
-
-    return tradeHistory
+    return formatPayload('listTrades', result)
   }
 
   /**
@@ -440,11 +528,11 @@ export class Client {
    * console.log(tickers)
    * ```
    */
-  public async listTickers(): Promise<Ticker[]> {
-    const result = await this.gql.query({ query: LIST_TICKERS })
-    const tickers = result.data.listTickers as Ticker[]
-
-    return tickers
+  public async listTickers(): Promise<Result<Ticker[]>> {
+    const result = await this.gql.query<{ listTickers: Ticker[] }>({
+      query: LIST_TICKERS
+    })
+    return formatPayload('listTickers', result)
   }
 
   /**
@@ -458,11 +546,11 @@ export class Client {
    * console.log(assets)
    * ```
    */
-  public async listAssets(): Promise<Asset[]> {
-    const result = await this.gql.query({ query: LIST_ASSETS_QUERY })
-    const assets = result.data.listAssets as Asset[]
-
-    return assets
+  public async listAssets(): Promise<Result<Asset[]>> {
+    const result = await this.gql.query<{ listAssets: Asset[] }>({
+      query: LIST_ASSETS_QUERY
+    })
+    return formatPayload('listAssets', result)
   }
 
   /**
@@ -476,23 +564,28 @@ export class Client {
    *
    * Example
    * ```
-   * const candleRange = await nash.listCandles('neo_gas')
+   * const candleRange = await nash.listCandles({
+   *   marketName : 'neo_gas'
+   * })
    * console.log(candleRange)
    * ``
    */
-  public async listCandles(
-    marketName: string,
-    before?: DateTime,
-    interval?: CandleInterval,
-    limit?: number
-  ): Promise<CandleRange> {
-    const result = await this.gql.query({
+
+  public async listCandles({
+    marketName,
+    before,
+    interval,
+    limit
+  }: ListCandlesParams): Promise<Result<CandleRange>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+    const result = await this.gql.query<{ listCandles: CandleRange }>({
       query: LIST_CANDLES,
       variables: { marketName, before, interval, limit }
     })
-    const candleRange = result.data.listCandles as CandleRange
-
-    return candleRange
+    return formatPayload('listCandles', result)
   }
 
   /**
@@ -506,17 +599,11 @@ export class Client {
    * console.log(markets)
    * ```
    */
-  public async listMarkets(): Promise<{ markets: Market[]; error: any }> {
-    try {
-      const result = await this.gql.query({ query: LIST_MARKETS_QUERY })
-      if (result.data) {
-        const markets = result.data.listMarkets as Market[]
-        return { markets, error: null }
-      }
-      return { markets: null, error: result }
-    } catch (e) {
-      return { markets: null, error: e }
-    }
+  public async listMarkets(): Promise<Result<Market[]>> {
+    const result = await this.gql.query<{ listMarkets: Market[] }>({
+      query: LIST_MARKETS_QUERY
+    })
+    return formatPayload('listMarkets', result)
   }
 
   /**
@@ -531,19 +618,21 @@ export class Client {
    * console.log(market)
    * ```
    */
-  public async getMarket(marketName: string): Promise<Market> {
-    const result = await this.gql.query({
+
+  public async getMarket(marketName: string): Promise<Result<Market>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+    const result = await this.gql.query<{ getMarkets: Market }>({
       query: GET_MARKET_QUERY,
       variables: { marketName }
     })
-    const market = result.data.getMarket as Market
-
-    return market
+    return formatPayload('getMarkets', result)
   }
 
   /**
    * list available orders for the current authenticated account.
-   *
    * @param before
    * @param buyOrSell
    * @param limit
@@ -556,22 +645,23 @@ export class Client {
    *
    * Example
    * ```
-   * const accountOrder = await nash.listAccountOrders('neo_eth')
+   * const accountOrder = await nash.listAccountOrders({
+   *   marketName : 'neo_eth'
+   * })
    * console.log(accountOrder.orders)
    * ```
    */
-  public async listAccountOrders(params: ListAccountOrderParams = {}): Promise<AccountOrder> {
-    const {
-      before,
-      buyOrSell,
-      limit,
-      marketName,
-      rangeStart,
-      rangeStop,
-      status,
-      type,
-      shouldIncludeTrades
-    } = params
+  public async listAccountOrders({
+    before,
+    buyOrSell,
+    limit,
+    marketName,
+    rangeStart,
+    rangeStop,
+    status,
+    type,
+    shouldIncludeTrades
+  }: ListAccountOrderParams = {}): Promise<Result<AccountOrder>> {
     const listAccountOrdersParams = createListAccountOrdersParams(
       before,
       buyOrSell,
@@ -582,20 +672,19 @@ export class Client {
       status,
       type
     )
-
-    const query = shouldIncludeTrades ? LIST_ACCOUNT_ORDERS_WITH_TRADES : LIST_ACCOUNT_ORDERS;
+    const query = shouldIncludeTrades
+      ? LIST_ACCOUNT_ORDERS_WITH_TRADES
+      : LIST_ACCOUNT_ORDERS
 
     const signedPayload = await this.signPayload(listAccountOrdersParams)
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ listAccountOrders: AccountOrder }>({
       query,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountOrder = result.data.listAccountOrders as AccountOrder
-
-    return accountOrder
+    return formatPayload('listAccountOrders', result)
   }
 
   /**
@@ -606,30 +695,32 @@ export class Client {
    *
    * Example
    * ```
-   * const tradeHistory = await nash.listAccountTrades(undefined, 10, 'neo_eth')
+   * const tradeHistory = await nash.listAccountTrades({
+   *   limit : 10,
+   *   marketName : 'neo_eth'
+   * })
    * console.log(tradeHistory.trades)
    * ```
    */
-  public async listAccountTrades(params: ListAccountTradeParams = {}): Promise<TradeHistory> {
-    const {before, limit, marketName} = params
+  public async listAccountTrades({
+    before,
+    limit,
+    marketName
+  }: ListAccountTradeParams = {}): Promise<Result<TradeHistory>> {
     const listAccountTradeParams = createListAccountTradesParams(
       before,
       limit,
       marketName
     )
-
     const signedPayload = await this.signPayload(listAccountTradeParams)
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ listAccountTrades: TradeHistory }>({
       query: LIST_ACCOUNT_TRADES,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-
-    const tradeHistory = result.data.listAccountTrades as TradeHistory
-
-    return tradeHistory
+    return formatPayload('listAccountTrades', result)
   }
 
   /**
@@ -642,15 +733,20 @@ export class Client {
    *
    * Example
    * ```
-   * const accountTransaction = await nash.listAccountTransactions()
+   * const accountTransaction = await nash.listAccountTransactions({
+   *   limit : 150,
+   *   ${paramName} : ${paramValue}
+   * })
    * console.log(accountTransaction.transactions)
    * ```
    */
-  public async listAccountTransactions(
-    cursor?: string,
-    fiatSymbol?: string,
-    limit?: number
-  ): Promise<AccountTransaction> {
+  // should change the parameter
+  // should declare de variables based on params
+  public async listAccountTransactions({
+    cursor,
+    fiatSymbol,
+    limit
+  }: ListAccountTransactionsParams): Promise<Result<AccountTransaction>> {
     const listAccountTransactionsParams = createListAccountTransactionsParams(
       cursor,
       fiatSymbol,
@@ -658,17 +754,16 @@ export class Client {
     )
     const signedPayload = await this.signPayload(listAccountTransactionsParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      listAccountTransactions: AccountTransaction
+    }>({
       query: LIST_ACCOUNT_TRANSACTIONS,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountTransactions = result.data
-      .listAccountTransactions as AccountTransaction
-
-    return accountTransactions
+    return formatPayload('listAccountTransactions', result)
   }
 
   /**
@@ -684,22 +779,29 @@ export class Client {
    * ```
    */
   public async listAccountBalances(
-    ignoreLowBalance: boolean = false
-  ): Promise<AccountBalance[]> {
+    ignoreLowBalance
+  ): Promise<Result<AccountBalance[]>> {
+    const validParams = checkMandatoryParams({
+      ignoreLowBalance,
+      Type: 'boolean'
+    })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const listAccountBalanceParams = createListAccountBalanceParams(
       ignoreLowBalance
     )
     const signedPayload = await this.signPayload(listAccountBalanceParams)
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      listAccountBalances: AccountBalance[]
+    }>({
       query: LIST_ACCOUNT_BALANCES,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountBalances = result.data.listAccountBalances as AccountBalance[]
-
-    return accountBalances
+    return formatPayload('listAccountBalances', result)
   }
 
   /**
@@ -718,21 +820,24 @@ export class Client {
    */
   public async getDepositAddress(
     currency: CryptoCurrency
-  ): Promise<AccountDepositAddress> {
+  ): Promise<Result<AccountDepositAddress>> {
+    const validParams = checkMandatoryParams({ currency, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const getDepositAddressParams = createGetDepositAddressParams(currency)
     const signedPayload = await this.signPayload(getDepositAddressParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      getDepositAddress: AccountDepositAddress
+    }>({
       query: GET_DEPOSIT_ADDRESS,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const depositAddress = result.data
-      .getDepositAddress as AccountDepositAddress
-
-    return depositAddress
+    return formatPayload('getDepositAddress', result)
   }
 
   /**
@@ -748,26 +853,36 @@ export class Client {
    * console.log(accountPortfolio)
    * ```
    */
-  public async getAccountPortfolio(
-    fiatSymbol?: FiatCurrency,
-    period?: Period
-  ): Promise<AccountPortfolio> {
+
+  public async getAccountPortfolio({
+    fiatSymbol,
+    period
+  }: GetAccountPortfolioParams = {}): Promise<Result<AccountPortfolio>> {
+    const validParams = checkMandatoryParams({
+      fiatSymbol,
+      period,
+      Type: 'string'
+    })
+    if (validParams.type === 'error') {
+      return validParams
+    }
+
     const getAccountPortfolioParams = createAccountPortfolioParams(
       fiatSymbol,
       period
     )
     const signedPayload = await this.signPayload(getAccountPortfolioParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      getAccountPorfolio: AccountPortfolio
+    }>({
       query: GET_ACCOUNT_PORTFOLIO,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountPortfolio = result.data.getAccountPortfolio as AccountPortfolio
-
-    return accountPortfolio
+    return formatPayload('getAccountPorfolio', result)
   }
 
   /**
@@ -782,20 +897,22 @@ export class Client {
    * console.log(movement)
    * ```
    */
-  public async getMovement(movementID: number): Promise<Movement> {
+  public async getMovement(movementID: number): Promise<Result<Movement>> {
+    const validParams = checkMandatoryParams({ movementID, Type: 'number' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const getMovemementParams = createGetMovementParams(movementID)
     const signedPayload = await this.signPayload(getMovemementParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ getMovement: Movement }>({
       query: GET_MOVEMENT,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const movement = result.data.getMovement as Movement
-
-    return movement
+    return formatPayload('getMovement', result)
   }
 
   /**
@@ -814,20 +931,22 @@ export class Client {
    */
   public async getAccountBalance(
     currency: CryptoCurrency
-  ): Promise<AccountBalance> {
+  ): Promise<Result<AccountBalance>> {
+    const validParams = checkMandatoryParams({ currency, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const getAccountBalanceParams = createGetAccountBalanceParams(currency)
     const signedPayload = await this.signPayload(getAccountBalanceParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ getAccountBalance: AccountBalance }>({
       query: GET_ACCOUNT_BALANCE,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountBalance = result.data.getAccountBalance as AccountBalance
-
-    return accountBalance
+    return formatPayload('getAccountBalance', result)
   }
 
   /**
@@ -842,20 +961,22 @@ export class Client {
    * console.log(order)
    * ```
    */
-  public async getAccountOrder(orderID: string): Promise<Order> {
+  public async getAccountOrder(orderID: string): Promise<Result<Order>> {
+    const validParams = checkMandatoryParams({ orderID, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const getAccountOrderParams = createGetAccountOrderParams(orderID)
     const signedPayload = await this.signPayload(getAccountOrderParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ getAccountOrder: Order }>({
       query: GET_ACCOUNT_ORDER,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const order = result.data.getAccountOrder as Order
-
-    return order
+    return formatPayload('getAccountOrder', result)
   }
 
   /**
@@ -869,20 +990,18 @@ export class Client {
    * console.log(accountVolume.thirtyDayTotalVolumePercent)
    * ```
    */
-  public async listAccountVolumes(): Promise<AccountVolume> {
+  public async listAccountVolumes(): Promise<Result<AccountVolume>> {
     const listAccountVolumesParams = createGetAccountVolumesParams()
     const signedPayload = await this.signPayload(listAccountVolumesParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ listAccountVolumes: AccountVolume }>({
       query: LIST_ACCOUNT_VOLUMES,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const accountVolumes = result.data.listAccountVolumes as AccountVolume
-
-    return accountVolumes
+    return formatPayload('listAccountVolumes', result)
   }
 
   /**
@@ -895,28 +1014,28 @@ export class Client {
    *
    * Example
    * ```
-   * const movements = await nash.listMovements()
+   * const movements = await nash.listMovements({
+   *   currency : 'eth'
+   * })
    * console.log(movements)
    * ```
    */
-  public async listMovements(
-    currency?: CryptoCurrency,
-    status?: MovementStatus,
-    type?: MovementType
-  ): Promise<Movement[]> {
+  public async listMovements({
+    currency,
+    status,
+    type
+  }: ListMovementsParams): Promise<Result<Movement[]>> {
     const listMovementParams = createListMovementsParams(currency, status, type)
     const signedPayload = await this.signPayload(listMovementParams)
 
-    const result = await this.gql.query({
+    const result = await this.gql.query<{ listMovements: Movement[] }>({
       query: LIST_MOVEMENTS,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const movements = result.data.listMovements as Movement[]
-
-    return movements
+    return formatPayload('listMovements', result)
   }
 
   /**
@@ -932,19 +1051,24 @@ export class Client {
    */
   public async getOrdersForMovement(
     asset: string
-  ): Promise<GetOrdersForMovementData> {
+  ): Promise<Result<OrdersForMovementData>> {
+    const validParams = checkMandatoryParams({ asset, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const getOrdersForMovementParams = createGetOrdersForMovementParams(asset)
     const signedPayload = await this.signPayload(getOrdersForMovementParams)
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      getOrdersForMovement: OrdersForMovementData
+    }>({
       query: GET_ORDERS_FOR_MOVEMENT_QUERY,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const getOrdersForMovementData = result.data as GetOrdersForMovementData
 
-    return getOrdersForMovementData
+    return formatPayload('getOrdersForMovement', result)
   }
 
   /**
@@ -960,19 +1084,19 @@ export class Client {
    */
   public async getAssetNonces(
     assetList: string[]
-  ): Promise<GetAssetsNoncesData> {
+  ): Promise<Result<AssetsNoncesData[]>> {
     const getAssetNoncesParams = createGetAssetsNoncesParams(assetList)
     const signedPayload = await this.signPayload(getAssetNoncesParams)
-    const result = await this.gql.query({
+    const result = await this.gql.query<{
+      assetsNonces: GetAssetsNoncesData
+    }>({
       query: GET_ASSETS_NONCES_QUERY,
       variables: {
         payload: signedPayload.payload,
         signature: signedPayload.signature
       }
     })
-    const getNoncesData = result.data as GetAssetsNoncesData
-
-    return getNoncesData
+    return formatPayload('assetsNonces', result)
   }
 
   /**
@@ -986,26 +1110,33 @@ export class Client {
    * console.log(getSignSyncStates)
    * ```
    */
-  public async getSignAndSyncStates(): Promise<boolean> {
+  public async getSignAndSyncStates(): Promise<Result<boolean>> {
     try {
-      const states: GetStatesData = await this.getStates()
-      if (
-        states.getStates.recycledOrders.length === 0 &&
-        states.getStates.states.length === 0
-      ) {
-        return true
+      const payload: Result<GetStatesData> = await this.getStates()
+      if (payload.type === 'error') {
+        return payload
+      }
+      const states = payload.data[0]
+      if (states.recycledOrders.length === 0 && states.states.length === 0) {
+        return {
+          type: 'ok'
+        }
       }
       const signResult = (await this.signStates(states)) as SignStatesData
       if (signResult.signStates === null) {
-        console.error('Error submitting signed states')
-        return true
+        return {
+          type: 'error',
+          message: 'Error submitting signed states'
+        }
       }
 
       const syncResult = await this.syncStates(signResult)
       return syncResult
     } catch (error) {
-      console.error(`Could not get/sign/sync states: ${error}`)
-      return false
+      return {
+        type: 'error',
+        message: `Could not get/sign/sync states: ${error}`
+      }
     }
   }
 
@@ -1020,21 +1151,18 @@ export class Client {
    * console.log(getStatesData)
    * ```
    */
-  public async getStates(): Promise<GetStatesData> {
+  public async getStates(): Promise<Result<GetStatesData>> {
     const getStatesParams = createGetStatesParams()
     const signedPayload = await this.signPayload(getStatesParams)
-
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{ getStates: GetStatesData }>({
         mutation: GET_STATES_MUTATION,
         variables: {
           payload: signedPayload.payload,
           signature: signedPayload.signature
         }
       })
-      const getStatesData = result.data as GetStatesData
-
-      return getStatesData
+      return formatPayload('getStates', result)
     } catch (e) {
       console.error('Could not get states: ', e)
       return e
@@ -1055,20 +1183,18 @@ export class Client {
   public async signStates(
     getStatesData: GetStatesData
   ): Promise<SignStatesData | Error> {
-    const stateList: SyncState[] = getStatesData.getStates.states.map(state => {
+    const stateList: SyncState[] = getStatesData.states.map(state => {
       return {
         blockchain: state.blockchain,
         message: state.message
       }
     })
-    const orderList: SyncState[] = getStatesData.getStates.recycledOrders.map(
-      state => {
-        return {
-          blockchain: state.blockchain,
-          message: state.message
-        }
+    const orderList: SyncState[] = getStatesData.recycledOrders.map(state => {
+      return {
+        blockchain: state.blockchain,
+        message: state.message
       }
-    )
+    })
 
     const signStateListPayload: PayloadAndKind = createSignStatesParams(
       stateList,
@@ -1114,7 +1240,9 @@ export class Client {
    * console.log(getStatesData)
    * ```
    */
-  public async syncStates(signStatesData: SignStatesData): Promise<boolean> {
+  public async syncStates(
+    signStatesData: SignStatesData
+  ): Promise<Result<boolean>> {
     const stateList: SyncState[] = signStatesData.signStates.serverSignedStates.map(
       state => {
         return {
@@ -1127,22 +1255,22 @@ export class Client {
     const signedPayload = await this.signPayload(syncStatesParams)
 
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{ syncStates: SyncState[] }>({
         mutation: SYNC_STATES_MUTATION,
         variables: {
           payload: signedPayload.payload,
           signature: signedPayload.signature
         }
       })
-      const syncStatesResult = result.data.syncStates.result
-
       // after syncing states, we should always update asset nonces
       await this.updateTradedAssetNonces()
 
-      return syncStatesResult
+      return formatPayload('syncStates', result)
     } catch (e) {
-      console.error('Could not query graphql for sync states: ', e)
-      return e
+      return {
+        type: 'error',
+        message: 'Could not query graphql for sync states'
+      }
     }
   }
 
@@ -1189,7 +1317,11 @@ export class Client {
    * console.log(result)
    * ```
    */
-  public async cancelAllOrders(marketName?: string): Promise<boolean> {
+  public async cancelAllOrders(marketName?: string): Promise<Result<boolean>> {
+    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     let cancelAllOrderParams: any = {
       timestamp: createTimestamp()
     }
@@ -1257,7 +1389,27 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     cancelAt?: DateTime
-  ): Promise<OrderPlaced> {
+  ): Promise<Result<OrderPlaced>> {
+    const validParams = checkMandatoryParams(
+      {
+        allowTaker,
+        Type: 'boolean'
+      },
+      {
+        amount,
+        limitPrice,
+        Type: 'object'
+      },
+      {
+        cancellationPolicy,
+        buyOrSell,
+        marketName,
+        Type: 'string'
+      }
+    )
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1286,19 +1438,20 @@ export class Client {
 
     const signedPayload = await this.signPayload(placeLimitOrderParams)
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{
+        placeLimitOrder: ApolloQueryResult<OrderPlaced>
+      }>({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
-      const orderPlaced = result.data.placeLimitOrder as OrderPlaced
-      return orderPlaced
+      return formatPayload('placeLimitOrder', result)
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk) {
+        if (updateNoncesOk.type === 'ok') {
           return await this.placeLimitOrder(
             allowTaker,
             amount,
@@ -1342,7 +1495,15 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string
-  ): Promise<OrderPlaced> {
+  ): Promise<Result<OrderPlaced>> {
+    const validParams = checkMandatoryParams({
+      buyOrSell,
+      marketName,
+      Type: 'string'
+    })
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1362,20 +1523,20 @@ export class Client {
     )
     const signedPayload = await this.signPayload(placeMarketOrderParams)
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{
+        placeMarketOrder: ApolloQueryResult<OrderPlaced>
+      }>({
         mutation: PLACE_MARKET_ORDER_MUTATION,
         variables: {
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
-      const orderPlaced = result.data.placeMarketOrder as OrderPlaced
-
-      return orderPlaced
+      return formatPayload('placeMarketOrder', result)
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk) {
+        if (updateNoncesOk.type === 'ok') {
           return await this.placeMarketOrder(amount, buyOrSell, marketName)
         }
       }
@@ -1426,7 +1587,15 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
-  ): Promise<OrderPlaced> {
+  ): Promise<Result<OrderPlaced>> {
+    const validParams = checkMandatoryParams(
+      { allowTaker, Type: 'boolean' },
+      { buyOrSell, marketName, cancellationPolicy, Type: 'string' },
+      { cancelAt: 'number' }
+    )
+    if (validParams.type === 'error') {
+      return validParams
+    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1459,15 +1628,17 @@ export class Client {
     )
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{
+        placeStopLimitOrder: ApolloQueryResult<OrderPlaced>
+      }>({
         mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
         variables: {
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
-      const orderPlaced = result.data.placeStopLimitOrder as OrderPlaced
-      return orderPlaced
+
+      return formatPayload('placeStopLimitOrder', result)
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
@@ -1520,7 +1691,15 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string,
     stopPrice: CurrencyPrice
-  ): Promise<OrderPlaced> {
+  ): Promise<Result<OrderPlaced>> {
+    const validParams = checkMandatoryParams(
+      { amount, stopPrice, Type: 'object' },
+      { buyOrSell, marketName, Type: 'string' }
+    )
+    if (validParams.type === 'error') {
+      return validParams
+    }
+
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1546,16 +1725,16 @@ export class Client {
     )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
     try {
-      const result = await this.gql.mutate({
+      const result = await this.gql.mutate<{
+        placeStopMarketOrder: ApolloQueryResult<OrderPlaced>
+      }>({
         mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
         variables: {
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
       })
-      const orderPlaced = result.data.placeStopMarketOrder as OrderPlaced
-
-      return orderPlaced
+      return formatPayload('placeStopMarketOrder', result)
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
         const updateNoncesOk = await this.updateTradedAssetNonces()
@@ -1784,18 +1963,29 @@ export class Client {
     }
   }
 
-  private async updateTradedAssetNonces(): Promise<boolean> {
+  private async updateTradedAssetNonces(): Promise<Result<boolean>> {
     try {
-      const nonces = await this.getAssetNonces(this.tradedAssets)
+      const payload: Result<AssetsNoncesData[]> = await this.getAssetNonces(
+        this.tradedAssets
+      )
+      if (payload.type === 'error') {
+        return {
+          type: 'error',
+          message: 'failed to retrieve nonces data'
+        }
+      }
+      const nonces: AssetsNoncesData[] = payload.data
       const assetNonces = {}
-      nonces.getAssetsNonces.forEach(item => {
+      nonces.forEach(item => {
         assetNonces[item.asset] = item.nonces
       })
       this.assetNonces = assetNonces
-      return true
+      return { type: 'ok' }
     } catch (e) {
-      console.log(`Could not update traded asset nonces: ${JSON.stringify(e)}`)
-      return false
+      return {
+        type: 'error',
+        message: `Could not update traded asset nonces: ${JSON.stringify(e)}`
+      }
     }
   }
 
@@ -1832,14 +2022,18 @@ export class Client {
     }
   }
 
-  private async fetchMarketData(): Promise<{ [key: string]: Market }> {
+  private async fetchMarketData(): Promise<Result<Record<string, Market>>> {
     if (this.opts.debug) {
       console.log('fetching latest exchange market data')
     }
-    const { markets, error } = await this.listMarkets()
-    const marketAssets = []
+    const payload: Result<Market[]> = await this.listMarkets()
+    if (payload.type === 'error') {
+      return payload
+    }
+    const markets = payload.data
+    const marketAssets: string[] = []
     if (markets) {
-      const marketData = {}
+      const marketData: Record<string, Market> = {}
       let market: Market
       for (const it of Object.keys(markets)) {
         market = markets[it]
@@ -1851,18 +2045,27 @@ export class Client {
           marketAssets.push(market.bUnit)
         }
       }
-
       this.tradedAssets = marketAssets
-      return marketData
+      return {
+        type: 'ok',
+        data: marketData
+      }
     } else {
-      return error
+      return {
+        type: 'error',
+        message: 'fail to retrieve market assets data'
+      }
     }
   }
 
-  private async fetchAssetData(): Promise<{ [key: string]: AssetData }> {
+  private async fetchAssetData(): Promise<Result<Record<string, AssetData>>> {
     const assetList = {}
     try {
-      const assets = await this.listAssets()
+      const payload: Result<Asset[]> = await this.listAssets()
+      if (payload.type === 'error') {
+        return payload
+      }
+      const assets = payload.data
       for (const a of assets) {
         assetList[a.symbol] = {
           hash: a.hash,
@@ -1872,8 +2075,14 @@ export class Client {
       }
     } catch (e) {
       console.log('Could not get assets: ', e)
-      return null
+      return {
+        type: 'error',
+        message: 'Could not get assets'
+      }
     }
-    return assetList
+    return {
+      type: 'ok',
+      data: assetList
+    }
   }
 }

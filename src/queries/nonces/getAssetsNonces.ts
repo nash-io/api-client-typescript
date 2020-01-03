@@ -14,10 +14,9 @@ export const GET_ASSETS_NONCES_QUERY = gql`
     }
   }
 `
-
-export interface GetAssetsNoncesData {
-  getAssetsNonces?: Array<{
-    asset: CryptoCurrency
-    nonces: number[]
-  }>
+export interface AssetsNoncesData {
+  asset: CryptoCurrency
+  nonces: number[]
 }
+
+export interface GetAssetsNoncesData extends Array<AssetsNoncesData> {}
