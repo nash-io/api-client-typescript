@@ -1088,7 +1088,7 @@ export class Client {
     const getAssetNoncesParams = createGetAssetsNoncesParams(assetList)
     const signedPayload = await this.signPayload(getAssetNoncesParams)
     const result = await this.gql.query<{
-      assetsNonces: GetAssetsNoncesData
+      getAssetsNonces: GetAssetsNoncesData
     }>({
       query: GET_ASSETS_NONCES_QUERY,
       variables: {
@@ -1096,7 +1096,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('assetsNonces', result)
+    return formatPayload('getAssetsNonces', result)
   }
 
   /**
