@@ -1116,7 +1116,7 @@ export class Client {
       if (payload.type === 'error') {
         return payload
       }
-      const states = payload.data[0]
+      const states = payload.data
       if (states.recycledOrders.length === 0 && states.states.length === 0) {
         return {
           type: 'ok'

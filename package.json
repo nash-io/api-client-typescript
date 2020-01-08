@@ -47,7 +47,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@neon-exchange/nash-protocol": "3.0.19",
+    "@neon-exchange/nash-protocol": "3.0.24",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
     "apollo-cache-inmemory": "^1.5.1",
@@ -106,9 +106,9 @@
       "**/*.spec.js"
     ]
   },
-   "husky": {
+  "husky": {
     "hooks": {
-      "pre-commit" : "yarn run test:lint && yarn run test:unit"	    
+      "pre-commit": "yarn run test:lint && yarn run test:unit"
     }
   }
 }
