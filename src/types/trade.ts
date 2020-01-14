@@ -15,6 +15,13 @@ export interface Trade {
   takerReceived: CurrencyAmount
   makerFee: CurrencyAmount
   takerFee: CurrencyAmount
+  accountSide: AccountTradeSides
+}
+
+export enum AccountTradeSides {
+  NONE = 'none',
+  MAKER = 'maker',
+  TAKER = 'taker'
 }
 
 export interface TradeHistory {

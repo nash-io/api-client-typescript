@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;queries/nonces/getAssetsNonces&quot; | @neon-exchange/api-client-typescript</title>
+	<title>AccountTradeSides | @neon-exchange/api-client-typescript</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,10 +56,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_queries_nonces_getassetsnonces_.html">&quot;queries/nonces/getAssetsNonces&quot;</a>
+					<a href="../modules/_types_trade_.html">&quot;types/trade&quot;</a>
+				</li>
+				<li>
+					<a href="_types_trade_.accounttradesides.html">AccountTradeSides</a>
 				</li>
 			</ul>
-			<h1>External module &quot;queries/nonces/getAssetsNonces&quot;</h1>
+			<h1>Enumeration AccountTradeSides</h1>
 		</div>
 	</div>
 </header>
@@ -71,30 +74,45 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Interfaces</h3>
+							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-interface tsd-parent-kind-external-module"><a href="../interfaces/_queries_nonces_getassetsnonces_.assetsnoncesdata.html" class="tsd-kind-icon">Assets<wbr>Nonces<wbr>Data</a></li>
-								<li class="tsd-kind-interface tsd-parent-kind-external-module"><a href="../interfaces/_queries_nonces_getassetsnonces_.getassetsnoncesdata.html" class="tsd-kind-icon">Get<wbr>Assets<wbr>Nonces<wbr>Data</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Variables</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_queries_nonces_getassetsnonces_.html#get_assets_nonces_query" class="tsd-kind-icon">GET_<wbr>ASSETS_<wbr>NONCES_<wbr>QUERY</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="_types_trade_.accounttradesides.html#maker" class="tsd-kind-icon">MAKER</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="_types_trade_.accounttradesides.html#none" class="tsd-kind-icon">NONE</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="_types_trade_.accounttradesides.html#taker" class="tsd-kind-icon">TAKER</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Variables</h2>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
-					<a name="get_assets_nonces_query" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagConst">Const</span> GET_<wbr>ASSETS_<wbr>NONCES_<wbr>QUERY</h3>
-					<div class="tsd-signature tsd-kind-icon">GET_<wbr>ASSETS_<wbr>NONCES_<wbr>QUERY<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;gql&#x60;query getAssetsNonces($payload: GetAssetsNoncesParams!$signature: Signature!) {getAssetsNonces(payload: $payload, signature: $signature)@connection(key: &quot;getAssetsNonces&quot;) {assetnonces}}&#x60;</span></div>
+				<h2>Enumeration members</h2>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="maker" class="tsd-anchor"></a>
+					<h3>MAKER</h3>
+					<div class="tsd-signature tsd-kind-icon">MAKER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;maker&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in queries/nonces/getAssetsNonces.ts:5</li>
+							<li>Defined in types/trade.ts:23</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="none" class="tsd-anchor"></a>
+					<h3>NONE</h3>
+					<div class="tsd-signature tsd-kind-icon">NONE<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;none&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in types/trade.ts:22</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="taker" class="tsd-anchor"></a>
+					<h3>TAKER</h3>
+					<div class="tsd-signature tsd-kind-icon">TAKER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;&quot;taker&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in types/trade.ts:24</li>
 						</ul>
 					</aside>
 				</section>
@@ -107,20 +125,35 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="_queries_nonces_getassetsnonces_.html">"queries/nonces/get<wbr>Assets<wbr>Nonces"</a>
+						<a href="../modules/_types_trade_.html">"types/trade"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-enum tsd-parent-kind-external-module">
+						<a href="_types_trade_.accounttradesides.html" class="tsd-kind-icon">Account<wbr>Trade<wbr>Sides</a>
+						<ul>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="_types_trade_.accounttradesides.html#maker" class="tsd-kind-icon">MAKER</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="_types_trade_.accounttradesides.html#none" class="tsd-kind-icon">NONE</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="_types_trade_.accounttradesides.html#taker" class="tsd-kind-icon">TAKER</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_queries_nonces_getassetsnonces_.assetsnoncesdata.html" class="tsd-kind-icon">Assets<wbr>Nonces<wbr>Data</a>
+						<a href="../interfaces/_types_trade_.trade.html" class="tsd-kind-icon">Trade</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_queries_nonces_getassetsnonces_.getassetsnoncesdata.html" class="tsd-kind-icon">Get<wbr>Assets<wbr>Nonces<wbr>Data</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
-						<a href="_queries_nonces_getassetsnonces_.html#get_assets_nonces_query" class="tsd-kind-icon">GET_<wbr>ASSETS_<wbr>NONCES_<wbr>QUERY</a>
+						<a href="../interfaces/_types_trade_.tradehistory.html" class="tsd-kind-icon">Trade<wbr>History</a>
 					</li>
 				</ul>
 			</nav>

@@ -11,6 +11,7 @@ export const TRADE_FRAGMENT = gql`
     makerOrderId
     takerOrderId
     executedAt
+    accountSide
     limitPrice {
       ...currencyPriceFields
     }
