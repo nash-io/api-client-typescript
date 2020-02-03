@@ -25,6 +25,8 @@ export interface State extends ClientSignedState {
   nonce: number
   address: string
   balance: CurrencyAmount
+  message: string
+  blockchain: string
 }
 
 export type States = State[]

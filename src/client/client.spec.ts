@@ -312,31 +312,6 @@ describe('getOrdersForMovement', () => {
   })
 })
 
-describe('cancelAllOrders', () => {
-  // should return an error trying to call the function without mandatory Param
-  it('should return an error trying to call the function without mandatory Params', async done => {
-    // expect to receive an object with property type = Error
-    const marketName = undefined as string
-    const ordersFormove = (await client.cancelAllOrders(
-      marketName
-    )) as FailResult
-    expect(ordersFormove.type).toBe('error')
-    expect(ordersFormove.message).toBe('marketName must be of type string')
-    done()
-  })
-  // should return an error when trying to call function with an invalid mandatory Param
-  it('should return an error trying to call the function with invalid mandatory Param', async done => {
-    // expect to receive an object with property type = error
-    const marketName = (1234 as undefined) as string
-    const ordersFormove = (await client.cancelAllOrders(
-      marketName
-    )) as FailResult
-    expect(ordersFormove.type).toBe('error')
-    expect(ordersFormove.message).toBe('marketName must be of type string')
-    done()
-  })
-})
-
 describe('placeLimitOrder', () => {
   // should return an error trying to call the function without mandatory Param
   it('should return an error trying to call the function without mandatory Params', async done => {

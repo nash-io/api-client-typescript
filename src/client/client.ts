@@ -48,7 +48,6 @@ import { checkMandatoryParams, formatPayload } from './utils'
 import { Result } from '../types'
 import {
   GetStatesData,
-  GET_STATES_MUTATION,
   SignStatesData,
   SIGN_STATES_MUTATION,
   SYNC_STATES_MUTATION
@@ -129,7 +128,6 @@ import {
   createListAccountTradesParams,
   MovementTypeDeposit,
   MovementTypeWithdrawal,
-  createGetStatesParams,
   SyncState,
   createSyncStatesParams,
   bufferize,
@@ -137,6 +135,11 @@ import {
   createTimestamp,
   SigningPayloadID
 } from '@neon-exchange/nash-protocol'
+
+import {
+  States,
+  SignStatesFields
+} from 'mutations/stateSyncing/fragments/signStatesFragment'
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
@@ -210,6 +213,7 @@ interface ListAccountOrderParams {
 }
 
 export const MISSING_NONCES = 'missing_asset_nonces'
+export const MAX_SIGN_STATE_RECURSION = 5
 
 export class Client {
   private opts: ClientOptions
@@ -1112,25 +1116,16 @@ export class Client {
    */
   public async getSignAndSyncStates(): Promise<Result<boolean>> {
     try {
-      const payload: Result<GetStatesData> = await this.getStates()
-      if (payload.type === 'error') {
-        return payload
-      }
-      const states = payload.data
-      if (states.recycledOrders.length === 0 && states.states.length === 0) {
-        return {
-          type: 'ok'
-        }
-      }
-      const signResult = (await this.signStates(states)) as SignStatesData
-      if (signResult.signStates === null) {
-        return {
-          type: 'error',
-          message: 'Error submitting signed states'
-        }
+      const emptyStates: GetStatesData = {
+        states: [],
+        recycledOrders: [],
+        serverSignedStates: []
       }
 
-      const syncResult = await this.syncStates(signResult)
+      const signStatesRecursive: SignStatesData = await this.signStates(
+        emptyStates
+      )
+      const syncResult = await this.syncStates(signStatesRecursive)
       return syncResult
     } catch (error) {
       return {
@@ -1140,33 +1135,13 @@ export class Client {
     }
   }
 
-  /**
-   * List all states and open orders to be signed for settlement
-   *
-   * @returns
-   *
-   * Example
-   * ```
-   * const getStatesData = await nash.getStates()
-   * console.log(getStatesData)
-   * ```
-   */
-  public async getStates(): Promise<Result<GetStatesData>> {
-    const getStatesParams = createGetStatesParams()
-    const signedPayload = await this.signPayload(getStatesParams)
-    try {
-      const result = await this.gql.mutate<{ getStates: GetStatesData }>({
-        mutation: GET_STATES_MUTATION,
-        variables: {
-          payload: signedPayload.payload,
-          signature: signedPayload.signature
-        }
-      })
-      return formatPayload('getStates', result)
-    } catch (e) {
-      console.error('Could not get states: ', e)
-      return e
-    }
+  private state_map_from_states(states): any {
+    return states.map(state => {
+      return {
+        blockchain: state.blockchain,
+        message: state.message
+      }
+    })
   }
 
   /**
@@ -1181,24 +1156,16 @@ export class Client {
    * ```
    */
   public async signStates(
-    getStatesData: GetStatesData
-  ): Promise<SignStatesData | Error> {
-    const stateList: SyncState[] = getStatesData.states.map(state => {
-      return {
-        blockchain: state.blockchain,
-        message: state.message
-      }
-    })
-    const orderList: SyncState[] = getStatesData.recycledOrders.map(state => {
-      return {
-        blockchain: state.blockchain,
-        message: state.message
-      }
-    })
+    getStatesData: GetStatesData,
+    depth: number = 0
+  ): Promise<SignStatesData> {
+    if (depth > MAX_SIGN_STATE_RECURSION) {
+      throw new Error('Max sign state recursion reached.')
+    }
 
     const signStateListPayload: PayloadAndKind = createSignStatesParams(
-      stateList,
-      orderList
+      this.state_map_from_states(getStatesData.states),
+      this.state_map_from_states(getStatesData.recycledOrders)
     )
 
     const signedStates: any = await this.signPayload(signStateListPayload)
@@ -1214,17 +1181,46 @@ export class Client {
 
       const signStatesData = result.data as SignStatesData
 
-      if (signStatesData.signStates === null) {
-        console.error(
-          'No states found from sign states submission.  Response is: ',
-          result
-        )
-        console.error('dumped result is: ', JSON.stringify(result))
+      // this is the response, we will send them in to be signed in the next recursive call
+      const states_requiring_signing: States = this.state_map_from_states(
+        signStatesData.signStates.states
+      )
+
+      // this is all the server signed states.  We don't really use/need these but it is good
+      // for the client to have them
+      const all_server_signed_states: SignStatesFields[] = getStatesData.serverSignedStates.concat(
+        this.state_map_from_states(signStatesData.signStates.serverSignedStates)
+      )
+
+      // keep a list of all states that have been signed so we can sync them
+      const all_states_to_sync = getStatesData.states.concat(
+        states_requiring_signing
+      )
+
+      // if input states to be signed are different than result, and that list has a length
+      // we recursively call this method until the signStates calls are exhausted
+      // with a max recursion depth of 5
+      if (
+        states_requiring_signing !== getStatesData.states &&
+        states_requiring_signing.length > 0
+      ) {
+        const recursiveStates: GetStatesData = {
+          states: states_requiring_signing,
+          recycledOrders: signStatesData.signStates.recycledOrders,
+          serverSignedStates: all_server_signed_states
+        }
+
+        return this.signStates(recursiveStates, depth + 1)
       }
+
+      // the result should have all the states that were signed by the server
+      // and all the states signed by the client in order to call syncStates
+      signStatesData.signStates.serverSignedStates = all_server_signed_states
+      signStatesData.signStates.states = all_states_to_sync
 
       return signStatesData
     } catch (e) {
-      console.error('Could not submit sign states data to graphql: ', e)
+      console.error('Could not sign states: ', e)
       return e
     }
   }
@@ -1318,10 +1314,6 @@ export class Client {
    * ```
    */
   public async cancelAllOrders(marketName?: string): Promise<Result<boolean>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
     let cancelAllOrderParams: any = {
       timestamp: createTimestamp()
     }
