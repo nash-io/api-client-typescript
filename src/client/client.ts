@@ -1904,6 +1904,11 @@ export class Client {
           address: this.nashCoreConfig.wallets.eth.address,
           blockchain: 'eth',
           public_key: this.nashCoreConfig.wallets.eth.publicKey
+        },
+        {
+          address: this.nashCoreConfig.wallets.btc.address,
+          blockchain: 'btc',
+          public_key: this.nashCoreConfig.wallets.btc.publicKey
         }
       ]
     }
