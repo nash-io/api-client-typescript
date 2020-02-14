@@ -8,8 +8,7 @@ export const LIST_ACCOUNT_ORDERS = gql`
     $payload: ListAccountOrdersParams!
     $signature: Signature
   ) {
-    listAccountOrders(payload: $payload, signature: $signature)
-      @connection(key: "listAccountOrders") {
+    listAccountOrders(payload: $payload, signature: $signature) {
       next
       orders {
         ...orderFields
@@ -24,8 +23,7 @@ export const LIST_ACCOUNT_ORDERS_WITH_TRADES = gql`
     $payload: ListAccountOrdersParams!
     $signature: Signature
   ) {
-    listAccountOrders(payload: $payload, signature: $signature)
-      @connection(key: "listAccountOrders") {
+    listAccountOrders(payload: $payload, signature: $signature) {
       next
       orders {
         ...orderFields

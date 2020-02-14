@@ -1,5 +1,4 @@
 import { Result } from '../types'
-import { ApolloQueryResult } from 'apollo-client'
 
 export function checkMandatoryParams<T>(
   ...args: Array<Record<string, any>>
@@ -36,9 +35,9 @@ export function checkMandatoryParams<T>(
   }
 }
 
-export function formatPayload<T>(
+export function formatPayload<T = any>(
   key: keyof T,
-  { errors, data }: ApolloQueryResult<T>
+  { errors, data }: { errors?: Array<{ message: string }>; data: T }
 ): Result<T[keyof T]> {
   // ignore graphqlErrors for not found data
   if (errors) {

@@ -7,8 +7,7 @@ export const GET_ACCOUNT_ORDER = gql`
     $payload: GetAccountOrderParams!
     $signature: Signature
   ) {
-    getAccountOrder(payload: $payload, signature: $signature)
-      @connection(key: "getAccountOrder") {
+    getAccountOrder(payload: $payload, signature: $signature) {
       ...orderFields
     }
   }

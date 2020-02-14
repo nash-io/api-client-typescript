@@ -7,8 +7,7 @@ export const LIST_ACCOUNT_TRANSACTIONS = gql`
     $payload: ListAccountTransactionsParams!
     $signature: Signature!
   ) {
-    listAccountTransactions(payload: $payload, signature: $signature)
-      @connection(key: "listAccountTransactions") {
+    listAccountTransactions(payload: $payload, signature: $signature) {
       nextCursor
       transactions {
         ...accountTransactionFields
