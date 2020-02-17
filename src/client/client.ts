@@ -26,7 +26,6 @@ import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder'
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder'
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder'
-import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
@@ -89,7 +88,6 @@ import {
   PaginationCursor,
   OrderStatus,
   OrderType,
-  SignMovementResult,
   AssetData,
   Asset,
   MissingNonceError,
@@ -107,7 +105,6 @@ import {
   InitParams,
   Config,
   signPayload,
-  createAddMovementParams,
   createPlaceStopMarketOrderParams,
   createPlaceStopLimitOrderParams,
   createPlaceMarketOrderParams,
@@ -126,20 +123,21 @@ import {
   createListAccountTransactionsParams,
   createListAccountOrdersParams,
   createListAccountTradesParams,
-  MovementTypeDeposit,
-  MovementTypeWithdrawal,
   SyncState,
   createSyncStatesParams,
   bufferize,
   createSignStatesParams,
   createTimestamp,
-  SigningPayloadID
+  SigningPayloadID,
+  createPrepareMovementParams,
+  createAddMovementParams
 } from '@neon-exchange/nash-protocol'
 
 import {
   States,
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
+import { PREPARE_MOVEMENT_MUTATION } from '../mutations/movements/prepareMovementMutation'
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
@@ -1758,80 +1756,41 @@ export class Client {
     )
   }
 
-  public async signDepositRequest(
-    address: string,
-    quantity: CurrencyAmount,
-    nonce?: number
-  ): Promise<SignMovementResult> {
-    const signMovementParams = createAddMovementParams(
+
+  public async addMovement(address: string, quantity: CurrencyAmount, type: MovementType): Promise<void> {
+
+    const prepareMovementMovementParams = createPrepareMovementParams(
       address,
       quantity,
-      MovementTypeDeposit,
-      nonce
+      type
     )
-    const signedPayload = await this.signPayload(signMovementParams)
+    const preparePayload = await this.signPayload(prepareMovementMovementParams)
     const result = await this.gql.mutate({
-      mutation: ADD_MOVEMENT_MUTATION,
+      mutation: PREPARE_MOVEMENT_MUTATION,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: preparePayload.payload,
+        signature: preparePayload.signature
       }
     })
 
-    // after deposit or withdrawal we want to update nonces
-    await this.updateTradedAssetNonces()
+    console.log("Result: ", result)
 
-    return {
-      result: result.data.addMovement,
-      blockchain_data: signedPayload.blockchain_data
-    }
-  }
-
-  /**
-   * Sign a withdraw request.
-   *
-   * @param address
-   * @param quantity
-   * @returns
-   *
-   * Example
-   * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
-   *
-   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
-   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
-   * const signedMovement = await nash.signWithdrawRequest(address, amount);
-   * console.log(signedMovement)
-   * ```
-   */
-  public async signWithdrawRequest(
-    address: string,
-    quantity: CurrencyAmount,
-    nonce?: number
-  ): Promise<SignMovementResult> {
-    const signMovementParams = createAddMovementParams(
+    const movementPayloadParams = createAddMovementParams(
       address,
       quantity,
-      MovementTypeWithdrawal,
-      nonce
+      type,
+      result.prepareMovement.nonce,
+      null,
+      result.prepareMovement.recycledOrders,
+      result.prepareMovement.transactionElements
     )
-    const signedPayload = await this.signPayload(signMovementParams)
-    const result = await this.gql.mutate({
-      mutation: ADD_MOVEMENT_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
+    
+    const signedMovement = await this.signPayload(movementPayloadParams)
 
     // after deposit or withdrawal we want to update nonces
     await this.updateTradedAssetNonces()
-
-    return {
-      result: result.data.addMovement,
-      blockchain_data: signedPayload.blockchain_data
-    }
   }
+
 
   /**
    * creates and uploads wallet and encryption keys to the CAS.
