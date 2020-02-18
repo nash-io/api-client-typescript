@@ -41,4 +41,3 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
 //   }
 //   signature: Signature
 // }
-

@@ -44,7 +44,7 @@ import {
   TwoFactorLoginResponse
 } from '../mutations/account/twoFactorLoginMutation'
 import { checkMandatoryParams, formatPayload } from './utils'
-import { Result } from '../types'
+import { Result, SignMovementResult } from '../types'
 import {
   GetStatesData,
   SignStatesData,
@@ -138,6 +138,7 @@ import {
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 import { PREPARE_MOVEMENT_MUTATION } from '../mutations/movements/prepareMovementMutation'
+import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
@@ -1756,9 +1757,11 @@ export class Client {
     )
   }
 
-
-  public async addMovement(address: string, quantity: CurrencyAmount, type: MovementType): Promise<void> {
-
+  public async addMovement(
+    address: string,
+    quantity: CurrencyAmount,
+    type: MovementType
+  ): Promise<SignMovementResult> {
     const prepareMovementMovementParams = createPrepareMovementParams(
       address,
       quantity,
@@ -1773,24 +1776,41 @@ export class Client {
       }
     })
 
-    console.log("Result: ", result)
-
     const movementPayloadParams = createAddMovementParams(
       address,
       quantity,
       type,
-      result.prepareMovement.nonce,
+      result.data.prepareMovement.nonce,
       null,
-      result.prepareMovement.recycledOrders,
-      result.prepareMovement.transactionElements
+      result.data.prepareMovement.recycledOrders,
+      result.data.prepareMovement.transactionElements
     )
-    
+
     const signedMovement = await this.signPayload(movementPayloadParams)
+
+    const payload = { ...signedMovement.payload }
+    payload.signedTransactionElements = payload.digests
+    payload.resignedOrders = payload.recycled_orders
+    delete payload.digests
+    delete payload.recycled_orders
+    delete payload.blockchainSignatures
+
+    const addMovementResult = await this.gql.mutate({
+      mutation: ADD_MOVEMENT_MUTATION,
+      variables: {
+        payload,
+        signature: signedMovement.signature
+      }
+    })
 
     // after deposit or withdrawal we want to update nonces
     await this.updateTradedAssetNonces()
-  }
 
+    return {
+      result: addMovementResult.data.addMovement,
+      blockchain_data: signedMovement.blockchain_data
+    }
+  }
 
   /**
    * creates and uploads wallet and encryption keys to the CAS.
