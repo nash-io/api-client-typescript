@@ -1767,6 +1767,7 @@ export class Client {
       quantity,
       type
     )
+
     const preparePayload = await this.signPayload(prepareMovementMovementParams)
     const result = await this.gql.mutate({
       mutation: PREPARE_MOVEMENT_MUTATION,
@@ -1787,9 +1788,9 @@ export class Client {
     )
 
     const signedMovement = await this.signPayload(movementPayloadParams)
-
     const payload = { ...signedMovement.payload }
-    payload.signedTransactionElements = payload.digests
+    payload.signedTransactionElements =
+      signedMovement.signedPayload.signed_transaction_elements
     payload.resignedOrders = payload.recycled_orders
     delete payload.digests
     delete payload.recycled_orders
