@@ -48,7 +48,8 @@
   },
   "dependencies": {
     "@absinthe/socket": "^0.2.1",
-    "@neon-exchange/nash-protocol": "3.0.32",
+    "@cityofzion/neon-js": "^4.7.2",
+    "@neon-exchange/nash-protocol-mpc": "0.3.1",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
     "array-buffer-to-hex": "^1.0.0",
@@ -58,7 +59,8 @@
     "node-fetch": "^2.3.0",
     "phoenix": "^1.4.14",
     "phoenix-channels": "^1.0.0",
-    "sha.js": "^2.4.11"
+    "sha.js": "^2.4.11",
+    "web3": "^1.2.6"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",
@@ -80,7 +82,7 @@
     "tslint-config-prettier": "^1.17.0",
     "tslint-immutable": "^5.0.0",
     "typedoc": "^0.13.0",
-    "typescript": "^3.1.6"
+    "typescript": "^3.8.3"
   },
   "ava": {
     "failFast": true,

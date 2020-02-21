@@ -8,6 +8,7 @@ export enum MovementType {
 
 export enum MovementStatus {
   COMPLETED = 'COMPLETED',
+  CREATED = 'CREATED',
   FAILED = 'FAILED',
   PENDING = 'PENDING'
 }
@@ -30,5 +31,14 @@ export interface SignMovement {
 
 export interface SignMovementResult {
   result: SignMovement
-  blockchain_data: any
+  blockchain_data: {
+    address: string
+    amount: string
+    asset: string
+    nonce: string
+    prefix: string
+    userPubKey: string
+    userSig?: string
+    r?: string
+  }
 }
