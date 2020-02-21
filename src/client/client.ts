@@ -1,6 +1,14 @@
 import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
+import * as NeonJS from '@cityofzion/neon-js'
+import { u, tx, sc, wallet } from '@cityofzion/neon-core'
+import { TransactionReceipt } from 'web3-core'
+import { Transaction as EthTransaction } from 'ethereumjs-tx'
+import Web3 from 'web3'
+import { Contract } from 'web3-eth-contract'
+import BigNumber from 'bignumber.js'
+import { ApolloError } from './ApolloError'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
@@ -26,6 +34,7 @@ import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrde
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder'
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder'
 import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
+import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
@@ -39,6 +48,11 @@ import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
 
 import {
+  DH_FIIL_POOL,
+  DHFillPoolArgs,
+  DHFillPoolResp
+} from '../mutations/dhFillPool'
+import {
   GetAssetsNoncesData,
   GET_ASSETS_NONCES_QUERY,
   AssetsNoncesData
@@ -47,25 +61,29 @@ import {
   GET_ORDERS_FOR_MOVEMENT_QUERY,
   OrdersForMovementData
 } from '../queries/movement/getOrdersForMovementQuery'
-import {
-  USER_2FA_LOGIN_MUTATION,
-  TwoFactorLoginResponse
-} from '../mutations/account/twoFactorLoginMutation'
+
 import { checkMandatoryParams } from './utils'
+
 import {
   GetStatesData,
   SignStatesData,
   SIGN_STATES_MUTATION,
   SYNC_STATES_MUTATION
 } from '../mutations/stateSyncing'
-import { SALT } from '../config'
+
+import {
+  CompletePayloadSignatureType,
+  COMPLETE_PAYLOAD_SIGNATURE,
+  CompletePayloadSignatureArgs,
+  CompletePayloadSignatureResult
+} from '../mutations/mpc/completeSignature'
+
 import { FiatCurrency } from '../constants/currency'
 import {
   normalizePriceForMarket,
-  normalizeAmountForMarket,
-  mapMarketsForNashProtocol
+  mapMarketsForNashProtocol,
+  normalizeAmountForMarket
 } from '../helpers'
-import toHex from 'array-buffer-to-hex'
 import fetch from 'node-fetch'
 import {
   OrderBook,
@@ -97,6 +115,7 @@ import {
   OrderStatus,
   OrderType,
   SignMovementResult,
+  Blockchain as TSAPIBlockchain,
   AssetData,
   Asset,
   MissingNonceError,
@@ -106,14 +125,11 @@ import {
 import { CryptoCurrency } from '../constants/currency'
 
 import {
-  getSecretKey,
-  encryptSecretKey,
   PayloadAndKind,
-  getHKDFKeysFromPassword,
-  initialize,
-  InitParams,
-  Config,
-  signPayload,
+  Blockchain,
+  BIP44,
+  preSignPayload,
+  ChildKey,
   createAddMovementParams,
   createPlaceStopMarketOrderParams,
   createPlaceStopLimitOrderParams,
@@ -123,6 +139,7 @@ import {
   createGetMovementParams,
   createGetDepositAddressParams,
   createGetAccountOrderParams,
+  computePresig,
   createGetAccountBalanceParams,
   createGetAccountVolumesParams,
   createGetAssetsNoncesParams,
@@ -136,18 +153,29 @@ import {
   MovementTypeDeposit,
   MovementTypeWithdrawal,
   SyncState,
+  APIKey,
   createSyncStatesParams,
-  bufferize,
   createSignStatesParams,
   createTimestamp,
   SigningPayloadID
-} from '@neon-exchange/nash-protocol'
+} from '@neon-exchange/nash-protocol-mpc'
 
 import {
   States,
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
+import { NEO_NETWORK, Networks, ETH_NETWORK } from './networks'
+
+import {
+  prefixWith0xIfNeeded,
+  setSignature,
+  transferExternalGetAmount,
+  serializeEthTx
+} from './ethUtils'
+
+import { SettlementABI } from './abi/eth/settlementABI'
+import { Erc20ABI } from './abi/eth/erc20ABI'
 
 export const EnvironmentConfiguration = {
   production: { host: 'app.nash.io' },
@@ -159,14 +187,27 @@ export const EnvironmentConfiguration = {
   local: { host: 'localhost:4000' }
 }
 
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+const BLOCKCHAIN_TO_BIP44 = {
+  [Blockchain.ETH]: BIP44.ETH,
+  [Blockchain.BTC]: BIP44.BTC,
+  [Blockchain.NEO]: BIP44.NEO
+}
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
+
 export interface ClientOptions {
   host: string
+  maxEthCostPrTransaction?: string
   debug?: boolean
+  neoScan?: string
+  neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
+  ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
 }
-
 export interface NonceSet {
   noncesFrom: number[]
   noncesTo: number[]
@@ -188,14 +229,6 @@ interface ListAccountTransactionsParams {
 interface GetAccountPortfolioParams {
   fiatSymbol?: FiatCurrency
   period?: Period
-}
-
-interface LoginParams {
-  email: string
-  password: string
-  twoFaCode?: string
-  walletIndices?: { [key: string]: number }
-  presetWallets?: object
 }
 
 interface ListTradeParams {
@@ -232,13 +265,13 @@ interface ListAccountOrderParams {
 /**
  * These interfaces are just here to
  */
-interface GQLQueryParams {
+interface GQLQueryParams<V> {
   query: any
-  variables?: object
+  variables?: V
 }
-interface GQLMutationParams {
+interface GQLMutationParams<V> {
   mutation: any
-  variables?: object
+  variables?: V
 }
 
 interface GQLError {
@@ -251,8 +284,8 @@ interface GQLResp<T> {
 }
 
 interface GQL {
-  query<T = any>(params: GQLQueryParams): Promise<GQLResp<T>>
-  mutate<T = any>(params: GQLMutationParams): Promise<GQLResp<T>>
+  query<T = any, V = any>(params: GQLQueryParams<V>): Promise<GQLResp<T>>
+  mutate<T = any, V = any>(params: GQLMutationParams<V>): Promise<GQLResp<T>>
 }
 
 const previousPrintResults = new Map<any, string>()
@@ -334,20 +367,35 @@ interface NashSocketEvents {
   ): void
 }
 
+export const findBestNetworkNode = async (nodes): Promise<string> => {
+  for (const url of nodes) {
+    try {
+      const s = await fetch(url)
+      if (s.status >= 400) {
+        throw new Error('invalid')
+      }
+      return url
+    } catch (e) {
+      console.info(url, 'is down. Trying next node')
+    }
+  }
+  throw new Error('No neo nodes up')
+}
+
 export class Client {
+  public ethVaultContract: Contract
+  public apiKey: APIKey
+  private maxEthCostPrTransaction: BigNumber
   private opts: ClientOptions
   private apiUri: string
-  private casUri: string
-  private wsUri: string
 
-  private initParams: InitParams
-  private nashCoreConfig: Config
-  private casCookie: string
-  private account: any
-  private publicKey: string
+  private wsToken: string
+  private wsUri: string
   private gql: GQL
-  private walletIndices: { [key: string]: number }
+  private web3: Web3
+  private authorization: string
   public marketData: { [key: string]: Market }
+  public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
   public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []
@@ -368,24 +416,47 @@ export class Client {
    * ```
    */
   constructor(opts: ClientOptions) {
-    this.opts = opts
+    this.opts = {
+      maxEthCostPrTransaction: '0.01',
+      ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
+      neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
+      ...opts
+    }
+    this.web3 = new Web3(ETH_NETWORK[Networks.MainNet].nodes[0])
 
     if (!opts.host || opts.host.indexOf('.') === -1) {
-      throw new Error(`Invalid API host '${opts.host}'`);
+      throw new Error(`Invalid API host '${opts.host}'`)
     }
 
     this.apiUri = `https://${opts.host}/api/graphql`
-    this.casUri = `https://${opts.host}/api`
     this.wsUri = `wss://${opts.host}/api/socket`
-
+    this.maxEthCostPrTransaction = new BigNumber(
+      this.web3.utils.toWei(this.opts.maxEthCostPrTransaction)
+    )
+    if (
+      this.opts.maxEthCostPrTransaction == null ||
+      isNaN(parseFloat(this.opts.maxEthCostPrTransaction))
+    ) {
+      throw new Error(
+        'maxEthCostPrTransaction is invalid ' +
+          this.opts.maxEthCostPrTransaction
+      )
+    }
+    const network = new NeonJS.rpc.Network({
+      ...this.opts.neoNetworkSettings,
+      name: this.opts.neoNetworkSettings.name
+    })
+    NeonJS.default.add.network(network, true)
+    this.ethVaultContract = new this.web3.eth.Contract(
+      SettlementABI,
+      this.opts.ethNetworkSettings.contracts.vault.contract
+    )
     const query: GQL['query'] = async params => {
-      // const operation = params.query.definitions[0]
-      // const operationName = operation && (operation.name.value as string)
       const resp = await fetch(this.apiUri, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Cookie: this.casCookie
+          Authorization: this.authorization
         },
         body: JSON.stringify({
           query: memorizedPrint(params.query),
@@ -394,12 +465,16 @@ export class Client {
       })
       if (resp.status !== 200) {
         let msg = `API error. Status code: ${resp.status}`
-        if (resp.data) { msg += ` / body: ${resp.data}`}
+        if (resp.data) {
+          msg += ` / body: ${resp.data}`
+        }
         throw new Error(msg)
       }
       const obj = await resp.json()
       if (obj.errors) {
-        throw new Error(JSON.stringify(obj.errors, null, 2))
+        throw new ApolloError({
+          graphQLErrors: obj.errors
+        })
       }
       return obj
     }
@@ -460,7 +535,7 @@ export class Client {
    * ```
    */
   createSocketConnection(): NashSocketEvents {
-    const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
+    const m = /nash-cookie=([0-9a-z-]+)/.exec(this.wsToken)
     if (m == null) {
       throw new Error('To subscribe to events, please login() first')
     }
@@ -592,128 +667,21 @@ export class Client {
    * ```
    */
   public async login({
-    email,
-    password,
-    twoFaCode,
-    walletIndices = { neo: 1, eth: 1, btc: 1 },
-    presetWallets
-  }: LoginParams): Promise<void> {
-    checkMandatoryParams({
-      email,
-      password,
-      Type: 'string'
-    })
-    this.walletIndices = walletIndices
-    const keys = await getHKDFKeysFromPassword(password, SALT)
-    const loginUrl = this.casUri + '/user_login'
-    const body = {
-      email,
-      password: toHex(keys.authKey)
-    }
-
-    const response = await fetch(loginUrl, {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-      method: 'POST'
-    })
-
-    if (response.status !== 200) {
-      let msg = `Login error. API status code: ${response.status}`
-      if (response.data) { msg += ` / body: ${response.data}`}
-      throw new Error(msg)
-    }
-
-    this.casCookie = response.headers.get('set-cookie')
-    const result = await response.json()
-    if (result.error) {
-      throw new Error(result.message)
-    }
-
-    this.account = result.account
+    secret,
+    apiKey
+  }: {
+    apiKey: string
+    secret: string
+  }): Promise<void> {
+    this.authorization = `Token ${apiKey}`
+    this.wsToken = apiKey
+    this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
     this.marketData = await this.fetchMarketData()
+    this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
-    this.assetNonces = {}
+
     this.currentOrderNonce = this.createTimestamp32()
-
-    if (result.message === 'Two factor required') {
-      if (twoFaCode !== undefined) {
-        this.account = await this.doTwoFactorLogin(twoFaCode)
-        if (this.account.type === 'error') {
-          throw new Error('Could not login')
-        }
-      } else {
-        // 2FA code is undefined. Check if needed by backend
-        throw new Error("Login requires 2 factor code, but no twoFaCode argument supplied")
-      }
-    }
-
-    if (this.account.encrypted_secret_key === null) {
-      console.log(
-        'keys not present in the CAS: creating and uploading as we speak.'
-      )
-
-      await this.createAndUploadKeys(
-        keys.encryptionKey,
-        this.casCookie,
-        presetWallets
-      )
-    }
-
-    const aead = {
-      encryptedSecretKey: bufferize(this.account.encrypted_secret_key),
-      nonce: bufferize(this.account.encrypted_secret_key_nonce),
-      tag: bufferize(this.account.encrypted_secret_key_tag)
-    }
-
-    this.initParams = {
-      walletIndices: this.walletIndices,
-      encryptionKey: keys.encryptionKey,
-      aead,
-      marketData: mapMarketsForNashProtocol(this.marketData),
-      assetData: this.assetData
-    }
-
-    this.nashCoreConfig = await initialize(this.initParams)
-    if (this.opts.debug) {
-      console.log(this.nashCoreConfig)
-    }
-
-    if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig }
-      cloned.wallets = presetWallets
-      this.nashCoreConfig = cloned
-    }
-
-    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
-
-    // after login we should always try to get asset nonces
     await this.updateTradedAssetNonces()
-  }
-
-  private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
-    const twoFaResult = await this.gql.mutate({
-      mutation: USER_2FA_LOGIN_MUTATION,
-      variables: { code: twoFaCode }
-    })
-    try {
-      const result = twoFaResult.data.twoFactorLogin as TwoFactorLoginResponse
-      const twoFAaccount = result.account
-      const wallets = {}
-      twoFAaccount.wallets.forEach(wallet => {
-        wallets[wallet.blockchain.toLowerCase()] = wallet.chainIndex
-      })
-      this.walletIndices = wallets
-      return {
-        encrypted_secret_key: twoFAaccount.encryptedSecretKey,
-        encrypted_secret_key_nonce: twoFAaccount.encryptedSecretKeyNonce,
-        encrypted_secret_key_tag: twoFAaccount.encryptedSecretKeyTag
-      }
-    } catch (e) {
-      return {
-        type: 'error',
-        message: twoFaResult.errors
-      }
-    }
   }
 
   /**
@@ -1635,7 +1603,6 @@ export class Client {
       marketName,
       buyOrSell
     )
-
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1724,7 +1691,6 @@ export class Client {
       marketName,
       buyOrSell
     )
-
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1982,7 +1948,7 @@ export class Client {
       nonce
     )
     const signedPayload = await this.signPayload(signMovementParams)
-    const result = await this.gql.mutate({
+    const result = await this.gql.mutate<{ addMovement: AddMovement }>({
       mutation: ADD_MOVEMENT_MUTATION,
       variables: {
         payload: signedPayload.payload,
@@ -1994,9 +1960,523 @@ export class Client {
     await this.updateTradedAssetNonces()
 
     return {
-      result: result.data.addMovement,
+      result: {
+        signature: result.data.addMovement.signature,
+        publicKey: result.data.addMovement.publicKey,
+        movement: result.data.addMovement
+      },
       blockchain_data: signedPayload.blockchain_data
     }
+  }
+
+  public async queryAllowance(contract: string): Promise<BigNumber> {
+    const erc20Contract = new this.web3.eth.Contract(Erc20ABI, `0x${contract}`)
+    try {
+      const res = await erc20Contract.methods
+        .allowance(
+          `0x${this.apiKey.child_keys[BIP44.ETH].address}`,
+          this.opts.neoNetworkSettings.contracts.vault.contract
+        )
+        .call()
+      return new BigNumber(res)
+    } catch (e) {
+      return new BigNumber(0)
+    }
+  }
+
+  private validateTransactionCost(gasPrice: string, estimate: number) {
+    const maxCost = new BigNumber(gasPrice)
+      .multipliedBy(2)
+      .multipliedBy(estimate)
+    if (this.maxEthCostPrTransaction.lt(maxCost)) {
+      throw new Error(
+        'Transaction ETH cost larger than maxEthCostPrTransaction (' +
+          this.opts.maxEthCostPrTransaction +
+          ')'
+      )
+    }
+  }
+
+  private async approveERC20Transaction(
+    asset: AssetData,
+    childKey: ChildKey,
+    amount: BigNumber
+  ): Promise<TransactionReceipt> {
+    const chainId = await this.web3.eth.net.getId()
+    const erc20Contract = await new this.web3.eth.Contract(
+      Erc20ABI,
+      '0x' + asset.hash
+    )
+
+    const approveAbi = erc20Contract.methods
+      .approve(
+        this.opts.ethNetworkSettings.contracts.vault.contract,
+        this.web3.utils.numberToHex(
+          transferExternalGetAmount(new BigNumber(amount), asset)
+        )
+      )
+      .encodeABI()
+
+    const ethApproveNonce = await this.web3.eth.getTransactionCount(
+      '0x' + childKey.address
+    )
+    const nonce = '0x' + ethApproveNonce.toString(16)
+
+    const estimate = await this.web3.eth.estimateGas({
+      from: '0x' + this.apiKey.child_keys[BIP44.ETH].address,
+      nonce: ethApproveNonce,
+      to: '0x' + asset.hash,
+      data: approveAbi
+    })
+
+    const gasPrice = await this.web3.eth.getGasPrice()
+    this.validateTransactionCost(gasPrice, estimate)
+    const approveTx = new EthTransaction({
+      nonce, // + movement.data.assetNonce,
+      gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
+      gasLimit: '0x' + (estimate * 2).toString(16),
+      to: '0x' + asset.hash,
+      value: 0,
+      data: approveAbi
+    })
+    approveTx.getChainId = () => chainId
+
+    const approveSignature = await this.signEthTransaction(approveTx)
+    setSignature(approveTx, approveSignature)
+
+    const p = this.web3.eth.sendSignedTransaction(
+      '0x' + approveTx.serialize().toString('hex')
+    )
+
+    return new Promise((resolve, reject) => {
+      p.once('error', reject)
+      p.once('receipt', resolve)
+    })
+  }
+
+  private async approveAndAwaitAllowance(
+    assetData: AssetData,
+    childKey: ChildKey,
+    amount: string
+  ): Promise<void> {
+    const bnAmount = new BigNumber(amount)
+    const currentAllowance = await this.queryAllowance(assetData.hash)
+    if (currentAllowance.lt(bnAmount)) {
+      await this.approveERC20Transaction(
+        assetData,
+        childKey,
+        bnAmount.minus(currentAllowance)
+      )
+
+      // We will wait for allowance for up to 5 minutes. After which I think we should time out.
+      for (let i = 0; i < 5 * 12 * 4; i++) {
+        const latestAllowance = await this.queryAllowance(assetData.hash)
+        if (latestAllowance.gte(bnAmount)) {
+          return
+        }
+        await sleep(5000)
+      }
+      throw new Error('Eth approval timed out')
+    }
+  }
+
+  public async transferToExternal(params: {
+    quantity: CurrencyAmount
+    address: string
+  }): Promise<{ txId: string; gasUsed?: number }> {
+    const {
+      quantity: { currency, amount },
+      address
+    } = params
+    if (this.assetData == null) {
+      throw new Error('Asset data null')
+    }
+    if (this.assetData[currency] == null) {
+      throw new Error('Invalid asset: ' + currency)
+    }
+    const assetData = this.assetData[currency]
+    const blockchain = assetData.blockchain
+    const childKey = this.apiKey.child_keys[
+      BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
+    ]
+    switch (blockchain) {
+      case 'eth':
+        const chainId = await this.web3.eth.net.getId()
+        const ethAccountNonce = await this.web3.eth.getTransactionCount(
+          '0x' + childKey.address
+        )
+        const value =
+          currency === CryptoCurrency.ETH ? this.web3.utils.toWei(amount) : '0'
+
+        let data = ''
+        if (currency !== CryptoCurrency.ETH) {
+          const erc20Contract = new this.web3.eth.Contract(
+            Erc20ABI,
+            `0x${assetData.hash}`
+          )
+          data = erc20Contract.methods
+            .transfer(
+              address,
+              this.web3.utils.numberToHex(
+                transferExternalGetAmount(new BigNumber(amount), assetData)
+              )
+            )
+            .encodeABI()
+        }
+
+        const gasPrice = await this.web3.eth.getGasPrice()
+        const estimate = await this.web3.eth.estimateGas({
+          from: prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address),
+          nonce: ethAccountNonce,
+          to: prefixWith0xIfNeeded(assetData.hash),
+          data
+        })
+
+        this.validateTransactionCost(gasPrice, estimate)
+
+        const ethTx = new EthTransaction({
+          nonce: '0x' + ethAccountNonce.toString(16),
+          gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
+          gasLimit: '0x' + estimate.toString(16),
+          to: prefixWith0xIfNeeded(
+            currency !== CryptoCurrency.ETH ? assetData.hash : address
+          ),
+          value: '0x' + parseInt(value, 10).toString(16),
+          data
+        })
+
+        ethTx.getChainId = () => chainId
+
+        const ethTxSignature = await this.signEthTransaction(ethTx)
+        setSignature(ethTx, ethTxSignature)
+        const receipt = await this.web3.eth.sendSignedTransaction(
+          '0x' + ethTx.serialize().toString('hex')
+        )
+        return {
+          txId: receipt.transactionHash,
+          gasUsed: receipt.gasUsed
+        }
+      case 'neo':
+        let transaction: tx.Transaction
+        const nodes = this.opts.neoNetworkSettings.nodes.reverse()
+        const node = await findBestNetworkNode(nodes)
+        const rpcClient = new NeonJS.rpc.RPCClient(node)
+        const balance = await NeonJS.api.neoscan.getBalance(
+          this.opts.neoScan,
+          childKey.address
+        )
+        if (
+          currency === CryptoCurrency.NEO ||
+          currency === CryptoCurrency.GAS
+        ) {
+          transaction = NeonJS.default.create
+            .contractTx()
+            .addIntent(
+              currency.toUpperCase(),
+              new u.Fixed8(amount, 10),
+              address
+            )
+        } else {
+          const sendAmount = parseFloat(amount) * 1e8
+          const timestamp = new BigNumber(this.createTimestamp32()).toString(16)
+          transaction = new tx.InvocationTransaction({
+            script: NeonJS.default.create.script({
+              scriptHash: assetData.hash,
+              operation: 'transfer',
+              args: [
+                sc.ContractParam.byteArray(childKey.address, 'address'),
+                sc.ContractParam.byteArray(address, 'address'),
+                sc.ContractParam.integer(sendAmount)
+              ]
+            }),
+            gas: 0
+          })
+            .addAttribute(
+              tx.TxAttrUsage.Script,
+              u.reverseHex(wallet.getScriptHashFromAddress(childKey.address))
+            )
+            .addAttribute(tx.TxAttrUsage.Remark, timestamp)
+        }
+        transaction.calculate(balance)
+        const payload = transaction.serialize(false)
+        const signature = await this.signNeoPayload(payload.toLowerCase())
+        transaction.addWitness(
+          tx.Witness.fromSignature(signature, childKey.public_key)
+        )
+        const signedPayload = transaction.serialize(true)
+        const neoStatus = await rpcClient.sendRawTransaction(signedPayload)
+
+        if (!neoStatus) {
+          throw new Error('Could not send neo')
+        }
+        return {
+          txId: transaction.hash,
+          gasUsed: 0
+        }
+      default:
+        throw new Error('Insupported blockchain')
+    }
+  }
+  private async signNeoPayload(payload: string): Promise<string> {
+    const messageHash = u.sha256(payload)
+    const childKey = this.apiKey.child_keys[BIP44.NEO]
+    const payloadPresig = await computePresig({
+      apiKey: {
+        client_secret_share: childKey.client_secret_share,
+        paillier_pk: this.apiKey.paillier_pk,
+        public_key: childKey.public_key,
+        server_secret_share_encrypted: childKey.server_secret_share_encrypted
+      },
+      blockchain: Blockchain.NEO,
+      fillPoolFn: this.fillPoolFn,
+      messageHash
+    })
+    const signature = await this.completePayloadSignature({
+      blockchain: Blockchain.NEO,
+      payload,
+      public_key: childKey.public_key,
+      signature: payloadPresig.presig,
+      type: CompletePayloadSignatureType.Blockchain,
+      r: payloadPresig.r
+    })
+    if (!wallet.verify(payload, signature, childKey.public_key)) {
+      throw new Error('Completed signature not correct')
+    }
+    return signature
+  }
+  private async signEthTransaction(etx: EthTransaction): Promise<string> {
+    const childKey = this.apiKey.child_keys[BIP44.ETH]
+    const txSignature = await computePresig({
+      apiKey: {
+        client_secret_share: childKey.client_secret_share,
+        paillier_pk: this.apiKey.paillier_pk,
+        public_key: childKey.public_key,
+        server_secret_share_encrypted: childKey.server_secret_share_encrypted
+      },
+      blockchain: Blockchain.ETH,
+      fillPoolFn: this.fillPoolFn,
+      messageHash: etx.hash(false).toString('hex')
+    })
+
+    const payload = serializeEthTx(etx)
+    const invocationSignature = await this.completePayloadSignature({
+      blockchain: Blockchain.ETH,
+      payload: payload.toLowerCase(),
+      public_key: childKey.public_key,
+      signature: txSignature.presig,
+      type: CompletePayloadSignatureType.Blockchain,
+      r: txSignature.r
+    })
+    return invocationSignature
+  }
+  public depositToTradingContract(quantity: CurrencyAmount) {
+    return this.transferToTradingContract(quantity, MovementTypeDeposit)
+  }
+  public withdrawFromTradingContract(quantity: CurrencyAmount) {
+    return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
+  }
+  private async transferToTradingContract(
+    quantity: CurrencyAmount,
+    movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
+  ): Promise<{ txId: string }> {
+    const movement = await this.getOrdersForMovement(quantity.currency)
+    if (this.assetData == null) {
+      throw new Error('Asset data null')
+    }
+    if (this.assetData[quantity.currency] == null) {
+      throw new Error('Invalid asset: ' + quantity.currency)
+    }
+    const assetData = this.assetData[quantity.currency]
+    const blockchain = assetData.blockchain
+    const childKey = this.apiKey.child_keys[
+      BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
+    ]
+    if (
+      blockchain === TSAPIBlockchain.ETH &&
+      movementType === MovementTypeDeposit &&
+      quantity.currency !== CryptoCurrency.ETH
+    ) {
+      await this.approveAndAwaitAllowance(assetData, childKey, quantity.amount)
+    }
+    const address = childKey.address
+    const signMovementParams = createAddMovementParams(
+      address,
+      quantity,
+      movementType,
+      movement.assetNonce
+    )
+    const signedPayload = await this.signPayload(signMovementParams)
+    const blockchainSignature = await this.completePayloadSignature({
+      blockchain: blockchain.toUpperCase() as Blockchain,
+      payload: signedPayload.blockchain_raw.toLowerCase(),
+      public_key: childKey.public_key,
+      signature: signedPayload.blockchain_data.userSig,
+      type: CompletePayloadSignatureType.Movement,
+      r: signedPayload.blockchain_data.r
+    })
+    const result = await this.gql.mutate<{ addMovement: AddMovement }>({
+      mutation: ADD_MOVEMENT_MUTATION,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
+      }
+    })
+
+    switch (blockchain) {
+      case 'eth':
+        const {
+          address: scriptAddress,
+          asset,
+          amount: scriptAmount,
+          nonce
+        } = signedPayload.blockchain_data
+        const chainId = await this.web3.eth.net.getId()
+
+        const scriptAmountDecimal = parseInt(scriptAmount, 10)
+        const amountHex = scriptAmountDecimal.toString(16)
+
+        let value: string = '0'
+
+        if (
+          quantity.currency === CryptoCurrency.ETH &&
+          movementType === MovementTypeDeposit
+        ) {
+          value = this.web3.utils.toWei(quantity.amount)
+        }
+
+        const args = [
+          '0x' + scriptAddress,
+          '0x' + asset,
+          '0x' + amountHex,
+          '0x' + nonce,
+          '0x' + scriptAddress,
+          '0x' + blockchainSignature,
+          '0x' + result.data.addMovement.signature
+        ]
+
+        const invocation =
+          movementType === MovementTypeDeposit
+            ? this.ethVaultContract.methods.deposit(...args)
+            : this.ethVaultContract.methods.sharedWithdrawal(...args)
+        const abi = invocation.encodeABI()
+
+        const ethAccountNonce = await this.web3.eth.getTransactionCount(
+          '0x' + childKey.address
+        )
+        const estimate = await this.web3.eth.estimateGas({
+          from: '0x' + this.apiKey.child_keys[BIP44.ETH].address,
+          nonce: ethAccountNonce,
+          to: this.opts.ethNetworkSettings.contracts.vault.contract,
+          data: abi
+        })
+        const gasPrice = await this.web3.eth.getGasPrice()
+        this.validateTransactionCost(gasPrice, estimate)
+        const movementTx = new EthTransaction({
+          nonce: '0x' + ethAccountNonce.toString(16),
+          gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
+          gasLimit: '0x' + (estimate * 2).toString(16),
+          to: this.opts.ethNetworkSettings.contracts.vault.contract,
+          value: '0x' + parseInt(value, 10).toString(16),
+          data: abi
+        })
+        movementTx.getChainId = () => chainId
+
+        const invocationSignature = await this.signEthTransaction(movementTx)
+
+        setSignature(movementTx, invocationSignature)
+
+        const ethReceipt = await this.web3.eth.sendSignedTransaction(
+          '0x' + movementTx.serialize().toString('hex')
+        )
+        return {
+          txId: ethReceipt.transactionHash
+        }
+      case 'neo':
+        const timestamp = new BigNumber(this.createTimestamp32()).toString(16)
+        const nodes = this.opts.neoNetworkSettings.nodes.reverse()
+        const node = await findBestNetworkNode(nodes)
+        const rpcClient = new NeonJS.rpc.RPCClient(node)
+        const balance = await NeonJS.api.neoscan.getBalance(
+          this.opts.neoScan,
+          childKey.address
+        )
+        const builder = new sc.ScriptBuilder()
+        builder.emitAppCall(
+          this.opts.neoNetworkSettings.contracts.vault.contract,
+          movementType === MovementTypeDeposit ? 'deposit' : 'sharedWithdrawal',
+          [
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.prefix
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.address
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.asset
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.amount
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.nonce
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              signedPayload.blockchain_data.userPubKey
+            ),
+            new sc.ContractParam(
+              'ByteArray',
+              result.data.addMovement.publicKey
+            ),
+            new sc.ContractParam('ByteArray', blockchainSignature),
+            new sc.ContractParam('ByteArray', result.data.addMovement.signature)
+          ]
+        )
+        const transaction = new tx.InvocationTransaction({
+          script: builder.str,
+          gas: 0
+        })
+          .addAttribute(
+            tx.TxAttrUsage.Script,
+            u.reverseHex(wallet.getScriptHashFromAddress(childKey.address))
+          )
+          .addAttribute(tx.TxAttrUsage.Remark, timestamp)
+        if (
+          movementType === MovementTypeDeposit &&
+          (quantity.currency === CryptoCurrency.NEO ||
+            quantity.currency === CryptoCurrency.GAS)
+        ) {
+          transaction.addIntent(
+            quantity.currency.toUpperCase(),
+            new BigNumber(quantity.amount).toNumber(),
+            this.opts.neoNetworkSettings.contracts.vault.address
+          )
+        }
+        transaction.calculate(balance)
+        const payload = transaction.serialize(false)
+
+        const signature = await this.signNeoPayload(payload.toLowerCase())
+        transaction.addWitness(
+          tx.Witness.fromSignature(signature, childKey.public_key)
+        )
+        const signedNeoPayload = transaction.serialize(true)
+        const neoStatus = await rpcClient.sendRawTransaction(signedNeoPayload)
+
+        if (!neoStatus) {
+          throw new Error('Could not send neo')
+        }
+        return {
+          txId: transaction.hash
+        }
+      default:
+        throw new Error('not implemented')
+    }
+    // console.log(blockchainSignature)
   }
 
   /**
@@ -2046,101 +2526,6 @@ export class Client {
   }
 
   /**
-   * creates and uploads wallet and encryption keys to the CAS.
-   *
-   * expects something like the following
-   * {
-   *   "signature_public_key": "024b14170f0166ff85882356295f5aa0cf4a9a5d29725b5a9e410ec193d20ee98f",
-   *   "encrypted_secret_key": "eb13bb0e89102d64700906c7082f9472",
-   *   "encrypted_secret_key_nonce": "f6783fe349320f71acc2ca79",
-   *   "encrypted_secret_key_tag": "7c8dc1020de77cd42dbbbb850f4335e8",
-   *   "wallets": [
-   *     {
-   *       "blockchain": "neo",
-   *       "address": "Aet6eGnQMvZ2xozG3A3SvWrMFdWMvZj1cU",
-   *       "public_key": "039fcee26c1f54024d19c0affcf6be8187467c9ba4749106a4b897a08b9e8fed23"
-   *     },
-   *     {
-   *       "blockchain": "ethereum",
-   *       "address": "5f8b6d9d487c8136cc1ad87d6e176742af625de8",
-   *       "public_key": "04d37f1a8612353ffbf20b0a68263b7aae235bd3af8d60877ed8135c27630d895894885f220a39acab4e70b025b1aca95fab1cd9368bf3dc912ef32dc65aecfa02"
-   *     }
-   *   ]
-   * }
-   */
-  private async createAndUploadKeys(
-    encryptionKey: Buffer,
-    casCookie: string,
-    presetWallets?: object
-  ): Promise<void> {
-    const secretKey = getSecretKey()
-    const res = encryptSecretKey(encryptionKey, secretKey)
-    const aead = {
-      encryptedSecretKey: res.encryptedSecretKey,
-      tag: res.tag,
-      nonce: res.nonce
-    }
-
-    this.initParams = {
-      walletIndices: this.walletIndices,
-      encryptionKey,
-      aead,
-      marketData: mapMarketsForNashProtocol(this.marketData),
-      assetData: this.assetData
-    }
-
-    this.nashCoreConfig = await initialize(this.initParams)
-
-    if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig }
-      cloned.wallets = presetWallets
-      this.nashCoreConfig = cloned
-    }
-
-    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
-
-    const url = this.casUri + '/auth/add_initial_wallets_and_client_keys'
-    const body = {
-      encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
-      encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),
-      encrypted_secret_key_tag: toHex(this.initParams.aead.tag),
-      signature_public_key: this.nashCoreConfig.payloadSigningKey.publicKey,
-      // TODO(@anthdm): construct the wallets object in more generic way.
-      wallets: [
-        {
-          address: this.nashCoreConfig.wallets.neo.address,
-          blockchain: 'neo',
-          public_key: this.nashCoreConfig.wallets.neo.publicKey
-        },
-        {
-          address: this.nashCoreConfig.wallets.eth.address,
-          blockchain: 'eth',
-          public_key: this.nashCoreConfig.wallets.eth.publicKey
-        },
-        {
-          address: this.nashCoreConfig.wallets.btc.address,
-          blockchain: 'btc',
-          public_key: this.nashCoreConfig.wallets.btc.publicKey
-        }
-      ]
-    }
-
-    const response = await fetch(url, {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json', cookie: casCookie },
-      method: 'POST'
-    })
-
-    const result = await response.json()
-    if (result.error) {
-      throw new Error(result.message)
-    }
-    if (this.opts.debug) {
-      console.log('successfully uploaded wallet keys to the CAS')
-    }
-  }
-
-  /**
    * helper function that returns the correct types for the needed GQL queries
    * and mutations.
    *
@@ -2148,28 +2533,57 @@ export class Client {
    * @param payload
    * @returns
    */
-  private async signPayload(payloadAndKind: PayloadAndKind): Promise<any> {
-    const privateKey = Buffer.from(
-      this.nashCoreConfig.payloadSigningKey.privateKey,
-      'hex'
-    )
-
-    const signedPayload = signPayload(
-      privateKey,
-      payloadAndKind,
-      this.nashCoreConfig
-    )
-
-    return {
+  private async signPayload(
+    payloadAndKind: PayloadAndKind
+  ): Promise<{
+    payload: Record<string, any>
+    signature: {
+      publicKey: string
+      signedDigest: string
+    }
+    blockchain_data: {
+      address: string
+      amount: string
+      asset: string
+      nonce: string
+      prefix: string
+      r?: string
+      userPubKey: string
+      userSig?: string
+    }
+    blockchain_raw: string
+    signedPayload: Record<string, any>
+  }> {
+    const signedPayload = await preSignPayload(this.apiKey, payloadAndKind, {
+      fillPoolFn: this.fillPoolFn,
+      assetData: this.assetData,
+      marketData: this.nashProtocolMarketData
+    })
+    const out = {
       payload: payloadAndKind.payload,
       signature: {
-        publicKey: this.publicKey,
+        publicKey: this.apiKey.payload_public_key,
         signedDigest: signedPayload.signature
       },
       blockchain_data: signedPayload.blockchainMovement,
       blockchain_raw: signedPayload.blockchainRaw,
       signedPayload: signedPayload.payload
     }
+    return out
+  }
+
+  private fillPoolFn = async (arg: {
+    client_dh_publics: string[]
+    blockchain: Blockchain
+  }): Promise<string[]> => {
+    const result = await this.gql.mutate<DHFillPoolResp, DHFillPoolArgs>({
+      mutation: DH_FIIL_POOL,
+      variables: {
+        dhPublics: arg.client_dh_publics,
+        blockchain: arg.blockchain
+      }
+    })
+    return result.data.dhFillPool
   }
 
   private async updateTradedAssetNonces(): Promise<void> {
@@ -2241,7 +2655,18 @@ export class Client {
       throw new Error('Could not fetch markets')
     }
   }
-
+  private async completePayloadSignature(
+    params: CompletePayloadSignatureArgs
+  ): Promise<string> {
+    const data = await this.gql.mutate<
+      { completePayloadSignature: CompletePayloadSignatureResult },
+      CompletePayloadSignatureArgs
+    >({
+      mutation: COMPLETE_PAYLOAD_SIGNATURE,
+      variables: params
+    })
+    return data.data.completePayloadSignature.signature
+  }
   private async fetchAssetData(): Promise<Record<string, AssetData>> {
     const assetList = {}
     const assets: Asset[] = await this.listAssets()
@@ -2249,6 +2674,8 @@ export class Client {
       assetList[a.symbol] = {
         hash: a.hash,
         precision: 8,
+        symbol: a.symbol,
+        blockchainPrecision: a.blockchainPrecision,
         blockchain: a.blockchain
       }
     }

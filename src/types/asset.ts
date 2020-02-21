@@ -13,6 +13,8 @@ export interface Asset {
 
 export interface AssetData {
   blockchain: Blockchain
+  symbol: CryptoCurrency
   precision: number
+  blockchainPrecision: number
   hash: string
 }
