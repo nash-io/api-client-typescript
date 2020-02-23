@@ -1,9 +1,10 @@
 // Endpoint of the central account service.
-export const CAS_URL = process.env.CAS_URL || 'http://localhost:4001/api'
-
 // Endpoint of the GQL server.
 export const GQL_URL =
   process.env.GQL_URL || 'http://localhost:4000/api/graphql'
+
+export const MATCHING_ENGINE_WS_URL =
+  process.env.WS_URL || 'http://localhost:4000/api/socket'
 
 // Log additional debug information when set to true.
 export const DEBUG = true

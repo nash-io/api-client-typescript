@@ -47,6 +47,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
+    "@absinthe/socket": "^0.2.1",
     "@neon-exchange/nash-protocol": "3.0.32",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/request": "^2.48.1",
@@ -55,7 +56,10 @@
     "graphql-tag": "^2.10.1",
     "lodash": "^4.17.11",
     "node-fetch": "^2.3.0",
-    "sha.js": "^2.4.11"
+    "phoenix": "^1.4.14",
+    "phoenix-channels": "^1.0.0",
+    "sha.js": "^2.4.11",
+    "ws": "^7.2.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",

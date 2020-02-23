@@ -1,3 +1,5 @@
+import * as AbsintheSocket from '@absinthe/socket'
+import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
@@ -28,6 +30,8 @@ import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
+import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
+import { UPDATED_ORDER_BOOK } from '../subscriptions/updateOrderBook'
 import {
   GetAssetsNoncesData,
   GET_ASSETS_NONCES_QUERY,
@@ -143,6 +147,7 @@ import {
  */
 export interface ClientOptions {
   apiURI: string
+  wsURI: string
   casURI: string
   debug?: boolean
 }
@@ -317,6 +322,68 @@ export class Client {
           query: params.mutation,
           variables: params.variables
         })
+    }
+  }
+
+  subscribeToEvents() {
+    const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
+    if (m == null) {
+      throw new Error('Could not connect')
+    }
+    const socket = new PhoenixSocket(this.opts.wsURI, {
+      decode: (rawPayload, callback) => {
+        const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
+
+        if (payload.status === 'error') {
+          if (typeof payload.response !== 'string') {
+            payload.response = JSON.stringify(payload.response)
+          }
+        }
+
+        return callback({
+          join_ref,
+          ref,
+          topic,
+          event,
+          payload
+        })
+      },
+      params: {
+        token: m[1]
+      }
+    })
+
+    const absintheSocket = AbsintheSocket.create(socket)
+    const updateOrderBookString = print(UPDATED_ORDER_BOOK)
+    const newAccountTradesString = print(NEW_ACCOUNT_TRADES)
+    return {
+      onUpdateOrderbook: (marketName: string, sub: (p: object) => void) => {
+        const obs = AbsintheSocket.send(absintheSocket, {
+          operation: updateOrderBookString,
+          variables: {
+            marketName
+          }
+        })
+        AbsintheSocket.observe(absintheSocket, obs, {
+          onResult: sub
+        })
+      },
+      onAccountTrade: (marketName: string, sub: (p: object) => void) => {
+        const signedPayload = this.signPayload({
+          kind: SigningPayloadID.newAccountTrades,
+          payload: {
+            marketName
+          }
+        })
+        const obs = AbsintheSocket.send(absintheSocket, {
+          operation: newAccountTradesString,
+          variables: signedPayload
+        })
+
+        AbsintheSocket.observe(absintheSocket, obs, {
+          onResult: sub
+        })
+      }
     }
   }
 
