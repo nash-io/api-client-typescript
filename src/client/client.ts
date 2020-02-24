@@ -229,7 +229,7 @@ interface GQLQueryParams {
   variables?: object
 }
 interface GQLMutationParams {
-  mutation: string
+  mutation: any
   variables?: object
 }
 
