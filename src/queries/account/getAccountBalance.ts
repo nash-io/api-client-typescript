@@ -7,8 +7,7 @@ export const GET_ACCOUNT_BALANCE = gql`
     $payload: GetAccountBalanceParams!
     $signature: Signature
   ) {
-    getAccountBalance(payload: $payload, signature: $signature)
-      @connection(key: "getAccountBalance") {
+    getAccountBalance(payload: $payload, signature: $signature) {
       ...accountBalanceFields
     }
   }

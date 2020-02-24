@@ -1,7 +1,4 @@
-import { ApolloClient, ApolloQueryResult } from 'apollo-client'
-import { setContext } from 'apollo-link-context'
-import { InMemoryCache } from 'apollo-cache-inmemory'
-import { createHttpLink } from 'apollo-link-http'
+import { print } from 'graphql/language/printer'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
 import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
@@ -212,6 +209,45 @@ interface ListAccountOrderParams {
   shouldIncludeTrades?: boolean
 }
 
+
+/**
+ * These interfaces are just here to
+ */
+interface GQLQueryParams {
+  query: any
+  variables?: object
+}
+interface GQLMutationParams {
+  mutation: string
+  variables?: object
+}
+
+interface GQLError {
+  message: string
+}
+
+interface GQLResp<T> {
+  data: T
+  errors?: GQLError[]
+}
+
+interface GQL {
+  query<T = any>(params: GQLQueryParams): Promise<GQLResp<T>>
+  mutate<T = any>(params: GQLMutationParams): Promise<GQLResp<T>>
+}
+
+const previousPrintResults = new Map<any, string>()
+
+// Print will instantiate a new visitor every time. Lets cache previously printed queries.
+const memorizedPrint = (ast: any): string => {
+  if (previousPrintResults.has(ast)) {
+    return previousPrintResults.get(ast)
+  }
+  const str = print(ast) as string
+  previousPrintResults.set(ast, str)
+  return str
+}
+
 export const MISSING_NONCES = 'missing_asset_nonces'
 export const MAX_SIGN_STATE_RECURSION = 5
 
@@ -222,7 +258,7 @@ export class Client {
   private casCookie: string
   private account: any
   private publicKey: string
-  private gql: ApolloClient<any>
+  private gql: GQL
   private walletIndices: { [key: string]: number }
   public marketData: { [key: string]: Market }
   public assetData: { [key: string]: AssetData }
@@ -251,31 +287,38 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = opts
 
-    const headerLink = setContext((_, { headers }) => {
-      return {
+    const query: GQL['query'] = async params => {
+      // const operation = params.query.definitions[0]
+      // const operationName = operation && (operation.name.value as string)
+      const resp = await fetch(this.opts.apiURI, {
+        method: 'POST',
         headers: {
-          ...headers,
+          'Content-Type': 'application/json',
           Cookie: this.casCookie
-        }
-      }
-    })
-
-    const httpLink = createHttpLink({ fetch, uri: this.opts.apiURI })
-
-    this.gql = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: headerLink.concat(httpLink),
-      defaultOptions: {
-        watchQuery: {
-          fetchPolicy: 'no-cache',
-          errorPolicy: 'all'
         },
-        query: {
-          fetchPolicy: 'no-cache',
-          errorPolicy: 'all'
-        }
+        body: JSON.stringify({
+          query: memorizedPrint(params.query),
+          variables: params.variables
+        })
+      })
+      if (resp.status !== 200) {
+        throw new Error(resp.message)
       }
-    })
+      const obj = await resp.json()
+      if (obj.errors) {
+        throw new Error(JSON.stringify(obj.errors, null, 2))
+      }
+      return obj
+    }
+
+    this.gql = {
+      query,
+      mutate: params =>
+        query({
+          query: params.mutation,
+          variables: params.variables
+        })
+    }
   }
 
   /**
@@ -1114,7 +1157,7 @@ export class Client {
    * console.log(getSignSyncStates)
    * ```
    */
-  public async getSignAndSyncStates(): Promise<Result<boolean>> {
+  public async getSignAndSyncStates(): Promise<Result<SyncState[]>> {
     try {
       const emptyStates: GetStatesData = {
         states: [],
@@ -1238,7 +1281,7 @@ export class Client {
    */
   public async syncStates(
     signStatesData: SignStatesData
-  ): Promise<Result<boolean>> {
+  ): Promise<Result<SyncState[]>> {
     const stateList: SyncState[] = signStatesData.signStates.serverSignedStates.map(
       state => {
         return {
@@ -1431,7 +1474,7 @@ export class Client {
     const signedPayload = await this.signPayload(placeLimitOrderParams)
     try {
       const result = await this.gql.mutate<{
-        placeLimitOrder: ApolloQueryResult<OrderPlaced>
+        placeLimitOrder: OrderPlaced
       }>({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
@@ -1516,7 +1559,7 @@ export class Client {
     const signedPayload = await this.signPayload(placeMarketOrderParams)
     try {
       const result = await this.gql.mutate<{
-        placeMarketOrder: ApolloQueryResult<OrderPlaced>
+        placeMarketOrder: OrderPlaced
       }>({
         mutation: PLACE_MARKET_ORDER_MUTATION,
         variables: {
@@ -1621,7 +1664,7 @@ export class Client {
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
     try {
       const result = await this.gql.mutate<{
-        placeStopLimitOrder: ApolloQueryResult<OrderPlaced>
+        placeStopLimitOrder: OrderPlaced
       }>({
         mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
         variables: {
@@ -1718,7 +1761,7 @@ export class Client {
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
     try {
       const result = await this.gql.mutate<{
-        placeStopMarketOrder: ApolloQueryResult<OrderPlaced>
+        placeStopMarketOrder: OrderPlaced
       }>({
         mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
         variables: {

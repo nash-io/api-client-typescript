@@ -11,8 +11,7 @@ export const GET_ACCOUNT_PORTFOLIO = gql`
     $payload: GetAccountPortfolioParams!
     $signature: Signature!
   ) {
-    getAccountPortfolio(payload: $payload, signature: $signature)
-      @connection(key: "getAccountPortfolio") {
+    getAccountPortfolio(payload: $payload, signature: $signature) {
       balances {
         ...portfolioBalanceFields
       }

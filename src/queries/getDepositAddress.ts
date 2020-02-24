@@ -5,8 +5,7 @@ export const GET_DEPOSIT_ADDRESS = gql`
     $payload: GetDepositAddressParams!
     $signature: Signature
   ) {
-    getDepositAddress(payload: $payload, signature: $signature)
-      @connection(key: "getDepositAddress") {
+    getDepositAddress(payload: $payload, signature: $signature) {
       address
       currency
     }

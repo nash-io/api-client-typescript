@@ -7,8 +7,7 @@ export const LIST_ACCOUNT_TRADES = gql`
     $payload: ListAccountTradesParams!
     $signature: Signature
   ) {
-    listAccountTrades(payload: $payload, signature: $signature)
-      @connection(key: "listAccountTrades") {
+    listAccountTrades(payload: $payload, signature: $signature) {
       next
       trades {
         ...tradeFields
