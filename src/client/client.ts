@@ -30,8 +30,14 @@ import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
+
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
-import { UPDATED_ORDER_BOOK } from '../subscriptions/updateOrderBook'
+import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
+import { UPDATED_ORDER_BOOK } from '../subscriptions/updatedOrderBook'
+import { NEW_TRADES } from '../subscriptions/newTrades'
+import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
+import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
+
 import {
   GetAssetsNoncesData,
   GET_ASSETS_NONCES_QUERY,
@@ -66,6 +72,7 @@ import {
   OrderBook,
   TradeHistory,
   Ticker,
+  Trade,
   CandleRange,
   CandleInterval,
   AccountDepositAddress,
@@ -255,6 +262,70 @@ const memorizedPrint = (ast: any): string => {
 export const MISSING_NONCES = 'missing_asset_nonces'
 export const MAX_SIGN_STATE_RECURSION = 5
 
+interface SubscriptionHandlers<T> {
+  onResult: (p: T) => void
+  onError: (p: Error) => void
+  onAbort: (p: Error) => void
+  onStart: (p: object) => void
+}
+
+interface NashEvents {
+  onUpdatedAccountOrders(
+    variables: {
+      buyOrSell?: OrderBuyOrSell
+      marketName?: string
+      rangeStart?: DateTime
+      rangeStop?: DateTime
+      status?: OrderStatus[]
+      type?: OrderType[]
+    },
+    handlers: SubscriptionHandlers<{
+      data: {
+        updatedAccountOrders: Order[]
+      }
+    }>
+  ): void
+  onUpdatedCandles(
+    variables: { interval: CandleInterval; marketName: string },
+    handlers: SubscriptionHandlers<{
+      data: {
+        updatedCandles: CandleRange[]
+      }
+    }>
+  ): void
+  onUpdatedTickers(
+    handlers: SubscriptionHandlers<{
+      data: {
+        updatedTickers: Ticker[]
+      }
+    }>
+  ): void
+  onNewTrades(
+    variables: { marketName: string },
+    handlers: SubscriptionHandlers<{
+      data: {
+        newTrades: Trade[]
+      }
+    }>
+  ): void
+  onUpdatedOrderbook(
+    variables: { marketName: string },
+    handlers: SubscriptionHandlers<{
+      data: {
+        updatedOrderBook: OrderBook
+      }
+    }>
+  ): void
+  onAccountTrade(
+    variables: { marketName: string },
+    handlers: SubscriptionHandlers<{
+      data: {
+        newAccountTrades: Trade[]
+      }
+    }>
+  ): void
+}
+
 export class Client {
   private opts: ClientOptions
   private initParams: InitParams
@@ -325,11 +396,62 @@ export class Client {
     }
   }
 
-  subscribeToEvents() {
+  /**
+   * Sets up a websocket and authenticates it using the current token.
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * import { Client } from '@neon-exchange/api-client-typescript'
+   *
+   * const nash = new Client({
+   *   apiURI: 'https://pathtoapiurl',
+   *   casURI: 'https://pathtocasurl',
+   *   wsURI: 'wss://pathtocasurl',
+   *   debug: true
+   * })
+   * await nash.login(...)
+   *
+   * const connection = nash.startConnection()
+   *
+   * // Getting the orderbook for the neo_eth marked
+   * connection.onUpdatedOrderbook(
+   *  { marketName: 'neo_eth' },
+   *  {
+   *    onResult: ({
+   *      data: {
+   *        updatedOrderBook: { bids, asks }
+   *      }
+   *    }) => {
+   *      console.log(`updated bids ${bids.length}`)
+   *      console.log(`updated asks ${asks.length}`)
+   *    }
+   *  }
+   * )
+   *
+   * // Getting the user orderobok for all markets
+   * connection.onUpdatedAccountOrders(
+   *  {},
+   *  {
+   *    onResult: ({
+   *      data: {
+   *        updatedAccountOrders
+   *      }
+   *    }) => {
+   *      console.log(`Updated orders: {updatedAccountOrders.length}`)
+   *    }
+   *  }
+   * )
+   *
+   * ```
+   */
+  startConnection(): NashEvents {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m == null) {
-      throw new Error('Could not connect')
+      throw new Error('To subscribe to events, please login() first')
     }
+
     const socket = new PhoenixSocket(this.opts.wsURI, {
       decode: (rawPayload, callback) => {
         const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
@@ -354,35 +476,83 @@ export class Client {
     })
 
     const absintheSocket = AbsintheSocket.create(socket)
+    const updatedAccountOrdersString = print(UPDATED_ACCOUNT_ORDERS)
     const updateOrderBookString = print(UPDATED_ORDER_BOOK)
     const newAccountTradesString = print(NEW_ACCOUNT_TRADES)
+    const newTradesString = print(NEW_TRADES)
+    const updatedTickersString = print(UPDATED_TICKERS)
+    const updatedCandlesString = print(UPDATED_CANDLES)
     return {
-      onUpdateOrderbook: (marketName: string, sub: (p: object) => void) => {
-        const obs = AbsintheSocket.send(absintheSocket, {
-          operation: updateOrderBookString,
-          variables: {
-            marketName
-          }
-        })
-        AbsintheSocket.observe(absintheSocket, obs, {
-          onResult: sub
-        })
-      },
-      onAccountTrade: (marketName: string, sub: (p: object) => void) => {
-        const signedPayload = this.signPayload({
-          kind: SigningPayloadID.newAccountTrades,
+      onUpdatedAccountOrders: async (variables, handlers) => {
+        const signedPayload = await this.signPayload({
+          kind: SigningPayloadID.updatedAccountOrders,
           payload: {
-            marketName
+            ...variables,
+            timestamp: createTimestamp()
           }
         })
-        const obs = AbsintheSocket.send(absintheSocket, {
-          operation: newAccountTradesString,
+        const not = AbsintheSocket.send(absintheSocket, {
+          operation: updatedAccountOrdersString,
           variables: signedPayload
         })
-
-        AbsintheSocket.observe(absintheSocket, obs, {
-          onResult: sub
+        AbsintheSocket.observe(absintheSocket, not, handlers)
+      },
+      onUpdatedCandles: (variables, handlers) =>
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: updatedCandlesString,
+            variables
+          }),
+          handlers
+        ),
+      onUpdatedTickers: handlers => {
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: updatedTickersString,
+            variables: {}
+          }),
+          handlers
+        )
+      },
+      onNewTrades: (variables, handlers) => {
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: newTradesString,
+            variables
+          }),
+          handlers
+        )
+      },
+      onUpdatedOrderbook: (variables, handlers) => {
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: updateOrderBookString,
+            variables
+          }),
+          handlers
+        )
+      },
+      onAccountTrade: async (variables, handlers) => {
+        const signedPayload = await this.signPayload({
+          kind: SigningPayloadID.newAccountTrades,
+          payload: {
+            ...variables,
+            timestamp: createTimestamp()
+          }
         })
+
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: newAccountTradesString,
+            variables: signedPayload
+          }),
+          handlers
+        )
       }
     }
   }
