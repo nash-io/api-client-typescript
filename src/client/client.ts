@@ -209,7 +209,6 @@ interface ListAccountOrderParams {
   shouldIncludeTrades?: boolean
 }
 
-
 /**
  * These interfaces are just here to
  */
@@ -1795,9 +1794,9 @@ export class Client {
       throw new InsufficientFundsError(error.message, signedPayload)
     }
     throw new Error(
-      `Could not place order: ${JSON.stringify(
-        error
-      )} using payload: ${JSON.stringify(signedPayload.blockchain_raw)}`
+      `Could not place order: ${error.message} using payload: ${JSON.stringify(
+        signedPayload.blockchain_raw
+      )}`
     )
   }
 
