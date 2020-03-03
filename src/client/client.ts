@@ -154,7 +154,7 @@ import {
  */
 export interface ClientOptions {
   apiURI: string
-  wsURI: string
+  wsURI?: string
   casURI: string
   debug?: boolean
 }
@@ -450,6 +450,9 @@ export class Client {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m == null) {
       throw new Error('To subscribe to events, please login() first')
+    }
+    if (this.opts.wsURI == null) {
+      throw new Error('wsURI config parameter missing')
     }
 
     const socket = new PhoenixSocket(this.opts.wsURI, {
