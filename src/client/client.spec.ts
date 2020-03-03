@@ -10,9 +10,7 @@ import {
 import { CryptoCurrency, FiatCurrency } from 'constants/currency'
 
 const client = new Nash.Client({
-  apiURI: 'https://app.sandbox.nash.io/api/graphql',
-  casURI: 'https://app.sandbox.nash.io/api',
-  wsURI: 'https://app.sandbox.nash.io/api/websocket',
+  env: 'sandbox',
   debug: false
 })
 

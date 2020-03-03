@@ -153,9 +153,7 @@ import {
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 export interface ClientOptions {
-  apiURI: string
-  wsURI?: string
-  casURI: string
+  env: 'production' | 'sandbox' | 'dev1' | 'dev2' | 'dev3' | 'dev4'
   debug?: boolean
 }
 
@@ -326,8 +324,21 @@ interface NashSocketEvents {
   ): void
 }
 
+const hosts = {
+  production: 'app.nash.io',
+  sandbox: 'app.sandbox.nash.io',
+  dev1: 'app.dev1.nash.io',
+  dev2: 'app.dev2.nash.io',
+  dev3: 'app.dev3.nash.io',
+  dev4: 'app.dev4.nash.ioi'
+}
+
 export class Client {
   private opts: ClientOptions
+  private apiUri: string
+  private casUri: string
+  private wsUri: string
+
   private initParams: InitParams
   private nashCoreConfig: Config
   private casCookie: string
@@ -353,8 +364,7 @@ export class Client {
    * import { Client } from '@neon-exchange/api-client-typescript'
    *
    * const nash = new Client({
-   *   apiURI: 'https://pathtoapiurl',
-   *   casURI: 'https://pathtocasurl',
+   *   env: 'production',
    *   debug: true
    * })
    * ```
@@ -362,10 +372,19 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = opts
 
+    const host = hosts[opts.env]
+    if (!host) {
+      throw new Error(`Invalid env '${opts.env}'`);
+    }
+
+    this.apiUri = process.env.API_URI || `https://${host}/api/graphql`
+    this.casUri = process.env.CAS_URI || `https://${host}/api`
+    this.wsUri = process.env.WS_URI || `wss://${host}/api/socket`
+
     const query: GQL['query'] = async params => {
       // const operation = params.query.definitions[0]
       // const operationName = operation && (operation.name.value as string)
-      const resp = await fetch(this.opts.apiURI, {
+      const resp = await fetch(this.apiUri, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -377,7 +396,9 @@ export class Client {
         })
       })
       if (resp.status !== 200) {
-        throw new Error(resp.message)
+        let msg = `API error. Status code: ${resp.status}`
+        if (resp.data) { msg += ` / body: ${resp.data}`}
+        throw new Error(msg)
       }
       const obj = await resp.json()
       if (obj.errors) {
@@ -406,9 +427,7 @@ export class Client {
    * import { Client } from '@neon-exchange/api-client-typescript'
    *
    * const nash = new Client({
-   *   apiURI: 'https://pathtoapiurl',
-   *   casURI: 'https://pathtocasurl',
-   *   wsURI: 'wss://pathtocasurl',
+   *   env: 'production',
    *   debug: true
    * })
    * await nash.login(...)
@@ -451,11 +470,11 @@ export class Client {
     if (m == null) {
       throw new Error('To subscribe to events, please login() first')
     }
-    if (this.opts.wsURI == null) {
-      throw new Error('wsURI config parameter missing')
+    if (this.wsUri == null) {
+      throw new Error('wsUri config parameter missing')
     }
 
-    const socket = new PhoenixSocket(this.opts.wsURI, {
+    const socket = new PhoenixSocket(this.wsUri, {
       decode: (rawPayload, callback) => {
         const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
 
@@ -604,7 +623,7 @@ export class Client {
     }
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, SALT)
-    const loginUrl = this.opts.casURI + '/user_login'
+    const loginUrl = this.casUri + '/user_login'
     const body = {
       email,
       password: toHex(keys.authKey)
@@ -881,7 +900,7 @@ export class Client {
    *
    * Example
    * ```
-   * const {markets, error} = await nash.listMarkets()
+   * const markets = await nash.listMarkets()
    * console.log(markets)
    * ```
    */
@@ -2169,7 +2188,7 @@ export class Client {
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
 
-    const url = this.opts.casURI + '/auth/add_initial_wallets_and_client_keys'
+    const url = this.casUri + '/auth/add_initial_wallets_and_client_keys'
     const body = {
       encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
       encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),

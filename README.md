@@ -6,12 +6,6 @@ To test your integrations, Nash provides a public sandbox environment at https:/
 
 NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The environment is automatically reset every four days.
 
-```typescript
-  casURI: 'https://app.sandbox.nash.io/api',
-  apiURI: 'https://app.sandbox.nash.io/api/graphql',
-  wsURI?: 'wss://app.sandbox.nash.io/api/socket'
-```
-
 ## Getting started
 
 To install, download a release bundle or install it from NPM:
@@ -32,14 +26,15 @@ cd ..
 import { Client } from '@neon-exchange/api-client-typescript'
 
 const nash = new Client({
-  apiURI: 'path_to_nash_api',
-  casURI: 'path_to_nash_cas',
+  env: 'sandbox',
   debug: false
 })
 
 const markets = nash.listMarkets()
 console.log(markets)
 ```
+
+Note: `env` can either be `sandbox` or `production`
 
 ## Authentication
 
@@ -49,8 +44,7 @@ Most Nash API requests require the client to be authenticated. This is needed to
 import { Client, CryptoCurrency } from '@neon-exchange/api-client-typescript'
 
 const nash = new Client({
-  apiURI: 'path_to_nash_api',
-  casURI: 'path_to_nash_cas',
+  env: 'sandbox',
   debug: false
 })
 
