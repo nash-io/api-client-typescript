@@ -269,7 +269,7 @@ interface SubscriptionHandlers<T> {
   onStart: (p: object) => void
 }
 
-interface NashEvents {
+interface NashSocketEvents {
   onUpdatedAccountOrders(
     variables: {
       buyOrSell?: OrderBuyOrSell
@@ -413,7 +413,7 @@ export class Client {
    * })
    * await nash.login(...)
    *
-   * const connection = nash.startConnection()
+   * const connection = nash.createSocketConnection()
    *
    * // Getting the orderbook for the neo_eth marked
    * connection.onUpdatedOrderbook(
@@ -446,7 +446,7 @@ export class Client {
    *
    * ```
    */
-  startConnection(): NashEvents {
+  createSocketConnection(): NashSocketEvents {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m == null) {
       throw new Error('To subscribe to events, please login() first')
