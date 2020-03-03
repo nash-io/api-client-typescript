@@ -51,8 +51,7 @@ import {
   USER_2FA_LOGIN_MUTATION,
   TwoFactorLoginResponse
 } from '../mutations/account/twoFactorLoginMutation'
-import { checkMandatoryParams, formatPayload } from './utils'
-import { Result } from '../types'
+import { checkMandatoryParams } from './utils'
 import {
   GetStatesData,
   SignStatesData,
@@ -608,20 +607,12 @@ export class Client {
     twoFaCode,
     walletIndices = { neo: 1, eth: 1 },
     presetWallets
-  }: LoginParams): Promise<Result<boolean>> {
-    // const validParams = checkMandatoryParams(
-    //      )
-    // if (validParams.type === 'error') {
-    //   return validParams
-    // }
-    const validParams = checkMandatoryParams({
+  }: LoginParams): Promise<void> {
+    checkMandatoryParams({
       email,
       password,
       Type: 'string'
     })
-    if (validParams.type === 'error') {
-      return validParams
-    }
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, SALT)
     const loginUrl = this.casUri + '/user_login'
@@ -645,30 +636,19 @@ export class Client {
     this.casCookie = response.headers.get('set-cookie')
     const result = await response.json()
     if (result.error || result.message === 'Two factor required') {
-      return {
-        type: 'error',
-        message: result.message
-      }
+      throw new Error(result.error || result.message)
     }
 
     this.account = result.account
-    const marketPayload = await this.fetchMarketData()
-    if (marketPayload.type === 'error') {
-      return marketPayload
-    }
-    this.marketData = marketPayload.data
-    const assetPayload = await this.fetchAssetData()
-    if (assetPayload.type === 'error') {
-      return assetPayload
-    }
-    this.assetData = assetPayload.data
+    this.marketData = await this.fetchMarketData()
+    this.assetData = await this.fetchAssetData()
     this.assetNonces = {}
     this.currentOrderNonce = this.createTimestamp32()
 
     if (twoFaCode !== undefined) {
       this.account = await this.doTwoFactorLogin(twoFaCode)
       if (this.account.type === 'error') {
-        return this.account
+        throw new Error('Could not login')
       }
     }
     if (this.account.encrypted_secret_key === null) {
@@ -681,7 +661,6 @@ export class Client {
         this.casCookie,
         presetWallets
       )
-      return { type: 'ok' }
     }
 
     const aead = {
@@ -713,8 +692,6 @@ export class Client {
 
     // after login we should always try to get asset nonces
     await this.updateTradedAssetNonces()
-
-    return { type: 'ok' }
   }
 
   private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
@@ -755,18 +732,14 @@ export class Client {
    * console.log(ticker)
    * ```
    */
-  public async getTicker(marketName: string): Promise<Result<Ticker>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  public async getTicker(marketName: string): Promise<Ticker> {
+    checkMandatoryParams({ marketName, Type: 'string' })
 
     const result = await this.gql.query<{ getTicker: Ticker }>({
       query: GET_TICKER,
       variables: { marketName }
     })
-    const payload = formatPayload('getTicker', result)
-    return payload
+    return result.data.getTicker
     // if(payload.type === "error") return payload
 
     // return ticker
@@ -784,17 +757,14 @@ export class Client {
    * console.log(orderBook.bids)
    * ```
    */
-  public async getOrderBook(marketName: string): Promise<Result<OrderBook>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  public async getOrderBook(marketName: string): Promise<OrderBook> {
+    checkMandatoryParams({ marketName, Type: 'string' })
+
     const result = await this.gql.query<{ getOrderBook: OrderBook }>({
       query: GET_ORDERBOOK,
       variables: { marketName }
     })
-    const payload = formatPayload('getOrderBook', result)
-    return payload
+    return result.data.getOrderBook
   }
 
   /**
@@ -817,16 +787,13 @@ export class Client {
     marketName,
     limit,
     before
-  }: ListTradeParams): Promise<Result<TradeHistory>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  }: ListTradeParams): Promise<TradeHistory> {
+    checkMandatoryParams({ marketName, Type: 'string' })
     const result = await this.gql.query<{ listTrades: TradeHistory }>({
       query: LIST_TRADES,
       variables: { marketName, limit, before }
     })
-    return formatPayload('listTrades', result)
+    return result.data.listTrades
   }
 
   /**
@@ -840,11 +807,11 @@ export class Client {
    * console.log(tickers)
    * ```
    */
-  public async listTickers(): Promise<Result<Ticker[]>> {
+  public async listTickers(): Promise<Ticker[]> {
     const result = await this.gql.query<{ listTickers: Ticker[] }>({
       query: LIST_TICKERS
     })
-    return formatPayload('listTickers', result)
+    return result.data.listTickers
   }
 
   /**
@@ -858,11 +825,11 @@ export class Client {
    * console.log(assets)
    * ```
    */
-  public async listAssets(): Promise<Result<Asset[]>> {
+  public async listAssets(): Promise<Asset[]> {
     const result = await this.gql.query<{ listAssets: Asset[] }>({
       query: LIST_ASSETS_QUERY
     })
-    return formatPayload('listAssets', result)
+    return result.data.listAssets
   }
 
   /**
@@ -888,16 +855,13 @@ export class Client {
     before,
     interval,
     limit
-  }: ListCandlesParams): Promise<Result<CandleRange>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  }: ListCandlesParams): Promise<CandleRange> {
+    checkMandatoryParams({ marketName, Type: 'string' })
     const result = await this.gql.query<{ listCandles: CandleRange }>({
       query: LIST_CANDLES,
       variables: { marketName, before, interval, limit }
     })
-    return formatPayload('listCandles', result)
+    return result.data.listCandles
   }
 
   /**
@@ -911,11 +875,11 @@ export class Client {
    * console.log(markets)
    * ```
    */
-  public async listMarkets(): Promise<Result<Market[]>> {
+  public async listMarkets(): Promise<Market[]> {
     const result = await this.gql.query<{ listMarkets: Market[] }>({
       query: LIST_MARKETS_QUERY
     })
-    return formatPayload('listMarkets', result)
+    return result.data.listMarkets
   }
 
   /**
@@ -931,16 +895,13 @@ export class Client {
    * ```
    */
 
-  public async getMarket(marketName: string): Promise<Result<Market>> {
-    const validParams = checkMandatoryParams({ marketName, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  public async getMarket(marketName: string): Promise<Market> {
+    checkMandatoryParams({ marketName, Type: 'string' })
     const result = await this.gql.query<{ getMarkets: Market }>({
       query: GET_MARKET_QUERY,
       variables: { marketName }
     })
-    return formatPayload('getMarkets', result)
+    return result.data.getMarkets
   }
 
   /**
@@ -973,7 +934,7 @@ export class Client {
     status,
     type,
     shouldIncludeTrades
-  }: ListAccountOrderParams = {}): Promise<Result<AccountOrder>> {
+  }: ListAccountOrderParams = {}): Promise<AccountOrder> {
     const listAccountOrdersParams = createListAccountOrdersParams(
       before,
       buyOrSell,
@@ -996,7 +957,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listAccountOrders', result)
+    return result.data.listAccountOrders
   }
 
   /**
@@ -1018,7 +979,7 @@ export class Client {
     before,
     limit,
     marketName
-  }: ListAccountTradeParams = {}): Promise<Result<TradeHistory>> {
+  }: ListAccountTradeParams = {}): Promise<TradeHistory> {
     const listAccountTradeParams = createListAccountTradesParams(
       before,
       limit,
@@ -1032,7 +993,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listAccountTrades', result)
+    return result.data.listAccountTrades
   }
 
   /**
@@ -1058,7 +1019,7 @@ export class Client {
     cursor,
     fiatSymbol,
     limit
-  }: ListAccountTransactionsParams): Promise<Result<AccountTransaction>> {
+  }: ListAccountTransactionsParams): Promise<AccountTransaction> {
     const listAccountTransactionsParams = createListAccountTransactionsParams(
       cursor,
       fiatSymbol,
@@ -1075,7 +1036,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listAccountTransactions', result)
+    return result.data.listAccountTransactions
   }
 
   /**
@@ -1092,14 +1053,11 @@ export class Client {
    */
   public async listAccountBalances(
     ignoreLowBalance
-  ): Promise<Result<AccountBalance[]>> {
-    const validParams = checkMandatoryParams({
+  ): Promise<AccountBalance[]> {
+    checkMandatoryParams({
       ignoreLowBalance,
       Type: 'boolean'
     })
-    if (validParams.type === 'error') {
-      return validParams
-    }
     const listAccountBalanceParams = createListAccountBalanceParams(
       ignoreLowBalance
     )
@@ -1113,7 +1071,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listAccountBalances', result)
+    return result.data.listAccountBalances
   }
 
   /**
@@ -1132,11 +1090,9 @@ export class Client {
    */
   public async getDepositAddress(
     currency: CryptoCurrency
-  ): Promise<Result<AccountDepositAddress>> {
-    const validParams = checkMandatoryParams({ currency, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  ): Promise<AccountDepositAddress> {
+    checkMandatoryParams({ currency, Type: 'string' })
+
     const getDepositAddressParams = createGetDepositAddressParams(currency)
     const signedPayload = await this.signPayload(getDepositAddressParams)
 
@@ -1149,7 +1105,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getDepositAddress', result)
+    return result.data.getDepositAddress
   }
 
   /**
@@ -1169,15 +1125,12 @@ export class Client {
   public async getAccountPortfolio({
     fiatSymbol,
     period
-  }: GetAccountPortfolioParams = {}): Promise<Result<AccountPortfolio>> {
-    const validParams = checkMandatoryParams({
+  }: GetAccountPortfolioParams = {}): Promise<AccountPortfolio> {
+    checkMandatoryParams({
       fiatSymbol,
       period,
       Type: 'string'
     })
-    if (validParams.type === 'error') {
-      return validParams
-    }
 
     const getAccountPortfolioParams = createAccountPortfolioParams(
       fiatSymbol,
@@ -1194,7 +1147,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getAccountPorfolio', result)
+    return result.data.getAccountPorfolio
   }
 
   /**
@@ -1209,11 +1162,9 @@ export class Client {
    * console.log(movement)
    * ```
    */
-  public async getMovement(movementID: number): Promise<Result<Movement>> {
-    const validParams = checkMandatoryParams({ movementID, Type: 'number' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  public async getMovement(movementID: number): Promise<Movement> {
+    checkMandatoryParams({ movementID, Type: 'number' })
+
     const getMovemementParams = createGetMovementParams(movementID)
     const signedPayload = await this.signPayload(getMovemementParams)
 
@@ -1224,7 +1175,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getMovement', result)
+    return result.data.getMovement
   }
 
   /**
@@ -1243,11 +1194,8 @@ export class Client {
    */
   public async getAccountBalance(
     currency: CryptoCurrency
-  ): Promise<Result<AccountBalance>> {
-    const validParams = checkMandatoryParams({ currency, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  ): Promise<AccountBalance> {
+    checkMandatoryParams({ currency, Type: 'string' })
     const getAccountBalanceParams = createGetAccountBalanceParams(currency)
     const signedPayload = await this.signPayload(getAccountBalanceParams)
 
@@ -1258,7 +1206,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getAccountBalance', result)
+    return result.data.getAccountBalance
   }
 
   /**
@@ -1273,11 +1221,8 @@ export class Client {
    * console.log(order)
    * ```
    */
-  public async getAccountOrder(orderID: string): Promise<Result<Order>> {
-    const validParams = checkMandatoryParams({ orderID, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  public async getAccountOrder(orderID: string): Promise<Order> {
+    checkMandatoryParams({ orderID, Type: 'string' })
     const getAccountOrderParams = createGetAccountOrderParams(orderID)
     const signedPayload = await this.signPayload(getAccountOrderParams)
 
@@ -1288,7 +1233,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getAccountOrder', result)
+    return result.data.getAccountOrder
   }
 
   /**
@@ -1302,7 +1247,7 @@ export class Client {
    * console.log(accountVolume.thirtyDayTotalVolumePercent)
    * ```
    */
-  public async listAccountVolumes(): Promise<Result<AccountVolume>> {
+  public async listAccountVolumes(): Promise<AccountVolume> {
     const listAccountVolumesParams = createGetAccountVolumesParams()
     const signedPayload = await this.signPayload(listAccountVolumesParams)
 
@@ -1313,7 +1258,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listAccountVolumes', result)
+    return result.data.listAccountVolumes
   }
 
   /**
@@ -1336,7 +1281,7 @@ export class Client {
     currency,
     status,
     type
-  }: ListMovementsParams): Promise<Result<Movement[]>> {
+  }: ListMovementsParams): Promise<Movement[]> {
     const listMovementParams = createListMovementsParams(currency, status, type)
     const signedPayload = await this.signPayload(listMovementParams)
 
@@ -1347,7 +1292,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('listMovements', result)
+    return result.data.listMovements
   }
 
   /**
@@ -1363,11 +1308,8 @@ export class Client {
    */
   public async getOrdersForMovement(
     asset: string
-  ): Promise<Result<OrdersForMovementData>> {
-    const validParams = checkMandatoryParams({ asset, Type: 'string' })
-    if (validParams.type === 'error') {
-      return validParams
-    }
+  ): Promise<OrdersForMovementData> {
+    checkMandatoryParams({ asset, Type: 'string' })
     const getOrdersForMovementParams = createGetOrdersForMovementParams(asset)
     const signedPayload = await this.signPayload(getOrdersForMovementParams)
     const result = await this.gql.query<{
@@ -1380,7 +1322,7 @@ export class Client {
       }
     })
 
-    return formatPayload('getOrdersForMovement', result)
+    return result.data.getOrdersForMovement
   }
 
   /**
@@ -1396,7 +1338,7 @@ export class Client {
    */
   public async getAssetNonces(
     assetList: string[]
-  ): Promise<Result<AssetsNoncesData[]>> {
+  ): Promise<AssetsNoncesData[]> {
     const getAssetNoncesParams = createGetAssetsNoncesParams(assetList)
     const signedPayload = await this.signPayload(getAssetNoncesParams)
     const result = await this.gql.query<{
@@ -1408,7 +1350,7 @@ export class Client {
         signature: signedPayload.signature
       }
     })
-    return formatPayload('getAssetsNonces', result)
+    return result.data.getAssetsNonces
   }
 
   /**
@@ -1422,25 +1364,18 @@ export class Client {
    * console.log(getSignSyncStates)
    * ```
    */
-  public async getSignAndSyncStates(): Promise<Result<SyncState[]>> {
-    try {
-      const emptyStates: GetStatesData = {
-        states: [],
-        recycledOrders: [],
-        serverSignedStates: []
-      }
-
-      const signStatesRecursive: SignStatesData = await this.signStates(
-        emptyStates
-      )
-      const syncResult = await this.syncStates(signStatesRecursive)
-      return syncResult
-    } catch (error) {
-      return {
-        type: 'error',
-        message: `Could not get/sign/sync states: ${error}`
-      }
+  public async getSignAndSyncStates(): Promise<SyncState[]> {
+    const emptyStates: GetStatesData = {
+      states: [],
+      recycledOrders: [],
+      serverSignedStates: []
     }
+
+    const signStatesRecursive: SignStatesData = await this.signStates(
+      emptyStates
+    )
+    const syncResult = await this.syncStates(signStatesRecursive)
+    return syncResult
   }
 
   private state_map_from_states(states): any {
@@ -1546,7 +1481,7 @@ export class Client {
    */
   public async syncStates(
     signStatesData: SignStatesData
-  ): Promise<Result<SyncState[]>> {
+  ): Promise<SyncState[]> {
     const stateList: SyncState[] = signStatesData.signStates.serverSignedStates.map(
       state => {
         return {
@@ -1558,24 +1493,17 @@ export class Client {
     const syncStatesParams = createSyncStatesParams(stateList)
     const signedPayload = await this.signPayload(syncStatesParams)
 
-    try {
-      const result = await this.gql.mutate<{ syncStates: SyncState[] }>({
-        mutation: SYNC_STATES_MUTATION,
-        variables: {
-          payload: signedPayload.payload,
-          signature: signedPayload.signature
-        }
-      })
-      // after syncing states, we should always update asset nonces
-      await this.updateTradedAssetNonces()
-
-      return formatPayload('syncStates', result)
-    } catch (e) {
-      return {
-        type: 'error',
-        message: 'Could not query graphql for sync states'
+    const result = await this.gql.mutate<{ syncStates: SyncState[] }>({
+      mutation: SYNC_STATES_MUTATION,
+      variables: {
+        payload: signedPayload.payload,
+        signature: signedPayload.signature
       }
-    }
+    })
+    // after syncing states, we should always update asset nonces
+    await this.updateTradedAssetNonces()
+
+    return result.data.syncStates
   }
 
   /**
@@ -1621,7 +1549,7 @@ export class Client {
    * console.log(result)
    * ```
    */
-  public async cancelAllOrders(marketName?: string): Promise<Result<boolean>> {
+  public async cancelAllOrders(marketName?: string): Promise<boolean> {
     let cancelAllOrderParams: any = {
       timestamp: createTimestamp()
     }
@@ -1689,8 +1617,8 @@ export class Client {
     limitPrice: CurrencyPrice,
     marketName: string,
     cancelAt?: DateTime
-  ): Promise<Result<OrderPlaced>> {
-    const validParams = checkMandatoryParams(
+  ): Promise<OrderPlaced> {
+    checkMandatoryParams(
       {
         allowTaker,
         Type: 'boolean'
@@ -1707,9 +1635,6 @@ export class Client {
         Type: 'string'
       }
     )
-    if (validParams.type === 'error') {
-      return validParams
-    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1747,21 +1672,19 @@ export class Client {
           signature: signedPayload.signature
         }
       })
-      return formatPayload('placeLimitOrder', result)
+      return result.data.placeLimitOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
-        const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk.type === 'ok') {
-          return await this.placeLimitOrder(
-            allowTaker,
-            amount,
-            buyOrSell,
-            cancellationPolicy,
-            limitPrice,
-            marketName,
-            cancelAt
-          )
-        }
+        await this.updateTradedAssetNonces()
+        return await this.placeLimitOrder(
+          allowTaker,
+          amount,
+          buyOrSell,
+          cancellationPolicy,
+          limitPrice,
+          marketName,
+          cancelAt
+        )
       }
 
       return this.handleOrderError(e, signedPayload)
@@ -1795,15 +1718,12 @@ export class Client {
     amount: CurrencyAmount,
     buyOrSell: OrderBuyOrSell,
     marketName: string
-  ): Promise<Result<OrderPlaced>> {
-    const validParams = checkMandatoryParams({
+  ): Promise<OrderPlaced> {
+    checkMandatoryParams({
       buyOrSell,
       marketName,
       Type: 'string'
     })
-    if (validParams.type === 'error') {
-      return validParams
-    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1832,13 +1752,11 @@ export class Client {
           signature: signedPayload.signature
         }
       })
-      return formatPayload('placeMarketOrder', result)
+      return result.data.placeMarketOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
-        const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk.type === 'ok') {
-          return await this.placeMarketOrder(amount, buyOrSell, marketName)
-        }
+        await this.updateTradedAssetNonces()
+        return await this.placeMarketOrder(amount, buyOrSell, marketName)
       }
       return this.handleOrderError(e, signedPayload)
     }
@@ -1887,15 +1805,12 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
-  ): Promise<Result<OrderPlaced>> {
-    const validParams = checkMandatoryParams(
+  ): Promise<OrderPlaced> {
+    checkMandatoryParams(
       { allowTaker, Type: 'boolean' },
       { buyOrSell, marketName, cancellationPolicy, Type: 'string' },
       { cancelAt: 'number' }
     )
-    if (validParams.type === 'error') {
-      return validParams
-    }
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -1938,22 +1853,20 @@ export class Client {
         }
       })
 
-      return formatPayload('placeStopLimitOrder', result)
+      return result.data.placeStopLimitOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
-        const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk) {
-          return await this.placeStopLimitOrder(
-            allowTaker,
-            amount,
-            buyOrSell,
-            cancellationPolicy,
-            limitPrice,
-            marketName,
-            stopPrice,
-            cancelAt
-          )
-        }
+        await this.updateTradedAssetNonces()
+        return await this.placeStopLimitOrder(
+          allowTaker,
+          amount,
+          buyOrSell,
+          cancellationPolicy,
+          limitPrice,
+          marketName,
+          stopPrice,
+          cancelAt
+        )
       }
 
       return this.handleOrderError(e, signedPayload)
@@ -1991,14 +1904,11 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string,
     stopPrice: CurrencyPrice
-  ): Promise<Result<OrderPlaced>> {
-    const validParams = checkMandatoryParams(
+  ): Promise<OrderPlaced> {
+    checkMandatoryParams(
       { amount, stopPrice, Type: 'object' },
       { buyOrSell, marketName, Type: 'string' }
     )
-    if (validParams.type === 'error') {
-      return validParams
-    }
 
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
@@ -2034,18 +1944,16 @@ export class Client {
           signature: signedPayload.signature
         }
       })
-      return formatPayload('placeStopMarketOrder', result)
+      return result.data.placeStopMarketOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
-        const updateNoncesOk = await this.updateTradedAssetNonces()
-        if (updateNoncesOk) {
-          return await this.placeStopMarketOrder(
-            amount,
-            buyOrSell,
-            marketName,
-            stopPrice
-          )
-        }
+        await this.updateTradedAssetNonces()
+        return await this.placeStopMarketOrder(
+          amount,
+          buyOrSell,
+          marketName,
+          stopPrice
+        )
       }
 
       return this.handleOrderError(e, signedPayload)
@@ -2268,30 +2176,15 @@ export class Client {
     }
   }
 
-  private async updateTradedAssetNonces(): Promise<Result<boolean>> {
-    try {
-      const payload: Result<AssetsNoncesData[]> = await this.getAssetNonces(
-        this.tradedAssets
-      )
-      if (payload.type === 'error') {
-        return {
-          type: 'error',
-          message: 'failed to retrieve nonces data'
-        }
-      }
-      const nonces: AssetsNoncesData[] = payload.data
-      const assetNonces = {}
-      nonces.forEach(item => {
-        assetNonces[item.asset] = item.nonces
-      })
-      this.assetNonces = assetNonces
-      return { type: 'ok' }
-    } catch (e) {
-      return {
-        type: 'error',
-        message: `Could not update traded asset nonces: ${JSON.stringify(e)}`
-      }
-    }
+  private async updateTradedAssetNonces(): Promise<void> {
+    const nonces: AssetsNoncesData[] = await this.getAssetNonces(
+      this.tradedAssets
+    )
+    const assetNonces = {}
+    nonces.forEach(item => {
+      assetNonces[item.asset] = item.nonces
+    })
+    this.assetNonces = assetNonces
   }
 
   private createTimestamp32(): number {
@@ -2327,15 +2220,11 @@ export class Client {
     }
   }
 
-  private async fetchMarketData(): Promise<Result<Record<string, Market>>> {
+  private async fetchMarketData(): Promise<Record<string, Market>> {
     if (this.opts.debug) {
       console.log('fetching latest exchange market data')
     }
-    const payload: Result<Market[]> = await this.listMarkets()
-    if (payload.type === 'error') {
-      return payload
-    }
-    const markets = payload.data
+    const markets: Market[] = await this.listMarkets()
     const marketAssets: string[] = []
     if (markets) {
       const marketData: Record<string, Market> = {}
@@ -2351,43 +2240,22 @@ export class Client {
         }
       }
       this.tradedAssets = marketAssets
-      return {
-        type: 'ok',
-        data: marketData
-      }
+      return marketData
     } else {
-      return {
-        type: 'error',
-        message: 'fail to retrieve market assets data'
-      }
+      throw new Error('Could not fetch markets')
     }
   }
 
-  private async fetchAssetData(): Promise<Result<Record<string, AssetData>>> {
+  private async fetchAssetData(): Promise<Record<string, AssetData>> {
     const assetList = {}
-    try {
-      const payload: Result<Asset[]> = await this.listAssets()
-      if (payload.type === 'error') {
-        return payload
-      }
-      const assets = payload.data
-      for (const a of assets) {
-        assetList[a.symbol] = {
-          hash: a.hash,
-          precision: 8,
-          blockchain: a.blockchain
-        }
-      }
-    } catch (e) {
-      console.log('Could not get assets: ', e)
-      return {
-        type: 'error',
-        message: 'Could not get assets'
+    const assets: Asset[] = await this.listAssets()
+    for (const a of assets) {
+      assetList[a.symbol] = {
+        hash: a.hash,
+        precision: 8,
+        blockchain: a.blockchain
       }
     }
-    return {
-      type: 'ok',
-      data: assetList
-    }
+    return assetList
   }
 }
