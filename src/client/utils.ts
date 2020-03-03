@@ -1,8 +1,6 @@
-import { Result } from '../types'
-
-export function checkMandatoryParams<T>(
+export function checkMandatoryParams(
   ...args: Array<Record<string, any>>
-): Result<T> {
+): void {
   // should iterate over all received params and check if they match with their respective Type
   const errors = []
   for (const arg of args) {
@@ -25,30 +23,7 @@ export function checkMandatoryParams<T>(
     }
   }
   if (errors.length === 0) {
-    return {
-      type: 'ok'
-    }
+    return
   }
-  return {
-    type: 'error',
-    message: errors.join('\n')
-  }
-}
-
-export function formatPayload<T = any>(
-  key: keyof T,
-  { errors, data }: { errors?: Array<{ message: string }>; data: T }
-): Result<T[keyof T]> {
-  // ignore graphqlErrors for not found data
-  if (errors) {
-    return {
-      type: 'error',
-      message: errors[0].message
-    }
-  }
-  const payload = data && data[key]
-  return {
-    type: 'ok',
-    data: payload
-  }
+  throw new Error(errors.join('\n'))
 }
