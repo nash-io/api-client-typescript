@@ -635,8 +635,8 @@ export class Client {
 
     this.casCookie = response.headers.get('set-cookie')
     const result = await response.json()
-    if (result.error || result.message === 'Two factor required') {
-      throw new Error(result.error || result.message)
+    if (result.error) {
+      throw new Error(result.message)
     }
 
     this.account = result.account
