@@ -635,6 +635,12 @@ export class Client {
       method: 'POST'
     })
 
+    if (response.status !== 200) {
+      let msg = `Login error. API status code: ${response.status}`
+      if (response.data) { msg += ` / body: ${response.data}`}
+      throw new Error(msg)
+    }
+
     this.casCookie = response.headers.get('set-cookie')
     const result = await response.json()
     if (result.error || result.message === 'Two factor required') {
