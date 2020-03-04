@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="3.0.21"></a>
+## [3.0.21](https://gitlab.com/nash-io-public/api-client-typescript/compare/v3.0.9...v3.0.21) (2020-03-04)
+
+
+
 <a name="3.0.11"></a>
 ## [3.0.11](https://gitlab.com/nash-io-public/api-client-typescript/compare/v3.0.9...v3.0.11) (2020-02-25)
 
