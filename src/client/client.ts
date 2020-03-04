@@ -149,11 +149,21 @@ import {
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
+
+const environmentConfiguration = {
+  production: { host: 'app.nash.io' },
+  sandbox: { host: 'app.sandbox.nash.io' },
+  dev1: { host: 'app.dev1.nash.io' },
+  dev2: { host: 'app.dev2.nash.io' },
+  dev3: { host: 'app.dev3.nash.io' },
+  dev4: { host: 'app.dev4.nash.io' }
+}
+
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 export interface ClientOptions {
-  env: 'production' | 'sandbox' | 'dev1' | 'dev2' | 'dev3' | 'dev4'
+  env: keyof(typeof environmentConfiguration)
   debug?: boolean
 }
 
@@ -324,15 +334,6 @@ interface NashSocketEvents {
   ): void
 }
 
-const hosts = {
-  production: 'app.nash.io',
-  sandbox: 'app.sandbox.nash.io',
-  dev1: 'app.dev1.nash.io',
-  dev2: 'app.dev2.nash.io',
-  dev3: 'app.dev3.nash.io',
-  dev4: 'app.dev4.nash.ioi'
-}
-
 export class Client {
   private opts: ClientOptions
   private apiUri: string
@@ -372,7 +373,7 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = opts
 
-    const host = hosts[opts.env]
+    const host = environmentConfiguration[opts.env].host
     if (!host) {
       throw new Error(`Invalid env '${opts.env}'`);
     }
