@@ -193,7 +193,7 @@ interface LoginParams {
   email: string
   password: string
   twoFaCode?: string
-  walletIndices: { [key: string]: number }
+  walletIndices?: { [key: string]: number }
   presetWallets?: object
 }
 
@@ -605,7 +605,7 @@ export class Client {
     email,
     password,
     twoFaCode,
-    walletIndices = { neo: 1, eth: 1 },
+    walletIndices = { neo: 1, eth: 1, btc: 1 },
     presetWallets
   }: LoginParams): Promise<void> {
     checkMandatoryParams({

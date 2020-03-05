@@ -53,8 +53,7 @@ const password = 'userpassword'
 
 const run = async () => {
   try {
-    await nash.login(email, password)
-
+    await nash.login({ email, password })
     const balance = await nash.getAccountBalance(CryptoCurrency.NEO)
     console.log(balance)
   } catch (e) {
