@@ -645,12 +645,18 @@ export class Client {
     this.assetNonces = {}
     this.currentOrderNonce = this.createTimestamp32()
 
-    if (twoFaCode !== undefined) {
-      this.account = await this.doTwoFactorLogin(twoFaCode)
-      if (this.account.type === 'error') {
-        throw new Error('Could not login')
+    if (result.message === 'Two factor required') {
+      if (twoFaCode !== undefined) {
+        this.account = await this.doTwoFactorLogin(twoFaCode)
+        if (this.account.type === 'error') {
+          throw new Error('Could not login')
+        }
+      } else {
+        // 2FA code is undefined. Check if needed by backend
+        throw new Error("Login requires 2 factor code, but no twoFaCode argument supplied")
       }
     }
+
     if (this.account.encrypted_secret_key === null) {
       console.log(
         'keys not present in the CAS: creating and uploading as we speak.'
