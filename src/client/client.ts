@@ -162,7 +162,7 @@ const environmentConfiguration = {
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 export interface ClientOptions {
-  env: keyof(typeof environmentConfiguration)
+  env: string  // Can be either an env name, or a host
   debug?: boolean
 }
 
@@ -372,14 +372,24 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = opts
 
-    const host = environmentConfiguration[opts.env].host
-    if (!host) {
-      throw new Error(`Invalid env '${opts.env}'`);
+    let host: string = null;
+
+    if (environmentConfiguration[opts.env]) {
+      host = environmentConfiguration[opts.env].host
+    } else {
+      // Could be that `env` itself is the host
+      if (opts.env.indexOf('.') > -1) {
+        host = opts.env
+      }
     }
 
-    this.apiUri = process.env.API_URI || `https://${host}/api/graphql`
-    this.casUri = process.env.CAS_URI || `https://${host}/api`
-    this.wsUri = process.env.WS_URI || `wss://${host}/api/socket`
+    if (!host) {
+      throw new Error(`Invalid environment name or host '${opts.env}'`);
+    }
+
+    this.apiUri = `https://${host}/api/graphql`
+    this.casUri = `https://${host}/api`
+    this.wsUri = `wss://${host}/api/socket`
 
     const query: GQL['query'] = async params => {
       // const operation = params.query.definitions[0]
