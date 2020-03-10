@@ -23,30 +23,24 @@ cd ..
 ## Usage
 
 ```typescript
-import { Client } from '@neon-exchange/api-client-typescript'
+import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
 
-const nash = new Client({
-  env: 'sandbox',
-  debug: false
-})
+const nash = new Client(EnvironmentConfiguration.sandbox)
 
 const markets = nash.listMarkets()
 console.log(markets)
 ```
 
-Note: `env` can either be `sandbox` or `production`
+Note: You can use either `EnvironmentConfiguration.production` or `EnvironmentConfiguration.sandbox`.
 
 ## Authentication
 
 Most Nash API requests require the client to be authenticated. This is needed to sign the payloads being sent over the wire.
 
 ```typescript
-import { Client, CryptoCurrency } from '@neon-exchange/api-client-typescript'
+import { Client, EnvironmentConfiguration, CryptoCurrency } from '@neon-exchange/api-client-typescript'
 
-const nash = new Client({
-  env: 'sandbox',
-  debug: false
-})
+const nash = new Client(EnvironmentConfiguration.sandbox)
 
 const email = 'user@email.com'
 const password = 'userpassword'

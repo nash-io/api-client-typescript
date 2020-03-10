@@ -149,20 +149,21 @@ import {
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
 
-const environmentConfiguration = {
+export const EnvironmentConfiguration = {
   production: { host: 'app.nash.io' },
   sandbox: { host: 'app.sandbox.nash.io' },
   dev1: { host: 'app.dev1.nash.io' },
   dev2: { host: 'app.dev2.nash.io' },
   dev3: { host: 'app.dev3.nash.io' },
-  dev4: { host: 'app.dev4.nash.io' }
+  dev4: { host: 'app.dev4.nash.io' },
+  local: { host: 'localhost:4000' }
 }
 
 /**
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 export interface ClientOptions {
-  env: string  // Can be either an env name, or a host
+  host: string
   debug?: boolean
 }
 
@@ -372,24 +373,13 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = opts
 
-    let host: string = null;
-
-    if (environmentConfiguration[opts.env]) {
-      host = environmentConfiguration[opts.env].host
-    } else {
-      // Could be that `env` itself is the host
-      if (opts.env.indexOf('.') > -1) {
-        host = opts.env
-      }
+    if (!opts.host || opts.host.indexOf('.') === -1) {
+      throw new Error(`Invalid API host '${opts.host}'`);
     }
 
-    if (!host) {
-      throw new Error(`Invalid environment name or host '${opts.env}'`);
-    }
-
-    this.apiUri = `https://${host}/api/graphql`
-    this.casUri = `https://${host}/api`
-    this.wsUri = `wss://${host}/api/socket`
+    this.apiUri = `https://${opts.host}/api/graphql`
+    this.casUri = `https://${opts.host}/api`
+    this.wsUri = `wss://${opts.host}/api/socket`
 
     const query: GQL['query'] = async params => {
       // const operation = params.query.definitions[0]
