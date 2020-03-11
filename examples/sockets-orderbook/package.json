@@ -1,0 +1,14 @@
+{
+  "name": "@neon-exchange/orderbook",
+  "version": "0.0.1",
+  "description": "Official TypeScript client for interacting with the Nash exchange",
+  "main": "orderbook.js",
+  "license": "MIT",
+  "keywords": [],
+  "engines": {
+    "node": ">=8.9"
+  },
+  "dependencies": {
+    "blessed": "0.1.81"
+  }
+}
