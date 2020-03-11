@@ -84,7 +84,7 @@
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
 					<a name="get_account_portfolio" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> GET_<wbr>ACCOUNT_<wbr>PORTFOLIO</h3>
-					<div class="tsd-signature tsd-kind-icon">GET_<wbr>ACCOUNT_<wbr>PORTFOLIO<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> =&nbsp;gql&#x60;query getAccountPortfolio($payload: GetAccountPortfolioParams!$signature: Signature!) {getAccountPortfolio(payload: $payload, signature: $signature)@connection(key: &quot;getAccountPortfolio&quot;) {balances {...portfolioBalanceFields}graph {...graphPointFields}total {...accountPortfolioTotalFields}}}${ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT}${GRAPH_POINT_FRAGMENT}${ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT}&#x60;</span></div>
+					<div class="tsd-signature tsd-kind-icon">GET_<wbr>ACCOUNT_<wbr>PORTFOLIO<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">DocumentNode</span><span class="tsd-signature-symbol"> =&nbsp;gql&#x60;query getAccountPortfolio($payload: GetAccountPortfolioParams!$signature: Signature!) {getAccountPortfolio(payload: $payload, signature: $signature) {balances {...portfolioBalanceFields}graph {...graphPointFields}total {...accountPortfolioTotalFields}}}${ACCOUNT_PORTFOLIO_BALANCE_FRAGMENT}${GRAPH_POINT_FRAGMENT}${ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT}&#x60;</span></div>
 					<aside class="tsd-sources">
 						<ul>
 							<li>Defined in queries/account/getAccountPortfolio.ts:9</li>

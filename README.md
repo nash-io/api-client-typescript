@@ -58,4 +58,46 @@ const run = async () => {
 run()
 ```
 
+## Websockets
+
+You can use websockets subscriptions like this:
+
+```typescript
+import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
+
+const nash = new Client(EnvironmentConfiguration.sandbox)
+await nash.login({ email, password })
+
+const connection = nash.createSocketConnection()
+
+// Getting the orderbook for the neo_eth marked
+connection.onUpdatedOrderbook(
+ { marketName: 'neo_eth' },
+ {
+   onResult: ({
+     data: {
+       updatedOrderBook: { bids, asks }
+     }
+   }) => {
+     console.log(`updated bids ${bids.length}`)
+     console.log(`updated asks ${asks.length}`)
+   }
+ }
+)
+
+// Getting the user orderobok for all markets
+connection.onUpdatedAccountOrders(
+ {},
+ {
+   onResult: ({
+     data: {
+       updatedAccountOrders
+     }
+   }) => {
+     console.log(`Updated orders: {updatedAccountOrders.length}`)
+   }
+ }
+)
+```
+
 ## For more function documentation, see [`docs/classes/_client_client_.client.html`](./classes/_client_client_.client.html)

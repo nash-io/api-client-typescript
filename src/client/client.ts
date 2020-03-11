@@ -362,12 +362,9 @@ export class Client {
    *
    * Example
    * ```
-   * import { Client } from '@neon-exchange/api-client-typescript'
+   * import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
    *
-   * const nash = new Client({
-   *   env: 'production',
-   *   debug: true
-   * })
+   * const nash = new Client(EnvironmentConfiguration.sandbox)
    * ```
    */
   constructor(opts: ClientOptions) {
@@ -424,13 +421,10 @@ export class Client {
    *
    * Example
    * ```
-   * import { Client } from '@neon-exchange/api-client-typescript'
+   * import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
    *
-   * const nash = new Client({
-   *   env: 'production',
-   *   debug: true
-   * })
-   * await nash.login(...)
+   * const nash = new Client(EnvironmentConfiguration.sandbox)
+   * await nash.login({ email, password })
    *
    * const connection = nash.createSocketConnection()
    *
@@ -590,15 +584,11 @@ export class Client {
    *
    * Example
    * ```
-   * const email = 'user@nash.io`
-   * const password = `yourpassword`
-   *
-   * nash.login({
-   *   email,
-   *   password
-   * })
-   * .then(_ => console.log('login success'))
-   * .catch(e => console.log(`login failed ${e}`)
+   * try {
+   *   nash.login({ email, password })
+   * } catch (e) {
+   *   console.error(`login failed ${e}`)
+   * }
    * ```
    */
   public async login({
