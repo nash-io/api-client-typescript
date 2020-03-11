@@ -7,6 +7,7 @@ cache:
 
 stages:
   - test
+  - docs
 
 before_script:
   - node -v
@@ -21,5 +22,16 @@ build_and_test:
     - yarn run build
     - yarn run test:lint
     - yarn run doc
-    # - yarn test
-    # - yarn cov:check
+
+# the docs job published the docs to gitlab pages
+docs:
+  stage: docs
+  script:
+    - yarn run doc
+  artifacts:
+    paths:
+      - docs
+  only:
+    - master
+    - docs
+    - tags

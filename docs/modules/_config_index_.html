@@ -73,9 +73,9 @@
 						<section class="tsd-index-section ">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_config_index_.html#cas_url" class="tsd-kind-icon">CAS_<wbr>URL</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_config_index_.html#debug" class="tsd-kind-icon">DEBUG</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_config_index_.html#gql_url" class="tsd-kind-icon">GQL_<wbr>URL</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_config_index_.html#matching_engine_ws_url" class="tsd-kind-icon">MATCHING_<wbr>ENGINE_<wbr>WS_<wbr>URL</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-external-module"><a href="_config_index_.html#salt" class="tsd-kind-icon">SALT</a></li>
 							</ul>
 						</section>
@@ -85,22 +85,12 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Variables</h2>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
-					<a name="cas_url" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagConst">Const</span> CAS_<wbr>URL</h3>
-					<div class="tsd-signature tsd-kind-icon">CAS_<wbr>URL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;process.env.CAS_URL || &#x27;http://localhost:4001/api&#x27;</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in config/index.ts:2</li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
 					<a name="debug" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> DEBUG</h3>
 					<div class="tsd-signature tsd-kind-icon">DEBUG<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">true</span><span class="tsd-signature-symbol"> =&nbsp;true</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in config/index.ts:9</li>
+							<li>Defined in config/index.ts:10</li>
 						</ul>
 					</aside>
 				</section>
@@ -110,7 +100,17 @@
 					<div class="tsd-signature tsd-kind-icon">GQL_<wbr>URL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;process.env.GQL_URL || &#x27;http://localhost:4000/api/graphql&#x27;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in config/index.ts:5</li>
+							<li>Defined in config/index.ts:3</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-external-module">
+					<a name="matching_engine_ws_url" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> MATCHING_<wbr>ENGINE_<wbr>WS_<wbr>URL</h3>
+					<div class="tsd-signature tsd-kind-icon">MATCHING_<wbr>ENGINE_<wbr>WS_<wbr>URL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;process.env.WS_URL || &#x27;http://localhost:4000/api/socket&#x27;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in config/index.ts:6</li>
 						</ul>
 					</aside>
 				</section>
@@ -120,7 +120,7 @@
 					<div class="tsd-signature tsd-kind-icon">SALT<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;&quot;</span><span class="tsd-signature-symbol"> =&nbsp;&quot;&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in config/index.ts:12</li>
+							<li>Defined in config/index.ts:13</li>
 						</ul>
 					</aside>
 				</section>
@@ -140,13 +140,13 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
-						<a href="_config_index_.html#cas_url" class="tsd-kind-icon">CAS_<wbr>URL</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
 						<a href="_config_index_.html#debug" class="tsd-kind-icon">DEBUG</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
 						<a href="_config_index_.html#gql_url" class="tsd-kind-icon">GQL_<wbr>URL</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
+						<a href="_config_index_.html#matching_engine_ws_url" class="tsd-kind-icon">MATCHING_<wbr>ENGINE_<wbr>WS_<wbr>URL</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-external-module">
 						<a href="_config_index_.html#salt" class="tsd-kind-icon">SALT</a>
