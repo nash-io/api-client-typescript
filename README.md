@@ -2,7 +2,7 @@
 
 Official TypeScript client for interacting with the Nash Exchange.
 
-To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io. When creating an account on the sandbox, use the referral code `DEMORC`.
+To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
 NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The environment is automatically reset every four days.
 
@@ -27,8 +27,12 @@ import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-type
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
-const markets = nash.listMarkets()
-console.log(markets)
+const run = async () => {
+  const markets = await nash.listMarkets()
+  console.log(markets)
+}
+
+run()
 ```
 
 Note: You can use either `EnvironmentConfiguration.production` or `EnvironmentConfiguration.sandbox`.
