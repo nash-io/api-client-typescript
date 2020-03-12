@@ -1,6 +1,6 @@
 {
   "name": "@neon-exchange/api-client-typescript",
-  "version": "4.0.1",
+  "version": "4.0.3",
   "description": "Official TypeScript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
