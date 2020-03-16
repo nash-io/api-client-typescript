@@ -178,14 +178,52 @@ import {
 import { SettlementABI } from './abi/eth/settlementABI'
 import { Erc20ABI } from './abi/eth/erc20ABI'
 
+export interface ClientOptions {
+  host: string
+  maxEthCostPrTransaction?: string
+  debug?: boolean
+  neoScan?: string
+  neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
+  ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
+}
 export const EnvironmentConfiguration = {
-  production: { host: 'app.nash.io' },
-  sandbox: { host: 'app.sandbox.nash.io' },
-  dev1: { host: 'app.dev1.nash.io' },
-  dev2: { host: 'app.dev2.nash.io' },
-  dev3: { host: 'app.dev3.nash.io' },
-  dev4: { host: 'app.dev4.nash.io' },
-  local: { host: 'localhost:4000' }
+  production: {
+    host: 'app.nash.io',
+    neoScan: 'https://neoscan.io//api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
+    neoNetworkSettings: NEO_NETWORK[Networks.MainNet]
+  } as ClientOptions,
+  sandbox: {
+    host: 'app.sandbox.nash.io',
+    neoScan: 'https://neo-local-explorer.sandbox.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
+    neoNetworkSettings: NEO_NETWORK[Networks.Sandbox]
+  } as ClientOptions,
+  dev1: {
+    host: 'app.dev1.nash.io',
+    neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Dev1],
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev1]
+  } as ClientOptions,
+  dev2: {
+    host: 'app.dev2.nash.io',
+    neoScan: 'https://neo-local-explorer.dev2.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Dev2],
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev2]
+  } as ClientOptions,
+  dev3: {
+    host: 'app.dev3.nash.io',
+    neoScan: 'https://neo-local-explorer.dev3.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Dev3],
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev3]
+  } as ClientOptions,
+  dev4: {
+    host: 'app.dev4.nash.io',
+    neoScan: 'https://neo-local-explorer.dev4.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Dev4],
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev4]
+  } as ClientOptions,
+  local: { host: 'localhost:4000' } as ClientOptions
 }
 
 async function sleep(ms: number) {
@@ -201,14 +239,6 @@ const BLOCKCHAIN_TO_BIP44 = {
  * ClientOptions is used to configure and construct a new Nash API Client.
  */
 
-export interface ClientOptions {
-  host: string
-  maxEthCostPrTransaction?: string
-  debug?: boolean
-  neoScan?: string
-  neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
-  ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
-}
 export interface NonceSet {
   noncesFrom: number[]
   noncesTo: number[]
@@ -419,8 +449,6 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.opts = {
       maxEthCostPrTransaction: '0.01',
-      ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
-      neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
       ...opts
     }
     this.web3 = new Web3(ETH_NETWORK[Networks.MainNet].nodes[0])
