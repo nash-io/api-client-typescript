@@ -66,6 +66,7 @@ import { checkMandatoryParams } from './utils'
 
 import {
   GetStatesData,
+  SyncStatesData,
   SignStatesData,
   SIGN_STATES_MUTATION,
   SYNC_STATES_MUTATION
@@ -1328,13 +1329,12 @@ export class Client {
    * console.log(getSignSyncStates)
    * ```
    */
-  public async getSignAndSyncStates(): Promise<SyncState[]> {
+  public async getSignAndSyncStates(): Promise<SyncStatesData> {
     const emptyStates: GetStatesData = {
       states: [],
       recycledOrders: [],
       serverSignedStates: []
     }
-
     const signStatesRecursive: SignStatesData = await this.signStates(
       emptyStates
     )
@@ -1445,7 +1445,7 @@ export class Client {
    */
   public async syncStates(
     signStatesData: SignStatesData
-  ): Promise<SyncState[]> {
+  ): Promise<SyncStatesData> {
     const stateList: SyncState[] = signStatesData.signStates.serverSignedStates.map(
       state => {
         return {
@@ -1457,7 +1457,7 @@ export class Client {
     const syncStatesParams = createSyncStatesParams(stateList)
     const signedPayload = await this.signPayload(syncStatesParams)
 
-    const result = await this.gql.mutate<{ syncStates: SyncState[] }>({
+    const result = await this.gql.mutate<{ syncStates: SyncStatesData }>({
       mutation: SYNC_STATES_MUTATION,
       variables: {
         payload: signedPayload.payload,

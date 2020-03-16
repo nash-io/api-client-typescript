@@ -12,7 +12,7 @@ export const SYNC_STATES_MUTATION = gql`
 
 export interface SyncStatesData {
   syncStates: {
-    result: boolean
+    result: string
   }
 }
 
