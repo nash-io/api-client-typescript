@@ -710,15 +710,14 @@ export class Client {
    * Login against the central account service. A login is required for all signed
    * request.
    * @returns
-   * @param email
-   * @param password
-   * @param twoFaCode (optional)
+   * @param secret string
+   * @param apiKey string
    * @returns
    *
    * Example
    * ```
    * try {
-   *   nash.login({ email, password })
+   *   nash.login(require('PATH_TO_KEY.json'))
    * } catch (e) {
    *   console.error(`login failed ${e}`)
    * }
