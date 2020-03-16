@@ -121,18 +121,9 @@ import {
   createPlaceLimitOrderParams,
   createCancelOrderParams,
   createGetMovementParams,
-  createGetDepositAddressParams,
-  createGetAccountOrderParams,
-  createGetAccountBalanceParams,
-  createGetAccountVolumesParams,
   createGetAssetsNoncesParams,
   createGetOrdersForMovementParams,
-  createAccountPortfolioParams,
   createListMovementsParams,
-  createListAccountBalanceParams,
-  createListAccountTransactionsParams,
-  createListAccountOrdersParams,
-  createListAccountTradesParams,
   MovementTypeDeposit,
   MovementTypeWithdrawal,
   SyncState,
@@ -147,7 +138,6 @@ import {
   States,
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
-
 
 export const EnvironmentConfiguration = {
   production: { host: 'app.nash.io' },
@@ -371,7 +361,7 @@ export class Client {
     this.opts = opts
 
     if (!opts.host || opts.host.indexOf('.') === -1) {
-      throw new Error(`Invalid API host '${opts.host}'`);
+      throw new Error(`Invalid API host '${opts.host}'`)
     }
 
     this.apiUri = `https://${opts.host}/api/graphql`
@@ -394,7 +384,9 @@ export class Client {
       })
       if (resp.status !== 200) {
         let msg = `API error. Status code: ${resp.status}`
-        if (resp.data) { msg += ` / body: ${resp.data}`}
+        if (resp.data) {
+          msg += ` / body: ${resp.data}`
+        }
         throw new Error(msg)
       }
       const obj = await resp.json()
@@ -619,7 +611,9 @@ export class Client {
 
     if (response.status !== 200) {
       let msg = `Login error. API status code: ${response.status}`
-      if (response.data) { msg += ` / body: ${response.data}`}
+      if (response.data) {
+        msg += ` / body: ${response.data}`
+      }
       throw new Error(msg)
     }
 
@@ -643,7 +637,9 @@ export class Client {
         }
       } else {
         // 2FA code is undefined. Check if needed by backend
-        throw new Error("Login requires 2 factor code, but no twoFaCode argument supplied")
+        throw new Error(
+          'Login requires 2 factor code, but no twoFaCode argument supplied'
+        )
       }
     }
 
@@ -931,26 +927,23 @@ export class Client {
     type,
     shouldIncludeTrades
   }: ListAccountOrderParams = {}): Promise<AccountOrder> {
-    const listAccountOrdersParams = createListAccountOrdersParams(
-      before,
-      buyOrSell,
-      limit,
-      marketName,
-      rangeStart,
-      rangeStop,
-      status,
-      type
-    )
     const query = shouldIncludeTrades
       ? LIST_ACCOUNT_ORDERS_WITH_TRADES
       : LIST_ACCOUNT_ORDERS
 
-    const signedPayload = await this.signPayload(listAccountOrdersParams)
     const result = await this.gql.query<{ listAccountOrders: AccountOrder }>({
       query,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: {
+          before,
+          buyOrSell,
+          limit,
+          marketName,
+          rangeStart,
+          rangeStop,
+          status,
+          type
+        }
       }
     })
     return result.data.listAccountOrders
@@ -976,17 +969,14 @@ export class Client {
     limit,
     marketName
   }: ListAccountTradeParams = {}): Promise<TradeHistory> {
-    const listAccountTradeParams = createListAccountTradesParams(
-      before,
-      limit,
-      marketName
-    )
-    const signedPayload = await this.signPayload(listAccountTradeParams)
     const result = await this.gql.query<{ listAccountTrades: TradeHistory }>({
       query: LIST_ACCOUNT_TRADES,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: {
+          before,
+          limit,
+          marketName
+        }
       }
     })
     return result.data.listAccountTrades
@@ -1016,20 +1006,16 @@ export class Client {
     fiatSymbol,
     limit
   }: ListAccountTransactionsParams): Promise<AccountTransaction> {
-    const listAccountTransactionsParams = createListAccountTransactionsParams(
-      cursor,
-      fiatSymbol,
-      limit
-    )
-    const signedPayload = await this.signPayload(listAccountTransactionsParams)
-
     const result = await this.gql.query<{
       listAccountTransactions: AccountTransaction
     }>({
       query: LIST_ACCOUNT_TRANSACTIONS,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: {
+          cursor,
+          fiatSymbol,
+          limit
+        }
       }
     })
     return result.data.listAccountTransactions
@@ -1054,17 +1040,13 @@ export class Client {
       ignoreLowBalance,
       Type: 'boolean'
     })
-    const listAccountBalanceParams = createListAccountBalanceParams(
-      ignoreLowBalance
-    )
-    const signedPayload = await this.signPayload(listAccountBalanceParams)
+
     const result = await this.gql.query<{
       listAccountBalances: AccountBalance[]
     }>({
       query: LIST_ACCOUNT_BALANCES,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: { ignoreLowBalance }
       }
     })
     return result.data.listAccountBalances
@@ -1089,16 +1071,12 @@ export class Client {
   ): Promise<AccountDepositAddress> {
     checkMandatoryParams({ currency, Type: 'string' })
 
-    const getDepositAddressParams = createGetDepositAddressParams(currency)
-    const signedPayload = await this.signPayload(getDepositAddressParams)
-
     const result = await this.gql.query<{
       getDepositAddress: AccountDepositAddress
     }>({
       query: GET_DEPOSIT_ADDRESS,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: { currency }
       }
     })
     return result.data.getDepositAddress
@@ -1128,19 +1106,15 @@ export class Client {
       Type: 'string'
     })
 
-    const getAccountPortfolioParams = createAccountPortfolioParams(
-      fiatSymbol,
-      period
-    )
-    const signedPayload = await this.signPayload(getAccountPortfolioParams)
-
     const result = await this.gql.query<{
       getAccountPorfolio: AccountPortfolio
     }>({
       query: GET_ACCOUNT_PORTFOLIO,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: {
+          fiatSymbol,
+          period
+        }
       }
     })
     return result.data.getAccountPorfolio
@@ -1192,14 +1166,11 @@ export class Client {
     currency: CryptoCurrency
   ): Promise<AccountBalance> {
     checkMandatoryParams({ currency, Type: 'string' })
-    const getAccountBalanceParams = createGetAccountBalanceParams(currency)
-    const signedPayload = await this.signPayload(getAccountBalanceParams)
 
     const result = await this.gql.query<{ getAccountBalance: AccountBalance }>({
       query: GET_ACCOUNT_BALANCE,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: { currency }
       }
     })
     return result.data.getAccountBalance
@@ -1208,7 +1179,7 @@ export class Client {
   /**
    * Get an order by ID.
    *
-   * @param orderID
+   * @param orderId
    * @returns
    *
    * Example
@@ -1217,16 +1188,13 @@ export class Client {
    * console.log(order)
    * ```
    */
-  public async getAccountOrder(orderID: string): Promise<Order> {
-    checkMandatoryParams({ orderID, Type: 'string' })
-    const getAccountOrderParams = createGetAccountOrderParams(orderID)
-    const signedPayload = await this.signPayload(getAccountOrderParams)
+  public async getAccountOrder(orderId: string): Promise<Order> {
+    checkMandatoryParams({ orderId, Type: 'string' })
 
     const result = await this.gql.query<{ getAccountOrder: Order }>({
       query: GET_ACCOUNT_ORDER,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: { orderId }
       }
     })
     return result.data.getAccountOrder
@@ -1244,15 +1212,8 @@ export class Client {
    * ```
    */
   public async listAccountVolumes(): Promise<AccountVolume> {
-    const listAccountVolumesParams = createGetAccountVolumesParams()
-    const signedPayload = await this.signPayload(listAccountVolumesParams)
-
     const result = await this.gql.query<{ listAccountVolumes: AccountVolume }>({
-      query: LIST_ACCOUNT_VOLUMES,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
+      query: LIST_ACCOUNT_VOLUMES
     })
     return result.data.listAccountVolumes
   }

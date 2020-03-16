@@ -7,11 +7,8 @@ import {
 } from './fragments'
 
 export const GET_ACCOUNT_PORTFOLIO = gql`
-  query getAccountPortfolio(
-    $payload: GetAccountPortfolioParams!
-    $signature: Signature!
-  ) {
-    getAccountPortfolio(payload: $payload, signature: $signature) {
+  query getAccountPortfolio($payload: GetAccountPortfolioParams!) {
+    getAccountPortfolio(payload: $payload) {
       balances {
         ...portfolioBalanceFields
       }

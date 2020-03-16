@@ -4,11 +4,8 @@ import { ORDER_FRAGMENT } from './fragments'
 import { TRADE_FRAGMENT } from '../market/fragments'
 
 export const LIST_ACCOUNT_ORDERS = gql`
-  query ListAccountOrders(
-    $payload: ListAccountOrdersParams!
-    $signature: Signature
-  ) {
-    listAccountOrders(payload: $payload, signature: $signature) {
+  query ListAccountOrders($payload: ListAccountOrdersParams!) {
+    listAccountOrders(payload: $payload) {
       next
       orders {
         ...orderFields
@@ -19,11 +16,8 @@ export const LIST_ACCOUNT_ORDERS = gql`
 `
 
 export const LIST_ACCOUNT_ORDERS_WITH_TRADES = gql`
-  query ListAccountOrders(
-    $payload: ListAccountOrdersParams!
-    $signature: Signature
-  ) {
-    listAccountOrders(payload: $payload, signature: $signature) {
+  query ListAccountOrders($payload: ListAccountOrdersParams!) {
+    listAccountOrders(payload: $payload) {
       next
       orders {
         ...orderFields
