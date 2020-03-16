@@ -188,7 +188,7 @@ export const EnvironmentConfiguration = {
   } as ClientOptions,
   sandbox: {
     host: 'app.sandbox.nash.io',
-    neoScan: 'https://neo-local-explorer.sandbox.nash.io/api/main_net',
+    neoScan: 'https://explorer.neo.sandbox.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
     neoNetworkSettings: NEO_NETWORK[Networks.Sandbox]
   } as ClientOptions,
