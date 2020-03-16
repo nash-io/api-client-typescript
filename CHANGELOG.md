@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [4.0.4](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.2...v4.0.4) (2020-03-17)
 
+<a name="0.1.4"></a>
+
+## [0.1.4](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.2...v0.1.4) (2020-03-16)
+
 <a name="0.1.2"></a>
 
 ## [0.1.2](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.2...v0.1.2) (2020-03-16)
