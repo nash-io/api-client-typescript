@@ -23,7 +23,10 @@ cd ..
 ## Usage
 
 ```typescript
-import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
+import {
+  Client,
+  EnvironmentConfiguration
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
@@ -38,16 +41,17 @@ Note: You can use either `EnvironmentConfiguration.production` or `EnvironmentCo
 Most Nash API requests require the client to be authenticated. This is needed to sign the payloads being sent over the wire.
 
 ```typescript
-import { Client, EnvironmentConfiguration, CryptoCurrency } from '@neon-exchange/api-client-typescript'
+import {
+  Client,
+  EnvironmentConfiguration,
+  CryptoCurrency
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
-const email = 'user@email.com'
-const password = 'userpassword'
-
 const run = async () => {
   try {
-    await nash.login({ email, password })
+    await nash.login(require('PATH_TO_KEY.json'))
     const balance = await nash.getAccountBalance(CryptoCurrency.NEO)
     console.log(balance)
   } catch (e) {
@@ -63,40 +67,39 @@ run()
 You can use websockets subscriptions like this:
 
 ```typescript
-import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
+import {
+  Client,
+  EnvironmentConfiguration
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
-await nash.login({ email, password })
+await nash.login(require('PATH_TO_KEY.json'))
 
 const connection = nash.createSocketConnection()
 
 // Getting the orderbook for the neo_eth marked
 connection.onUpdatedOrderbook(
- { marketName: 'neo_eth' },
- {
-   onResult: ({
-     data: {
-       updatedOrderBook: { bids, asks }
-     }
-   }) => {
-     console.log(`updated bids ${bids.length}`)
-     console.log(`updated asks ${asks.length}`)
-   }
- }
+  { marketName: 'neo_eth' },
+  {
+    onResult: ({
+      data: {
+        updatedOrderBook: { bids, asks }
+      }
+    }) => {
+      console.log(`updated bids ${bids.length}`)
+      console.log(`updated asks ${asks.length}`)
+    }
+  }
 )
 
 // Getting the user orderobok for all markets
 connection.onUpdatedAccountOrders(
- {},
- {
-   onResult: ({
-     data: {
-       updatedAccountOrders
-     }
-   }) => {
-     console.log(`Updated orders: {updatedAccountOrders.length}`)
-   }
- }
+  {},
+  {
+    onResult: ({ data: { updatedAccountOrders } }) => {
+      console.log(`Updated orders: {updatedAccountOrders.length}`)
+    }
+  }
 )
 ```
 
