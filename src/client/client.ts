@@ -266,6 +266,10 @@ interface SubscriptionHandlers<T> {
 }
 
 interface NashSocketEvents {
+  /**
+   * See https://www.npmjs.com/package/phoenix-channels
+   */
+  socket: InstanceType<PhoenixSocket>
   onUpdatedAccountOrders(
     variables: {
       buyOrSell?: OrderBuyOrSell
@@ -457,7 +461,6 @@ export class Client {
     if (this.wsUri == null) {
       throw new Error('wsUri config parameter missing')
     }
-
     const socket = new PhoenixSocket(this.wsUri, {
       decode: (rawPayload, callback) => {
         const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
@@ -482,6 +485,30 @@ export class Client {
     })
 
     const absintheSocket = AbsintheSocket.create(socket)
+
+    // The disconnect event is implemented incorrectly
+    // as it does not trigger the correct events.
+    //
+    // This implementation triggers the correct events
+    socket.disconnect = (c, code, reason) => {
+      if (socket.conn) {
+        socket.conn.onclose = event => {
+          socket.log('transport', 'close', event)
+          socket.channels.forEach(channel => channel.trigger('phx_close'))
+          clearInterval(socket.heartbeatTimer)
+          socket.stateChangeCallbacks.close.forEach(callback => callback(event))
+        }
+        if (code) {
+          socket.conn.close(code, reason || '')
+        } else {
+          socket.conn.close()
+        }
+        socket.conn = null
+      }
+      if (c) {
+        c()
+      }
+    }
     const updatedAccountOrdersString = print(UPDATED_ACCOUNT_ORDERS)
     const updateOrderBookString = print(UPDATED_ORDER_BOOK)
     const newAccountTradesString = print(NEW_ACCOUNT_TRADES)
@@ -489,6 +516,7 @@ export class Client {
     const updatedTickersString = print(UPDATED_TICKERS)
     const updatedCandlesString = print(UPDATED_CANDLES)
     return {
+      socket,
       onUpdatedAccountOrders: async (variables, handlers) => {
         const signedPayload = await this.signPayload({
           kind: SigningPayloadID.updatedAccountOrders,
