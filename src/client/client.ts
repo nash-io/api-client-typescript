@@ -491,20 +491,26 @@ export class Client {
     //
     // This implementation triggers the correct events
     socket.disconnect = (c, code, reason) => {
-      if (socket.conn) {
-        socket.conn.onclose = event => {
-          socket.log('transport', 'close', event)
-          socket.channels.forEach(channel => channel.trigger('phx_close'))
-          clearInterval(socket.heartbeatTimer)
-          socket.stateChangeCallbacks.close.forEach(callback => callback(event))
+      if (!socket.conn) {
+        if (c) {
+          c()
         }
-        if (code) {
-          socket.conn.close(code, reason || '')
-        } else {
-          socket.conn.close()
-        }
-        socket.conn = null
+        return
       }
+      // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
+      socket.conn.onclose = event => {
+        socket.log('transport', 'close', event)
+        // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
+        socket.channels.forEach(channel => channel.trigger('phx_close'))
+        clearInterval(socket.heartbeatTimer)
+        socket.stateChangeCallbacks.close.forEach(callback => callback(event))
+      }
+      if (code) {
+        socket.conn.close(code, reason || '')
+      } else {
+        socket.conn.close()
+      }
+      socket.conn = null
       if (c) {
         c()
       }
