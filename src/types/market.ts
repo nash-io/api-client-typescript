@@ -34,6 +34,8 @@ export interface Ticker {
 }
 
 export interface OrderBook {
+  lastUpdateId: number
+  updateId: number
   bids: OrderbookRecord[]
   asks: OrderbookRecord[]
 }

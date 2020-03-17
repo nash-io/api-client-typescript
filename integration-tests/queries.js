@@ -24,6 +24,14 @@ async function run() {
     shouldIncludeTrades: true
   })
   await client.listAccountTrades()
+
+  const orderBook = await client.getOrderBook('eth_neo')
+  if (orderBook.lastUpdateId == null) {
+    throw new Error('Missing lastUpdateId')
+  }
+  if (orderBook.lastUpdateId == null) {
+    throw new Error('Missing updateId')
+  }
 }
 
 run()
