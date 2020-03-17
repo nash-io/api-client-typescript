@@ -444,7 +444,7 @@ export class Client {
       maxEthCostPrTransaction: '0.01',
       ...opts
     }
-    this.web3 = new Web3(ETH_NETWORK[Networks.MainNet].nodes[0])
+    this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
     if (!opts.host || opts.host.indexOf('.') === -1) {
       throw new Error(`Invalid API host '${opts.host}'`)
@@ -1970,7 +1970,7 @@ export class Client {
       const res = await erc20Contract.methods
         .allowance(
           `0x${this.apiKey.child_keys[BIP44.ETH].address}`,
-          this.opts.neoNetworkSettings.contracts.vault.contract
+          this.opts.ethNetworkSettings.contracts.vault.contract
         )
         .call()
       return new BigNumber(res)
@@ -2111,7 +2111,7 @@ export class Client {
           )
           data = erc20Contract.methods
             .transfer(
-              address,
+              prefixWith0xIfNeeded(address),
               this.web3.utils.numberToHex(
                 transferExternalGetAmount(new BigNumber(amount), assetData)
               )
@@ -2123,21 +2123,24 @@ export class Client {
         const estimate = await this.web3.eth.estimateGas({
           from: prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address),
           nonce: ethAccountNonce,
-          to: prefixWith0xIfNeeded(assetData.hash),
+          to: prefixWith0xIfNeeded(
+            currency === CryptoCurrency.ETH
+              ? '0x7C291eB2D2Ec9A35dba0e2C395c5928cd7d90e51'
+              : assetData.hash
+          ),
           data
         })
 
         this.validateTransactionCost(gasPrice, estimate)
-
         const ethTx = new EthTransaction({
           nonce: '0x' + ethAccountNonce.toString(16),
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + estimate.toString(16),
+          gasLimit: '0x' + (estimate * 2).toString(16),
           to: prefixWith0xIfNeeded(
             currency !== CryptoCurrency.ETH ? assetData.hash : address
           ),
           value: '0x' + parseInt(value, 10).toString(16),
-          data
+          data: data === '' ? undefined : data
         })
 
         ethTx.getChainId = () => chainId

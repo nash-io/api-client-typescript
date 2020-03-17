@@ -36,21 +36,21 @@ async function testSubscriptions() {
     return new Promise((resolve, reject) => {
       let resolved = false
       connection[test](args, {
-        onError() {
+        onError(e) {
           if (resolved) {
             return
           }
           console.log('Failed ' + tstName)
           resolved = true
-          reject()
+          reject(e)
         },
-        onAbort() {
+        onAbort(e) {
           if (resolved) {
             return
           }
           console.log('Failed ' + tstName)
           resolved = true
-          reject()
+          reject(e)
         },
         onStart() {
           console.log('OK ' + tstName)
