@@ -1,8 +1,12 @@
-const Nash = require('../../build/main')
+const Nash = require('@neon-exchange/api-client-typescript')
 const blessed = require('blessed')
 
 const USERNAME = ''
 const PASSWORD = ''
+
+if (USERNAME === '' || PASSWORD === '') {
+  throw new Error('You must supply a username and password to test the example')
+}
 
 const client = new Nash.Client(Nash.EnvironmentConfiguration.sandbox)
 // Create a screen object.
@@ -93,8 +97,8 @@ async function run() {
   const initialOrderbookData = await client.getOrderBook('neo_eth')
   const askOrderBook = new Map()
   const bidOrderBook = new Map()
-  const asks = initialOrderbookData.data.asks
-  const bids = initialOrderbookData.data.bids
+  const asks = initialOrderbookData.asks
+  const bids = initialOrderbookData.bids
   asks.forEach(ask => askOrderBook.set(ask.price.amount, ask))
   bids.forEach(bid => bidOrderBook.set(bid.price.amount, bid))
 
@@ -127,7 +131,7 @@ async function run() {
   }
   update()
   try {
-    const sub = client.subscribeToEvents()
+    const sub = client.createSocketConnection()
     sub.onUpdatedOrderbook('neo_eth', order => {
       order.data.updatedOrderBook.asks.forEach(ask => {
         if (parseFloat(ask.amount.amount) === 0.0) {
