@@ -1,10 +1,12 @@
 const Nash = require('../build/main')
 
-const client = new Nash.Client(Nash.EnvironmentConfiguration[process.env.ENV])
+const client = new Nash.Client(
+  Nash.EnvironmentConfiguration[process.env.NASH_ENV]
+)
 async function run() {
   await client.login({
-    email: process.env.EMAIL,
-    password: process.env.PASSWORD
+    email: process.env.NASH_EMAIL,
+    password: process.env.NASH_PASSWORD
   })
 
   await client.getAccountBalance(Nash.CryptoCurrency.NEO)
