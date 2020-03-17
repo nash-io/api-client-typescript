@@ -28,7 +28,6 @@ import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopM
 import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
 import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
-import { LIST_ACCOUNT_VOLUMES } from '../queries/account/listAccountVolumes'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
@@ -79,7 +78,6 @@ import {
   MovementStatus,
   MovementType,
   AccountPortfolio,
-  AccountVolume,
   Period,
   CancelledOrder,
   AccountBalance,
@@ -999,13 +997,11 @@ export class Client {
    * console.log(accountTransaction.transactions)
    * ```
    */
-  // should change the parameter
-  // should declare de variables based on params
   public async listAccountTransactions({
     cursor,
     fiatSymbol,
     limit
-  }: ListAccountTransactionsParams): Promise<AccountTransaction> {
+  }: ListAccountTransactionsParams = {}): Promise<AccountTransaction> {
     const result = await this.gql.query<{
       listAccountTransactions: AccountTransaction
     }>({
@@ -1036,11 +1032,6 @@ export class Client {
   public async listAccountBalances(
     ignoreLowBalance
   ): Promise<AccountBalance[]> {
-    checkMandatoryParams({
-      ignoreLowBalance,
-      Type: 'boolean'
-    })
-
     const result = await this.gql.query<{
       listAccountBalances: AccountBalance[]
     }>({
@@ -1062,24 +1053,30 @@ export class Client {
    * ```
    * import { CryptoCurrency } from '@neon-exchange/api-client-typescript'
    *
-   * const address = await nash.getDepositAddress(CryptoCurrency.NEO)
+   * const address = await nash.getAccountAddress(CryptoCurrency.NEO)
    * console.log(address)
    * ```
    */
-  public async getDepositAddress(
+  public async getAccountAddress(
     currency: CryptoCurrency
   ): Promise<AccountDepositAddress> {
     checkMandatoryParams({ currency, Type: 'string' })
 
     const result = await this.gql.query<{
-      getDepositAddress: AccountDepositAddress
+      getAccountAddress: AccountDepositAddress
     }>({
       query: GET_DEPOSIT_ADDRESS,
       variables: {
         payload: { currency }
       }
     })
-    return result.data.getDepositAddress
+    return result.data.getAccountAddress
+  }
+
+  public getDepositAddress(
+    currency: CryptoCurrency
+  ): Promise<AccountDepositAddress> {
+    return this.getAccountAddress(currency)
   }
 
   /**
@@ -1091,7 +1088,10 @@ export class Client {
    *
    * Example
    * ```
-   * const accountPortfolio = await nash.getAccountPortfolio()
+   * const accountPortfolio = await nash.getAccountPortfolio({
+   *   fiatSymbol: "USD",
+   *
+   * })
    * console.log(accountPortfolio)
    * ```
    */
@@ -1100,14 +1100,8 @@ export class Client {
     fiatSymbol,
     period
   }: GetAccountPortfolioParams = {}): Promise<AccountPortfolio> {
-    checkMandatoryParams({
-      fiatSymbol,
-      period,
-      Type: 'string'
-    })
-
     const result = await this.gql.query<{
-      getAccountPorfolio: AccountPortfolio
+      getAccountPortfolio: AccountPortfolio
     }>({
       query: GET_ACCOUNT_PORTFOLIO,
       variables: {
@@ -1117,7 +1111,7 @@ export class Client {
         }
       }
     })
-    return result.data.getAccountPorfolio
+    return result.data.getAccountPortfolio
   }
 
   /**
@@ -1198,24 +1192,6 @@ export class Client {
       }
     })
     return result.data.getAccountOrder
-  }
-
-  /**
-   * List all volumes for the current authenticated account.
-   *
-   * @returns
-   *
-   * Example
-   * ```
-   * const accountVolume = await nash.listAccountVolumes()
-   * console.log(accountVolume.thirtyDayTotalVolumePercent)
-   * ```
-   */
-  public async listAccountVolumes(): Promise<AccountVolume> {
-    const result = await this.gql.query<{ listAccountVolumes: AccountVolume }>({
-      query: LIST_ACCOUNT_VOLUMES
-    })
-    return result.data.listAccountVolumes
   }
 
   /**
