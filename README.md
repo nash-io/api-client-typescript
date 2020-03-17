@@ -12,13 +12,7 @@ To install, download a release bundle or install it from NPM:
 
     yarn add @neon-exchange/api-client-typescript
 
-If you install it from a release bundle (or Git), install the dependencies and run `yarn link` in order to use it just like the module from NPM:
-
-unzip api-client-ts-task-bundle.zip
-cd api-client-ts-task-bundle
-yarn install
-yarn link
-cd ..
+For the MPC version, use this package: https://www.npmjs.com/package/@neon-exchange/api-client-typescript-mpc
 
 ## Usage
 
