@@ -5,10 +5,7 @@ async function testDisconnect() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
   )
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
+  await client.login(require('./key.json'))
 
   const connection = client.createSocketConnection()
   let state = null
@@ -29,7 +26,6 @@ async function testDisconnect() {
   }
   console.log('OK: socket can disconnect correctly')
 }
-
 async function testSubscriptions() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
@@ -73,10 +69,7 @@ async function testSubscriptions() {
   })
   connection.socket.disconnect()
 
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
+  await client.login(require('./key.json'))
   connection = client.createSocketConnection()
   for (const interval of Object.values(Nash.CandleInterval)) {
     await runTest(connection, 'onUpdatedCandles', {

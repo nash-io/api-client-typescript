@@ -590,7 +590,7 @@ export class Client {
       params:
         this.wsToken != null
           ? {
-              token: this.wsTokens
+              token: this.wsToken
             }
           : {}
     })
