@@ -455,11 +455,17 @@ export class Client {
    */
   createSocketConnection(): NashSocketEvents {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
-    if (m == null) {
-      throw new Error('To subscribe to events, please login() first')
-    }
     if (this.wsUri == null) {
       throw new Error('wsUri config parameter missing')
+    }
+    const authCheck = (sub: string) => {
+      if (m == null) {
+        throw new Error(
+          'To use ' +
+            sub +
+            ', you must login() before creating the socket connection'
+        )
+      }
     }
     const socket = new PhoenixSocket(this.wsUri, {
       decode: (rawPayload, callback) => {
@@ -479,9 +485,12 @@ export class Client {
           payload
         })
       },
-      params: {
-        token: m[1]
-      }
+      params:
+        m != null
+          ? {
+              token: m[1]
+            }
+          : {}
     })
 
     const absintheSocket = AbsintheSocket.create(socket)
@@ -523,19 +532,18 @@ export class Client {
     const updatedCandlesString = print(UPDATED_CANDLES)
     return {
       socket,
-      onUpdatedAccountOrders: async (variables, handlers) => {
-        const signedPayload = await this.signPayload({
-          kind: SigningPayloadID.updatedAccountOrders,
-          payload: {
-            ...variables,
-            timestamp: createTimestamp()
-          }
-        })
-        const not = AbsintheSocket.send(absintheSocket, {
-          operation: updatedAccountOrdersString,
-          variables: signedPayload
-        })
-        AbsintheSocket.observe(absintheSocket, not, handlers)
+      onUpdatedAccountOrders: async (payload, handlers) => {
+        authCheck('onUpdatedAccountOrders')
+        AbsintheSocket.observe(
+          absintheSocket,
+          AbsintheSocket.send(absintheSocket, {
+            operation: updatedAccountOrdersString,
+            variables: {
+              payload
+            }
+          }),
+          handlers
+        )
       },
       onUpdatedCandles: (variables, handlers) =>
         AbsintheSocket.observe(
@@ -576,20 +584,15 @@ export class Client {
           handlers
         )
       },
-      onAccountTrade: async (variables, handlers) => {
-        const signedPayload = await this.signPayload({
-          kind: SigningPayloadID.newAccountTrades,
-          payload: {
-            ...variables,
-            timestamp: createTimestamp()
-          }
-        })
-
+      onAccountTrade: async (payload, handlers) => {
+        authCheck('onAccountTrade')
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
             operation: newAccountTradesString,
-            variables: signedPayload
+            variables: {
+              payload
+            }
           }),
           handlers
         )

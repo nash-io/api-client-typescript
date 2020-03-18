@@ -1,9 +1,10 @@
 const Nash = require('../build/main')
-const client = new Nash.Client(
-  Nash.EnvironmentConfiguration[process.env.NASH_ENV]
-)
+
 const wait = n => new Promise(r => setTimeout(r, n))
 async function testDisconnect() {
+  const client = new Nash.Client(
+    Nash.EnvironmentConfiguration[process.env.NASH_ENV]
+  )
   await client.login({
     email: process.env.NASH_EMAIL,
     password: process.env.NASH_PASSWORD
@@ -28,14 +29,12 @@ async function testDisconnect() {
   }
   console.log('OK: socket can disconnect correctly')
 }
-async function testSubscriptions() {
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
 
-  const connection = client.createSocketConnection()
-  function runTest(test, args) {
+async function testSubscriptions() {
+  const client = new Nash.Client(
+    Nash.EnvironmentConfiguration[process.env.NASH_ENV]
+  )
+  function runTest(connection, test, args) {
     const tstName = test + '(' + JSON.stringify(args) + ')'
     // console.log('Running ' + tstName)
     return new Promise((resolve, reject) => {
@@ -65,20 +64,34 @@ async function testSubscriptions() {
       })
     })
   }
+  let connection = client.createSocketConnection()
+  await runTest(connection, 'onNewTrades', {
+    marketName: 'bat_neo'
+  })
+  await runTest(connection, 'onUpdatedOrderbook', {
+    marketName: 'bat_neo'
+  })
+  connection.socket.disconnect()
+
+  await client.login({
+    email: process.env.NASH_EMAIL,
+    password: process.env.NASH_PASSWORD
+  })
+  connection = client.createSocketConnection()
   for (const interval of Object.values(Nash.CandleInterval)) {
-    await runTest('onUpdatedCandles', {
+    await runTest(connection, 'onUpdatedCandles', {
       marketName: 'eth_neo',
       interval
     })
   }
-  await runTest('onNewTrades', {
+  await runTest(connection, 'onNewTrades', {
     marketName: 'eth_neo'
   })
-  await runTest('onUpdatedOrderbook', {
+  await runTest(connection, 'onUpdatedOrderbook', {
     marketName: 'eth_neo'
   })
-  await runTest('onUpdatedAccountOrders', {})
-  await runTest('onAccountTrade', {
+  await runTest(connection, 'onUpdatedAccountOrders', {})
+  await runTest(connection, 'onAccountTrade', {
     marketName: 'eth_neo'
   })
 
