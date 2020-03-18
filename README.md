@@ -8,11 +8,11 @@ NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The 
 
 ## Getting started
 
-To install, download a release bundle or install it from NPM:
+For the MPC version, we use this package: https://www.npmjs.com/package/@neon-exchange/api-client-typescript-mpc
 
-    yarn add @neon-exchange/api-client-typescript
+Install it from NPM:
 
-For the MPC version, use this package: https://www.npmjs.com/package/@neon-exchange/api-client-typescript-mpc
+    yarn add @neon-exchange/api-client-typescript-mpc
 
 ## Usage
 
@@ -20,7 +20,7 @@ For the MPC version, use this package: https://www.npmjs.com/package/@neon-excha
 import {
   Client,
   EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript-mpc'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
@@ -43,7 +43,7 @@ import {
   Client,
   EnvironmentConfiguration,
   CryptoCurrency
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript-mpc'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
@@ -68,7 +68,7 @@ You can use websockets subscriptions like this:
 import {
   Client,
   EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript-mpc'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 await nash.login(require('PATH_TO_KEY.json'))
