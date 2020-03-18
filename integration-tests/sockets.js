@@ -1,6 +1,7 @@
 const Nash = require('../build/main')
 
-const wait = n => new Promise(r => setTimeout(r, n))
+const { wait } = require('./utils')
+
 async function testDisconnect() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]

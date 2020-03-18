@@ -1,4 +1,5 @@
 const Nash = require('../build/main')
+const { wait } = require('./utils')
 
 const client = new Nash.Client(
   Nash.EnvironmentConfiguration[process.env.NASH_ENV]
@@ -21,8 +22,20 @@ async function run() {
   async function testEthTransfer(currency) {
     try {
       await client.transferToExternal({
-        quantity: Nash.createCurrencyAmount('0.1', currency),
-        address: '0x7C291eB2D2Ec9A35dba0e2C395c5928cd7d90e51'
+        quantity: Nash.createCurrencyAmount('0.01', currency),
+        address: client.getEthAddress()
+      })
+      console.log('ok ' + currency + ' personal -> external')
+    } catch (e) {
+      console.log('failed ' + currency + ' personal -> external')
+      console.log(e.message)
+    }
+  }
+  async function testNeoTransfer(currency) {
+    try {
+      await client.transferToExternal({
+        quantity: Nash.createCurrencyAmount('0.01', currency),
+        address: client.getNeoAddress()
       })
       console.log('ok ' + currency + ' personal -> external')
     } catch (e) {
@@ -37,6 +50,8 @@ async function run() {
   await testDeposit(Nash.CryptoCurrency.BAT)
   await testEthTransfer(Nash.CryptoCurrency.ETH)
   await testEthTransfer(Nash.CryptoCurrency.BAT)
+  await testNeoTransfer(Nash.CryptoCurrency.GAS)
+  await testNeoTransfer(Nash.CryptoCurrency.NOS)
 }
 
 run()

@@ -2679,4 +2679,14 @@ export class Client {
     }
     return assetList
   }
+
+  public getNeoAddress(): string {
+    return this.apiKey.child_keys[BIP44.NEO].address
+  }
+  public getEthAddress(): string {
+    return prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address)
+  }
+  public getBtcAddress(): string {
+    return this.apiKey.child_keys[BIP44.BTC].address
+  }
 }
