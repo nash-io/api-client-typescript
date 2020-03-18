@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="4.0.6"></a>
+## [4.0.6](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.2...v4.0.6) (2020-03-18)
+
+
+
 <a name="4.0.4"></a>
 ## [4.0.4](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.2...v4.0.4) (2020-03-17)
 
