@@ -44,9 +44,6 @@ export function transferExternalGetAmount(
   asset: AssetData
 ): number {
   switch (asset.blockchain) {
-    case Blockchain.NEO:
-      return amount.toNumber()
-    // case Blockchain.BTC:
     case Blockchain.ETH:
       if (asset.symbol === 'eth') {
         return amount.toNumber()

@@ -1,7 +1,10 @@
 import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
+import fetch from 'node-fetch'
 import * as NeonJS from '@cityofzion/neon-js'
+import * as bitcoin from 'bitcoinjs-lib'
+import coinSelect from 'coinselect'
 import { u, tx, sc, wallet } from '@cityofzion/neon-core'
 import { TransactionReceipt } from 'web3-core'
 import { Transaction as EthTransaction } from 'ethereumjs-tx'
@@ -17,6 +20,11 @@ import {
   LIST_ACCOUNT_ORDERS_WITH_TRADES
 } from '../queries/order/listAccountOrders'
 import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
+import {
+  GET_ACCOUNT_ADDRESS,
+  GetAccountAddressParams,
+  GetAccountAddressResult
+} from '../queries/account/getAccountAddress'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
 import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance'
@@ -35,7 +43,6 @@ import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLi
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder'
 import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
-import { GET_DEPOSIT_ADDRESS } from '../queries/getDepositAddress'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 
@@ -61,7 +68,7 @@ import {
   OrdersForMovementData
 } from '../queries/movement/getOrdersForMovementQuery'
 
-import { checkMandatoryParams } from './utils'
+import { checkMandatoryParams, detectBlockchain } from './utils'
 
 import {
   GetStatesData,
@@ -78,13 +85,24 @@ import {
   CompletePayloadSignatureResult
 } from '../mutations/mpc/completeSignature'
 
+import {
+  COMPLETE_BTC_TRANSACTION_SIGNATURES,
+  CompleteBtcTransactionSignaturesArgs,
+  CompleteBtcTransactionSignaturesResult
+} from '../mutations/mpc/completeBTCTransacitonSignatures'
+
+import {
+  SEND_BLOCKCHAIN_RAW_TRANSACTION,
+  SendBlockchainRawTransactionArgs,
+  SendBlockchainRawTransactionResult
+} from '../mutations/blockchain/sendBlockchainRawTransaction'
+
 import { FiatCurrency } from '../constants/currency'
 import {
   normalizePriceForMarket,
   mapMarketsForNashProtocol,
   normalizeAmountForMarket
 } from '../helpers'
-import fetch from 'node-fetch'
 import {
   OrderBook,
   TradeHistory,
@@ -92,7 +110,6 @@ import {
   Trade,
   CandleRange,
   CandleInterval,
-  AccountDepositAddress,
   Movement,
   MovementStatus,
   MovementType,
@@ -146,6 +163,7 @@ import {
   APIKey,
   createSyncStatesParams,
   createSignStatesParams,
+  createSendBlockchainRawTransactionParams,
   createTimestamp,
   SigningPayloadID
 } from '@neon-exchange/nash-protocol-mpc'
@@ -155,7 +173,7 @@ import {
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
-import { NEO_NETWORK, Networks, ETH_NETWORK } from './networks'
+import { NEO_NETWORK, BTC_NETWORK, Networks, ETH_NETWORK } from './networks'
 
 import {
   prefixWith0xIfNeeded,
@@ -167,6 +185,14 @@ import {
 import { SettlementABI } from './abi/eth/settlementABI'
 import { Erc20ABI } from './abi/eth/erc20ABI'
 
+import {
+  calculateBtcFees,
+  BTC_SATOSHI_MULTIPLIER,
+  networkFromName,
+  calculateFeeRate,
+  getHashAndSighashType
+} from './btcUtils'
+
 export interface ClientOptions {
   host: string
   maxEthCostPrTransaction?: string
@@ -174,43 +200,50 @@ export interface ClientOptions {
   neoScan?: string
   neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
   ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
+  btcNetworkSettings?: typeof BTC_NETWORK[Networks.MainNet]
 }
 export const EnvironmentConfiguration = {
   production: {
     host: 'app.nash.io',
     neoScan: 'https://neoscan.io//api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
-    neoNetworkSettings: NEO_NETWORK[Networks.MainNet]
+    neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
+    btcNetworkSettings: BTC_NETWORK[Networks.MainNet]
   } as ClientOptions,
   sandbox: {
     host: 'app.sandbox.nash.io',
     neoScan: 'https://explorer.neo.sandbox.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
-    neoNetworkSettings: NEO_NETWORK[Networks.Sandbox]
+    neoNetworkSettings: NEO_NETWORK[Networks.Sandbox],
+    btcNetworkSettings: BTC_NETWORK[Networks.Sandbox]
   } as ClientOptions,
   dev1: {
     host: 'app.dev1.nash.io',
     neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev1],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev1]
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev1],
+    btcNetworkSettings: BTC_NETWORK[Networks.Dev1]
   } as ClientOptions,
   dev2: {
     host: 'app.dev2.nash.io',
     neoScan: 'https://neo-local-explorer.dev2.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev2],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev2]
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev2],
+    btcNetworkSettings: BTC_NETWORK[Networks.Dev2]
   } as ClientOptions,
   dev3: {
     host: 'app.dev3.nash.io',
     neoScan: 'https://neo-local-explorer.dev3.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev3],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev3]
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev3],
+    btcNetworkSettings: BTC_NETWORK[Networks.Dev3]
   } as ClientOptions,
   dev4: {
     host: 'app.dev4.nash.io',
     neoScan: 'https://neo-local-explorer.dev4.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev4],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev4]
+    neoNetworkSettings: NEO_NETWORK[Networks.Dev4],
+    btcNetworkSettings: BTC_NETWORK[Networks.Dev4]
   } as ClientOptions,
   local: { host: 'localhost:4000' } as ClientOptions
 }
@@ -318,6 +351,13 @@ const memorizedPrint = (ast: any): string => {
   const str = print(ast) as string
   previousPrintResults.set(ast, str)
   return str
+}
+
+const P2shP2wpkhScript = (pubkeyBuffer: Buffer): Buffer => {
+  // HASH160 len(20) {script} OP_EQUAL
+  const addrHash = bitcoin.crypto.hash160(pubkeyBuffer)
+  const script = 'a914' + addrHash.toString('hex') + '87'
+  return Buffer.from(script, 'hex')
 }
 
 export const MISSING_NONCES = 'missing_asset_nonces'
@@ -1086,13 +1126,14 @@ export class Client {
    */
   public async getAccountAddress(
     currency: CryptoCurrency
-  ): Promise<AccountDepositAddress> {
+  ): Promise<GetAccountAddressResult['getAccountAddress']> {
     checkMandatoryParams({ currency, Type: 'string' })
 
-    const result = await this.gql.query<{
-      getAccountAddress: AccountDepositAddress
-    }>({
-      query: GET_DEPOSIT_ADDRESS,
+    const result = await this.gql.query<
+      GetAccountAddressResult,
+      GetAccountAddressParams
+    >({
+      query: GET_ACCOUNT_ADDRESS,
       variables: {
         payload: { currency }
       }
@@ -1100,9 +1141,15 @@ export class Client {
     return result.data.getAccountAddress
   }
 
+  /**
+   * @param  {CryptoCurrency} currency [description]
+   * @return {Promise}                 [description]
+   *
+   * @deprecated will be removed in next major version use getAccountAddress
+   */
   public getDepositAddress(
     currency: CryptoCurrency
-  ): Promise<AccountDepositAddress> {
+  ): Promise<GetAccountAddressResult['getAccountAddress']> {
     return this.getAccountAddress(currency)
   }
 
@@ -2091,6 +2138,20 @@ export class Client {
     }
     const assetData = this.assetData[currency]
     const blockchain = assetData.blockchain
+    if (this.opts.host === EnvironmentConfiguration.production.host) {
+      const addrBlockchain = detectBlockchain(address)
+      if (addrBlockchain === null) {
+        throw new Error(
+          `We can infer blockchain type from address ${address}. If you think this is an error please report it.`
+        )
+      }
+      if (addrBlockchain !== blockchain) {
+        throw new Error(
+          `You are attempted to send a ${blockchain} asset, but address is infered to be ${addrBlockchain}`
+        )
+      }
+    }
+
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
@@ -2201,20 +2262,195 @@ export class Client {
         transaction.addWitness(
           tx.Witness.fromSignature(signature, childKey.public_key)
         )
-        const signedPayload = transaction.serialize(true)
-        const neoStatus = await rpcClient.sendRawTransaction(signedPayload)
+        const neoStatus = await rpcClient.sendRawTransaction(
+          transaction.serialize(true)
+        )
 
         if (!neoStatus) {
           throw new Error('Could not send neo')
         }
         return {
-          txId: transaction.hash,
-          gasUsed: 0
+          txId: transaction.hash
+        }
+      case 'btc':
+        const pubKey = Buffer.from(childKey.public_key, 'hex')
+        const externalTransferAmount = new BigNumber(amount).toNumber()
+        const { vins } = await this.getAccountAddress(CryptoCurrency.BTC)
+        const utxos = vins.map(vin => {
+          if (vin.value == null || vin.txid == null || vin.n == null) {
+            throw new Error('Invalid vin')
+          }
+          return {
+            txid: vin.txid,
+            vout: vin.n,
+            value: vin.value.amount as string,
+            height: 0
+          }
+        })
+        const btcGasPrice = await calculateFeeRate()
+        const fee = calculateBtcFees(externalTransferAmount, btcGasPrice, utxos)
+        const net = networkFromName(this.opts.btcNetworkSettings.name)
+        const btcTx = new bitcoin.Psbt({ network: net })
+        let utxoInputTotal = fee.times(-1)
+        utxos.forEach(utxo => {
+          utxoInputTotal = utxoInputTotal.plus(utxo.value)
+        })
+
+        let useAll = false
+        if (utxoInputTotal.toFixed(8) === new BigNumber(amount).toFixed(8)) {
+          useAll = true
+        }
+        const transferAmount = Math.round(
+          new BigNumber(amount).times(BTC_SATOSHI_MULTIPLIER).toNumber()
+        )
+
+        const p2wpkh = bitcoin.payments.p2wpkh({
+          network: net,
+          pubkey: pubKey
+        })
+        // this payment is used by the p2sh payment
+        const p2shPayment = bitcoin.payments.p2sh({
+          network: net,
+          redeem: p2wpkh
+        })
+        // this is the redeemScript used for the P2SH
+        // It is of format 00 14 hash160(pubkey)
+        if (p2shPayment.redeem == null || p2shPayment.redeem.output == null) {
+          throw new Error('Invalid p2shPayment')
+        }
+        const redeem = p2shPayment.redeem.output
+
+        // we recostruct the scriptPubkey from the redeem script
+        // the format is 79 14 hash160(redeem) 87
+        const myScript = Buffer.from(P2shP2wpkhScript(redeem))
+
+        const allUtxo = utxos.map(utxo => ({
+          ...utxo,
+          txId: utxo.txid,
+          value: new BigNumber(utxo.value)
+            .times(BTC_SATOSHI_MULTIPLIER)
+            .toNumber()
+        }))
+
+        let inputs
+        let outputs
+        if (useAll) {
+          inputs = allUtxo
+          outputs = [{ address, value: transferAmount }]
+        } else {
+          // Calculate inputs and outputs using coin selection algorithm
+          const result = coinSelect(
+            allUtxo,
+            [{ address, value: transferAmount }],
+            btcGasPrice
+          )
+          inputs = result.inputs
+          outputs = result.outputs
+        }
+
+        if (!inputs || !outputs) {
+          throw new Error('Insufficient funds')
+        }
+        for (const input of inputs) {
+          const txInput = {
+            hash: input.txId,
+            index: input.vout,
+            witnessUtxo: {
+              script: myScript,
+              value: input.value
+            },
+            redeemScript: redeem
+          }
+          // console.info("added input: ", txInput)
+          btcTx.addInput(txInput)
+        }
+        for (const output of outputs) {
+          btcTx.addOutput({
+            address: output.address || childKey.address,
+            value: output.value
+          })
+        }
+        // Sign all inputs and build transaction
+        const uTx = btcTx.data.globalMap.unsignedTx
+        const uutx = ((uTx as never) as { tx: bitcoin.Transaction }).tx
+
+        const presignatures: Array<{
+          sighashType: number
+          presig: CompleteBtcTransactionSignaturesArgs['inputPresigs'][0]
+        }> = []
+
+        for (let i = 0; i < inputs.length; i++) {
+          // The function body of sign has been extracted as we want to sign this in our mpc way
+          const { hash, sighashType } = getHashAndSighashType(
+            btcTx.data.inputs,
+            i,
+            pubKey,
+            ((btcTx as never) as { __CACHE: any }).__CACHE,
+            [bitcoin.Transaction.SIGHASH_ALL]
+          )
+          const btcPayloadPresig = await computePresig({
+            apiKey: {
+              client_secret_share: childKey.client_secret_share,
+              paillier_pk: this.apiKey.paillier_pk,
+              public_key: childKey.public_key,
+              server_secret_share_encrypted:
+                childKey.server_secret_share_encrypted
+            },
+            blockchain: Blockchain.BTC,
+            fillPoolFn: this.fillPoolFn,
+            messageHash: hash.toString('hex')
+          })
+
+          presignatures.push({
+            sighashType,
+            presig: {
+              signature: btcPayloadPresig.presig,
+              r: btcPayloadPresig.r,
+              amount: inputs[i].value
+            }
+          })
+        }
+        const completeBtcTransactionPayload = {
+          payload: uutx.toBuffer().toString('hex'),
+          publicKey: childKey.public_key,
+          inputPresigs: presignatures.map(p => p.presig)
+        }
+        const completedInputSignatures = await this.completeBtcTransactionSignatures(
+          completeBtcTransactionPayload
+        )
+        for (let i = 0; i < presignatures.length; i++) {
+          const partialSig = [
+            {
+              pubkey: pubKey,
+              signature: bitcoin.script.signature.encode(
+                Buffer.from(
+                  completedInputSignatures[i].slice(
+                    0,
+                    completedInputSignatures[i].length - 2
+                  ),
+                  'hex'
+                ),
+                presignatures[i].sighashType
+              )
+            }
+          ]
+          btcTx.data.updateInput(i, { partialSig })
+          btcTx.validateSignaturesOfInput(i)
+        }
+        btcTx.finalizeAllInputs()
+        const signedRawBtcTx = btcTx.extractTransaction().toHex()
+        await this.sendBlockchainRawTransaction({
+          payload: signedRawBtcTx,
+          blockchain: Blockchain.BTC
+        })
+        return {
+          txId: uutx.getId()
         }
       default:
-        throw new Error('Insupported blockchain')
+        throw new Error('Unsupported blockchain ' + assetData.blockchain)
     }
   }
+
   private async signNeoPayload(payload: string): Promise<string> {
     const messageHash = u.sha256(payload)
     const childKey = this.apiKey.child_keys[BIP44.NEO]
@@ -2242,6 +2478,7 @@ export class Client {
     }
     return signature
   }
+
   private async signEthTransaction(etx: EthTransaction): Promise<string> {
     const childKey = this.apiKey.child_keys[BIP44.ETH]
     const txSignature = await computePresig({
@@ -2653,18 +2890,56 @@ export class Client {
       throw new Error('Could not fetch markets')
     }
   }
+
+  private async completeBtcTransactionSignatures(
+    params: CompleteBtcTransactionSignaturesArgs
+  ): Promise<string[]> {
+    const resp = await this.gql.mutate<
+      CompleteBtcTransactionSignaturesResult,
+      CompleteBtcTransactionSignaturesArgs
+    >({
+      mutation: COMPLETE_BTC_TRANSACTION_SIGNATURES,
+      variables: params
+    })
+    return resp.data.completeBtcPayloadSignature
+  }
+
+  private async sendBlockchainRawTransaction(params: {
+    blockchain: SendBlockchainRawTransactionArgs['payload']['blockchain']
+    payload: SendBlockchainRawTransactionArgs['payload']['transactionPayload']
+  }): Promise<string> {
+    const signedPayload = await this.signPayload(
+      createSendBlockchainRawTransactionParams(
+        params.blockchain,
+        params.payload
+      )
+    )
+    const resp = await this.gql.mutate<
+      SendBlockchainRawTransactionResult,
+      SendBlockchainRawTransactionArgs
+    >({
+      mutation: SEND_BLOCKCHAIN_RAW_TRANSACTION,
+      variables: {
+        payload: signedPayload.payload as SendBlockchainRawTransactionArgs['payload'],
+        signature: signedPayload.signature
+      }
+    })
+    return resp.data.sendBlockchainRawTransaction
+  }
+
   private async completePayloadSignature(
     params: CompletePayloadSignatureArgs
   ): Promise<string> {
-    const data = await this.gql.mutate<
+    const resp = await this.gql.mutate<
       { completePayloadSignature: CompletePayloadSignatureResult },
       CompletePayloadSignatureArgs
     >({
       mutation: COMPLETE_PAYLOAD_SIGNATURE,
       variables: params
     })
-    return data.data.completePayloadSignature.signature
+    return resp.data.completePayloadSignature.signature
   }
+
   private async fetchAssetData(): Promise<Record<string, AssetData>> {
     const assetList = {}
     const assets: Asset[] = await this.listAssets()
