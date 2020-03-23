@@ -42,6 +42,11 @@ import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrde
 import { PLACE_STOP_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeStopLimitOrder'
 import { PLACE_STOP_MARKET_ORDER_MUTATION } from '../mutations/orders/placeStopMarketOrder'
 import { ADD_MOVEMENT_MUTATION } from '../mutations/movements/addMovementMutation'
+import {
+  PREPARE_MOVEMENT_MUTATION,
+  PrepareMovementData,
+  PrepareMovementVariables
+} from '../mutations/movements/prepareMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
 import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
@@ -257,9 +262,37 @@ const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.BTC]: BIP44.BTC,
   [Blockchain.NEO]: BIP44.NEO
 }
-/**
- * ClientOptions is used to configure and construct a new Nash API Client.
- */
+
+export const sanitizeAddMovementPayload = (payload: {
+  recycled_orders: []
+  resigned_orders: []
+  recycledOrders: []
+  resignedOrders: []
+  digests: []
+  signed_transaction_elements: []
+  signedTransactionElements: []
+}) => {
+  const submitPayload = { ...payload }
+  if (
+    payload.recycled_orders != null ||
+    payload.resigned_orders != null ||
+    payload.recycledOrders != null
+  ) {
+    delete submitPayload.recycled_orders
+    delete submitPayload.recycledOrders
+    submitPayload.resignedOrders = submitPayload.resigned_orders
+    delete submitPayload.resigned_orders
+  }
+  if (payload.digests != null) {
+    delete submitPayload.digests
+  }
+  if (payload.signed_transaction_elements != null) {
+    submitPayload.signedTransactionElements =
+      payload.signed_transaction_elements
+    delete submitPayload.signed_transaction_elements
+  }
+  return submitPayload
+}
 
 export interface NonceSet {
   noncesFrom: number[]
@@ -2028,7 +2061,7 @@ export class Client {
 
   private validateTransactionCost(gasPrice: string, estimate: number) {
     const maxCost = new BigNumber(gasPrice)
-      .multipliedBy(2)
+      .multipliedBy(4)
       .multipliedBy(estimate)
     if (this.maxEthCostPrTransaction.lt(maxCost)) {
       throw new Error(
@@ -2510,11 +2543,34 @@ export class Client {
   public withdrawFromTradingContract(quantity: CurrencyAmount) {
     return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
   }
+  private async prepareMovement(
+    payload: Omit<PrepareMovementVariables['payload'], 'timestamp'>
+  ): Promise<PrepareMovementData['prepareMovement']> {
+    const signature = await this.signPayload({
+      kind: SigningPayloadID.prepareMovementPayload,
+      payload: {
+        ...payload,
+        timestamp: new Date().getTime()
+      }
+    })
+
+    const data = await this.gql.mutate<
+      PrepareMovementData,
+      PrepareMovementVariables
+    >({
+      mutation: PREPARE_MOVEMENT_MUTATION,
+      variables: {
+        payload: signature.payload as PrepareMovementVariables['payload'],
+        signature: signature.signature
+      }
+    })
+
+    return data.data.prepareMovement
+  }
   private async transferToTradingContract(
     quantity: CurrencyAmount,
     movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
   ): Promise<{ txId: string }> {
-    const movement = await this.getOrdersForMovement(quantity.currency)
     if (this.assetData == null) {
       throw new Error('Asset data null')
     }
@@ -2534,27 +2590,74 @@ export class Client {
       await this.approveAndAwaitAllowance(assetData, childKey, quantity.amount)
     }
     const address = childKey.address
-    const signMovementParams = createAddMovementParams(
+
+    const preparedMovement = await this.prepareMovement({
       address,
-      quantity,
-      movementType,
-      movement.assetNonce
-    )
-    const signedPayload = await this.signPayload(signMovementParams)
-    const blockchainSignature = await this.completePayloadSignature({
-      blockchain: blockchain.toUpperCase() as Blockchain,
-      payload: signedPayload.blockchain_raw.toLowerCase(),
-      public_key: childKey.public_key,
-      signature: signedPayload.blockchain_data.userSig,
-      type: CompletePayloadSignatureType.Movement,
-      r: signedPayload.blockchain_data.r
+      quantity: {
+        amount: new BigNumber(quantity.amount).toFormat(8),
+        currency: assetData.symbol
+      },
+      type: movementType
     })
-    const result = await this.gql.mutate<{ addMovement: AddMovement }>({
+
+    const amountBN = new BigNumber(quantity.amount)
+    let movementAmount = new BigNumber(quantity.amount)
+
+    if (
+      quantity.currency === CryptoCurrency.BTC &&
+      movementType === MovementTypeWithdrawal
+    ) {
+      const withdrawalFee = new BigNumber(preparedMovement.fees.amount)
+      movementAmount = amountBN.plus(withdrawalFee)
+    }
+
+    const signedAddMovementPayload = await this.signPayload({
+      payload: {
+        address: childKey.address,
+        nonce: preparedMovement.nonce,
+        quantity: {
+          amount: movementAmount.toFormat(8),
+          currency: assetData.symbol
+        },
+        type: movementType,
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        recycled_orders: preparedMovement.recycledOrders.map(
+          ({ blockchain: orderBlockchain, message }) => ({
+            blockchain: orderBlockchain,
+            message
+          })
+        ),
+        digests: preparedMovement.transactionElements.map(
+          ({ digest: digest }) => ({ digest })
+        ),
+        timestamp: new Date().getTime()
+      },
+      kind: SigningPayloadID.addMovementPayload
+    })
+    const sanitizedPayload = sanitizeAddMovementPayload(
+      signedAddMovementPayload.signedPayload as never
+    )
+    const addMovementResult = await this.gql.mutate<{
+      addMovement: AddMovement
+    }>({
       mutation: ADD_MOVEMENT_MUTATION,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: sanitizedPayload,
+        signature: signedAddMovementPayload.signature
       }
+    })
+    if (quantity.currency === CryptoCurrency.BTC) {
+      return {
+        txId: addMovementResult.data.addMovement.id.toString()
+      }
+    }
+    const blockchainSignature = await this.completePayloadSignature({
+      blockchain: blockchain.toUpperCase() as Blockchain,
+      payload: signedAddMovementPayload.blockchain_raw.toLowerCase(),
+      public_key: childKey.public_key,
+      signature: signedAddMovementPayload.blockchain_data.userSig,
+      type: CompletePayloadSignatureType.Movement,
+      r: signedAddMovementPayload.blockchain_data.r
     })
 
     switch (blockchain) {
@@ -2564,7 +2667,7 @@ export class Client {
           asset,
           amount: scriptAmount,
           nonce
-        } = signedPayload.blockchain_data
+        } = signedAddMovementPayload.blockchain_data
         const chainId = await this.web3.eth.net.getId()
 
         const scriptAmountDecimal = parseInt(scriptAmount, 10)
@@ -2586,7 +2689,7 @@ export class Client {
           '0x' + nonce,
           '0x' + scriptAddress,
           '0x' + blockchainSignature,
-          '0x' + result.data.addMovement.signature
+          '0x' + addMovementResult.data.addMovement.signature
         ]
 
         const invocation =
@@ -2599,7 +2702,7 @@ export class Client {
           '0x' + childKey.address
         )
         const estimate = await this.web3.eth.estimateGas({
-          from: '0x' + this.apiKey.child_keys[BIP44.ETH].address,
+          from: '0x' + childKey.address,
           nonce: ethAccountNonce,
           to: this.opts.ethNetworkSettings.contracts.vault.contract,
           data: abi
@@ -2609,7 +2712,7 @@ export class Client {
         const movementTx = new EthTransaction({
           nonce: '0x' + ethAccountNonce.toString(16),
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + (estimate * 2).toString(16),
+          gasLimit: '0x' + (estimate * 4).toString(16),
           to: this.opts.ethNetworkSettings.contracts.vault.contract,
           value: '0x' + parseInt(value, 10).toString(16),
           data: abi
@@ -2642,34 +2745,37 @@ export class Client {
           [
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.prefix
+              signedAddMovementPayload.blockchain_data.prefix
             ),
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.address
+              signedAddMovementPayload.blockchain_data.address
             ),
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.asset
+              signedAddMovementPayload.blockchain_data.asset
             ),
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.amount
+              signedAddMovementPayload.blockchain_data.amount
             ),
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.nonce
+              signedAddMovementPayload.blockchain_data.nonce
             ),
             new sc.ContractParam(
               'ByteArray',
-              signedPayload.blockchain_data.userPubKey
+              signedAddMovementPayload.blockchain_data.userPubKey
             ),
             new sc.ContractParam(
               'ByteArray',
-              result.data.addMovement.publicKey
+              addMovementResult.data.addMovement.publicKey
             ),
             new sc.ContractParam('ByteArray', blockchainSignature),
-            new sc.ContractParam('ByteArray', result.data.addMovement.signature)
+            new sc.ContractParam(
+              'ByteArray',
+              addMovementResult.data.addMovement.signature
+            )
           ]
         )
         const transaction = new tx.InvocationTransaction({
