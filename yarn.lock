@@ -763,10 +763,10 @@
     core-js "2.6.0"
     graphql "14.0.2"
 
-"@neon-exchange/nash-protocol-mpc@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol-mpc/-/nash-protocol-mpc-0.5.2.tgz#f12a167838eed01bd9a88789765f1792e9374ff8"
-  integrity sha512-RhjxX5LchCtQK6KbWD5J0whmbD3ZsCDoRvi9bzM39+A834Y1fxhZUZ16qyNRuJSQyle0AYcFOT6fUsuAnDvDgA==
+"@neon-exchange/nash-protocol-mpc@0.5.4":
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol-mpc/-/nash-protocol-mpc-0.5.4.tgz#25fcb6edc08adafdd78bc5b1482ac2aaf24ac220"
+  integrity sha512-tZ6XUuCyUg/14VzcPUjkzUE7svGIcCj060Q7Snux3FUPe2mC/5mqB37YR2EtGVjfYQCaWE1CzcuuJznzEY003g==
   dependencies:
     "@cityofzion/neon-core" "4.5.2"
     "@cityofzion/neon-js" "4.5.2"

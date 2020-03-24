@@ -1641,7 +1641,7 @@ export class Client {
    *   false,
    *   createCurrencyAmount('1', CryptoCurrency.NEO),
    *   OrderBuyOrSell.BUY,
-   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   OrderCancellationPolicy.GOOD_TIL_CANCELLED,
    *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
    *   'neo_gas'
    * )
@@ -1825,7 +1825,7 @@ export class Client {
    *   false,
    *   createCurrencyAmount('1', CryptoCurrency.NEO),
    *   OrderBuyOrSell.BUY,
-   *   OrdeCancellationPolicy.GOOD_TILL_CANCELLED,
+   *   OrderCancellationPolicy.GOOD_TIL_CANCELLED,
    *   createCurrencyPrice('0.01', CryptoCurrency.GAS, CryptoCurrency.NEO),
    *   'neo_gas'
    *   createCurrencyPrice('0.02', CryptoCurrency.GAS, CryptoCurrency.NEO)
