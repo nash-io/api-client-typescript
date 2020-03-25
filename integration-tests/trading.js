@@ -11,7 +11,7 @@ async function run() {
     Nash.OrderBuyOrSell.BUY,
     Nash.OrderCancellationPolicy.GOOD_TIL_CANCELLED,
     Nash.createCurrencyPrice(
-      '0.020124',
+      '0.0212632',
       Nash.CryptoCurrency.BTC,
       Nash.CryptoCurrency.ETH
     ),

@@ -1,11 +1,12 @@
 const Nash = require('../build/main')
 const { wait } = require('./utils')
 
-const client = new Nash.Client(
-  Nash.EnvironmentConfiguration[process.env.NASH_ENV]
-)
+const client = new Nash.Client({
+  ...Nash.EnvironmentConfiguration[process.env.NASH_ENV],
+  maxEthCostPrTransaction: '1.0'
+})
 async function run() {
-  await client.login(require('./key.json'))
+  await client.login(require('./key1.json'))
   async function testDeposit(currency) {
     try {
       await client.depositToTradingContract(

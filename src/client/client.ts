@@ -2061,7 +2061,7 @@ export class Client {
 
   private validateTransactionCost(gasPrice: string, estimate: number) {
     const maxCost = new BigNumber(gasPrice)
-      .multipliedBy(4)
+      .multipliedBy(2)
       .multipliedBy(estimate)
     if (this.maxEthCostPrTransaction.lt(maxCost)) {
       throw new Error(
@@ -2222,6 +2222,7 @@ export class Client {
               ? '0x7C291eB2D2Ec9A35dba0e2C395c5928cd7d90e51'
               : assetData.hash
           ),
+          value,
           data
         })
 
@@ -2701,18 +2702,21 @@ export class Client {
         const ethAccountNonce = await this.web3.eth.getTransactionCount(
           '0x' + childKey.address
         )
+        const gasPrice = await this.web3.eth.getGasPrice()
         const estimate = await this.web3.eth.estimateGas({
           from: '0x' + childKey.address,
           nonce: ethAccountNonce,
+          gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
+          value: '0x' + parseInt(value, 10).toString(16),
           to: this.opts.ethNetworkSettings.contracts.vault.contract,
           data: abi
         })
-        const gasPrice = await this.web3.eth.getGasPrice()
+
         this.validateTransactionCost(gasPrice, estimate)
         const movementTx = new EthTransaction({
           nonce: '0x' + ethAccountNonce.toString(16),
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + (estimate * 4).toString(16),
+          gasLimit: '0x' + (estimate * 2).toString(16),
           to: this.opts.ethNetworkSettings.contracts.vault.contract,
           value: '0x' + parseInt(value, 10).toString(16),
           data: abi
