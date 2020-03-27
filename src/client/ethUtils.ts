@@ -41,17 +41,21 @@ export function setSignature(tx: EthTransaction, sig: string) {
 
 export function transferExternalGetAmount(
   amount: BigNumber,
-  asset: AssetData
+  asset: AssetData,
+  isMainNet: boolean
 ): number {
   switch (asset.blockchain) {
     case Blockchain.ETH:
       if (asset.symbol === 'eth') {
         return amount.toNumber()
       } else if (asset.symbol === CryptoCurrency.USDC) {
-        // special case for USDC since backend serves incorrect blockchain precision for USDC
+        // Special case for USDC since backend serves incorrect blockchain precision for USDC
         // Note: This should be fixed in the backend but do not want to update assets/prod.csv
-        // at this moment due to causing un-foreseen issues with that
-        return amount.toNumber() * Math.pow(10, 6)
+        // At this moment due to causing un-foreseen issues with that
+        const exponent = isMainNet ? 6 : 18
+        return amount
+          .times(new BigNumber(10).exponentiatedBy(exponent))
+          .toNumber()
       } else {
         if (asset.blockchainPrecision == null) {
           throw new Error('Missing blockchainPrecision')

@@ -488,6 +488,7 @@ export class Client {
 
   private wsToken: string
   private wsUri: string
+  private isMainNet: boolean
   private gql: GQL
   private web3: Web3
   private authorization: string
@@ -517,6 +518,7 @@ export class Client {
       maxEthCostPrTransaction: '0.01',
       ...opts
     }
+    this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
     if (!opts.host || opts.host.indexOf('.') === -1) {
@@ -2044,8 +2046,15 @@ export class Client {
     }
   }
 
-  public async queryAllowance(contract: string): Promise<BigNumber> {
-    const erc20Contract = new this.web3.eth.Contract(Erc20ABI, `0x${contract}`)
+  public async queryAllowance(assetData: AssetData): Promise<BigNumber> {
+    let approvalPower = assetData.blockchainPrecision
+    if (assetData.symbol === CryptoCurrency.USDC) {
+      approvalPower = this.isMainNet ? 6 : 18
+    }
+    const erc20Contract = new this.web3.eth.Contract(
+      Erc20ABI,
+      `0x${assetData.hash}`
+    )
     try {
       const res = await erc20Contract.methods
         .allowance(
@@ -2053,7 +2062,7 @@ export class Client {
           this.opts.ethNetworkSettings.contracts.vault.contract
         )
         .call()
-      return new BigNumber(res)
+      return new BigNumber(res).div(Math.pow(10, approvalPower))
     } catch (e) {
       return new BigNumber(0)
     }
@@ -2087,7 +2096,11 @@ export class Client {
       .approve(
         this.opts.ethNetworkSettings.contracts.vault.contract,
         this.web3.utils.numberToHex(
-          transferExternalGetAmount(new BigNumber(amount), asset)
+          transferExternalGetAmount(
+            new BigNumber(amount),
+            asset,
+            this.isMainNet
+          )
         )
       )
       .encodeABI()
@@ -2135,7 +2148,7 @@ export class Client {
     amount: string
   ): Promise<void> {
     const bnAmount = new BigNumber(amount)
-    const currentAllowance = await this.queryAllowance(assetData.hash)
+    const currentAllowance = await this.queryAllowance(assetData)
     if (currentAllowance.lt(bnAmount)) {
       await this.approveERC20Transaction(
         assetData,
@@ -2145,7 +2158,7 @@ export class Client {
 
       // We will wait for allowance for up to 5 minutes. After which I think we should time out.
       for (let i = 0; i < 5 * 12 * 4; i++) {
-        const latestAllowance = await this.queryAllowance(assetData.hash)
+        const latestAllowance = await this.queryAllowance(assetData)
         if (latestAllowance.gte(bnAmount)) {
           return
         }
@@ -2207,7 +2220,11 @@ export class Client {
             .transfer(
               prefixWith0xIfNeeded(address),
               this.web3.utils.numberToHex(
-                transferExternalGetAmount(new BigNumber(amount), assetData)
+                transferExternalGetAmount(
+                  new BigNumber(amount),
+                  assetData,
+                  this.isMainNet
+                )
               )
             )
             .encodeABI()

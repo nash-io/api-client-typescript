@@ -6,7 +6,7 @@ const client = new Nash.Client({
   maxEthCostPrTransaction: '1.0'
 })
 async function run() {
-  await client.login(require('./key1.json'))
+  await client.login(require('./key.json'))
   async function testDeposit(currency) {
     try {
       await client.depositToTradingContract(
@@ -34,6 +34,7 @@ async function run() {
   await testDeposit(Nash.CryptoCurrency.GAS)
   await testDeposit(Nash.CryptoCurrency.NOS)
   await testDeposit(Nash.CryptoCurrency.ETH)
+  await testDeposit(Nash.CryptoCurrency.USDC)
   await testDeposit(Nash.CryptoCurrency.BAT)
   await testDeposit(Nash.CryptoCurrency.BTC)
   await testTransfer(Nash.CryptoCurrency.ETH, client.getEthAddress())
