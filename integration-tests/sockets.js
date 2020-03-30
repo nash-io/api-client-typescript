@@ -1,14 +1,12 @@
 const Nash = require('../build/main')
 
-const wait = n => new Promise(r => setTimeout(r, n))
+const { wait } = require('./utils')
+
 async function testDisconnect() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
   )
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
+  await client.login(require('./key.json'))
 
   const connection = client.createSocketConnection()
   let state = null
@@ -29,7 +27,6 @@ async function testDisconnect() {
   }
   console.log('OK: socket can disconnect correctly')
 }
-
 async function testSubscriptions() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
@@ -40,21 +37,21 @@ async function testSubscriptions() {
     return new Promise((resolve, reject) => {
       let resolved = false
       connection[test](args, {
-        onError() {
+        onError(e) {
           if (resolved) {
             return
           }
           console.log('Failed ' + tstName)
           resolved = true
-          reject()
+          reject(e)
         },
-        onAbort() {
+        onAbort(e) {
           if (resolved) {
             return
           }
           console.log('Failed ' + tstName)
           resolved = true
-          reject()
+          reject(e)
         },
         onStart() {
           console.log('OK ' + tstName)
@@ -73,10 +70,7 @@ async function testSubscriptions() {
   })
   connection.socket.disconnect()
 
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
+  await client.login(require('./key.json'))
   connection = client.createSocketConnection()
   for (const interval of Object.values(Nash.CandleInterval)) {
     await runTest(connection, 'onUpdatedCandles', {

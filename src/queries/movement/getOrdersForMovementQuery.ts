@@ -1,6 +1,6 @@
 import gql from 'graphql-tag'
 
-import { SyncState } from '@neon-exchange/nash-protocol'
+import { SyncState } from '@neon-exchange/nash-protocol-mpc'
 
 export const GET_ORDERS_FOR_MOVEMENT_QUERY = gql`
   query getOrdersForMovement(

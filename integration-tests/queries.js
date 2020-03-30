@@ -4,26 +4,36 @@ const client = new Nash.Client(
   Nash.EnvironmentConfiguration[process.env.NASH_ENV]
 )
 async function run() {
-  await client.login({
-    email: process.env.NASH_EMAIL,
-    password: process.env.NASH_PASSWORD
-  })
+  await client.login(require('./key.json'))
 
-  await client.getAccountBalance(Nash.CryptoCurrency.NEO)
-  await client.getAccountBalance(Nash.CryptoCurrency.ETH)
-  await client.getAccountBalance(Nash.CryptoCurrency.BTC)
-  await client.getAccountPortfolio()
-  await client.listAccountBalances(false)
-  await client.listAccountBalances(true)
-  await client.listAccountTransactions()
-  await client.getAccountAddress(Nash.CryptoCurrency.NEO)
-  await client.getAccountAddress(Nash.CryptoCurrency.ETH)
-  await client.getAccountAddress(Nash.CryptoCurrency.BTC)
-  await client.listAccountOrders()
-  await client.listAccountOrders({
-    shouldIncludeTrades: true
-  })
-  await client.listAccountTrades()
+  async function test(name, args) {
+    try {
+      await client[name](...args)
+      console.log(
+        name + '(' + args.map(e => JSON.stringify(e)).join(', ') + ')' + ' OK'
+      )
+    } catch (e) {
+      console.log(name + ' Failed')
+    }
+  }
+
+  await test('getAccountBalance', [Nash.CryptoCurrency.NEO])
+  await test('getAccountBalance', [Nash.CryptoCurrency.ETH])
+  await test('getAccountBalance', [Nash.CryptoCurrency.BTC])
+  await test('getAccountPortfolio', [])
+  await test('listAccountBalances', [false])
+  await test('listAccountBalances', [true])
+  await test('listAccountTransactions', [])
+  await test('getAccountAddress', [Nash.CryptoCurrency.NEO])
+  await test('getAccountAddress', [Nash.CryptoCurrency.ETH])
+  await test('getAccountAddress', [Nash.CryptoCurrency.BTC])
+  await test('listAccountOrders', [])
+  await test('listAccountOrders', [
+    {
+      shouldIncludeTrades: true
+    }
+  ])
+  await test('listAccountTrades', [])
 
   const orderBook = await client.getOrderBook('eth_neo')
   if (orderBook.lastUpdateId == null) {

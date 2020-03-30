@@ -1,5 +1,4 @@
 import { Asset, CurrencyAccountVolume } from '../types'
-import { CryptoCurrency } from '../constants/currency'
 
 export interface AccountWallet {
   address: string
@@ -67,9 +66,4 @@ export interface AcountVolume {
 export interface GraphPoint {
   time: number
   value: number
-}
-
-export interface AccountDepositAddress {
-  address: string
-  currency: CryptoCurrency
 }
