@@ -171,7 +171,7 @@ import {
   createSendBlockchainRawTransactionParams,
   createTimestamp,
   SigningPayloadID
-} from '@neon-exchange/nash-protocol-mpc'
+} from '@neon-exchange/nash-protocol'
 
 import {
   States,
