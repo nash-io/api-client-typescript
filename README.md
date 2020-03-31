@@ -2,18 +2,22 @@
 
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
-* Github: https://gitlab.com/nash-io-public/api-client-typescript
-* Documentation: https://nash-io-public.gitlab.io/api-client-typescript
+- Github: https://gitlab.com/nash-io-public/api-client-typescript
+- Documentation: https://nash-io-public.gitlab.io/api-client-typescript
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
 NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The environment is automatically reset every four days.
 
+## Installation
+
+```
+   yarn add @neon-exchange/api-client-typescript
+```
+
 ## Getting started
 
-To get started you need to create an API key.
-
-Start by navigating to the API keys page from your Profile. Click on 'Generate new key', and step through the wizard to set up a new key. When you key is created, download it, and save if somewhere accessible from your project.
+To get started you need to create an API key. You can find instructions on how to do so on our (wiki)[https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Setting-up-API-keys] page.
 
 Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
 
@@ -103,5 +107,9 @@ connection.onUpdatedAccountOrders(
   }
 )
 ```
+
+## Managing APIKey policies
+
+To find information about how to set up policies for APIkeys please consult the (wiki)[https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Apikey-policies]
 
 ## For more function documentation, see [`docs/classes/_client_client_.client.html`](./classes/_client_client_.client.html)
