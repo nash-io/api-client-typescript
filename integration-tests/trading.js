@@ -1,10 +1,11 @@
 const Nash = require('../build/main')
+const { login } = require('./utils')
 
-const client = new Nash.Client(
-  Nash.EnvironmentConfiguration[process.env.NASH_ENV]
-)
 async function run() {
-  await client.login(require('./key.json'))
+  const client = new Nash.Client(
+    Nash.EnvironmentConfiguration[process.env.NASH_ENV]
+  )
+  await login(client)
   await client.placeLimitOrder(
     false,
     Nash.createCurrencyAmount('1.0', Nash.CryptoCurrency.ETH),

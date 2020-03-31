@@ -2,6 +2,8 @@ import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
 import fetch from 'node-fetch'
+import toHex from 'array-buffer-to-hex'
+
 import * as NeonJS from '@cityofzion/neon-js'
 import * as bitcoin from 'bitcoinjs-lib'
 import coinSelect from 'coinselect'
@@ -33,6 +35,12 @@ import { GET_MOVEMENT } from '../queries/movement/getMovement'
 import { GET_TICKER } from '../queries/market/getTicker'
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder'
 import { CANCEL_ALL_ORDERS_MUTATION } from '../mutations/orders/cancelAllOrders'
+
+import {
+  USER_2FA_LOGIN_MUTATION,
+  TwoFactorLoginResponse
+} from '../mutations/account/twoFactorLoginMutation'
+
 import { LIST_CANDLES } from '../queries/candlestick/listCandles'
 import { LIST_TICKERS } from '../queries/market/listTickers'
 import { LIST_TRADES } from '../queries/market/listTrades'
@@ -146,31 +154,39 @@ import {
 import { CryptoCurrency } from '../constants/currency'
 
 import {
-  PayloadAndKind,
-  Blockchain,
+  APIKey,
   BIP44,
-  preSignPayload,
+  Blockchain,
+  bufferize,
   ChildKey,
-  createAddMovementParams,
-  createPlaceStopMarketOrderParams,
-  createPlaceStopLimitOrderParams,
-  createPlaceMarketOrderParams,
-  createPlaceLimitOrderParams,
-  createCancelOrderParams,
-  createGetMovementParams,
   computePresig,
+  Config,
+  createAddMovementParams,
+  createCancelOrderParams,
   createGetAssetsNoncesParams,
+  createGetMovementParams,
   createGetOrdersForMovementParams,
   createListMovementsParams,
+  createPlaceLimitOrderParams,
+  createPlaceMarketOrderParams,
+  createPlaceStopLimitOrderParams,
+  createPlaceStopMarketOrderParams,
+  createSendBlockchainRawTransactionParams,
+  createSignStatesParams,
+  createSyncStatesParams,
+  createTimestamp,
+  encryptSecretKey,
+  getHKDFKeysFromPassword,
+  getSecretKey,
+  initialize,
+  InitParams,
   MovementTypeDeposit,
   MovementTypeWithdrawal,
-  SyncState,
-  APIKey,
-  createSyncStatesParams,
-  createSignStatesParams,
-  createSendBlockchainRawTransactionParams,
-  createTimestamp,
-  SigningPayloadID
+  PayloadAndKind,
+  preSignPayload,
+  SigningPayloadID,
+  signPayload,
+  SyncState
 } from '@neon-exchange/nash-protocol'
 
 import {
@@ -300,6 +316,15 @@ export interface NonceSet {
   nonceOrder: number
 }
 
+interface LoginParams {
+  email: string
+  password: string
+  twoFaCode?: string
+  walletIndices?: { [key: string]: number }
+  presetWallets?: object
+  salt?: string
+}
+
 interface ListAccountTradeParams {
   before?: PaginationCursor
   limit?: number
@@ -348,6 +373,11 @@ interface ListAccountOrderParams {
   shouldIncludeTrades?: boolean
 }
 
+enum ClientMode {
+  NONE = 'NONE',
+  MPC = 'MPC',
+  FULL_SECRET = 'FULL_SECRET'
+}
 /**
  * These interfaces are just here to
  */
@@ -480,13 +510,21 @@ export const findBestNetworkNode = async (nodes): Promise<string> => {
 }
 
 export class Client {
+  private mode: ClientMode = ClientMode.NONE
   public ethVaultContract: Contract
   public apiKey: APIKey
   private maxEthCostPrTransaction: BigNumber
   private opts: ClientOptions
   private apiUri: string
 
+  private initParams: InitParams
+  private nashCoreConfig: Config
+  private casCookie: string
+  private publicKey: string
+  private account: any
+
   private wsToken: string
+  private casUri: string
   private wsUri: string
   private isMainNet: boolean
   private gql: GQL
@@ -494,6 +532,8 @@ export class Client {
   private authorization: string
   public marketData: { [key: string]: Market }
   public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
+  private walletIndices: { [key: string]: number }
+  private headers: object
   public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []
@@ -526,6 +566,7 @@ export class Client {
     }
 
     this.apiUri = `https://${opts.host}/api/graphql`
+    this.casUri = `https://${opts.host}/api`
     this.wsUri = `wss://${opts.host}/api/socket`
     this.maxEthCostPrTransaction = new BigNumber(
       this.web3.utils.toWei(this.opts.maxEthCostPrTransaction)
@@ -551,10 +592,7 @@ export class Client {
     const query: GQL['query'] = async params => {
       const resp = await fetch(this.apiUri, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: this.authorization
-        },
+        headers: this.headers,
         body: JSON.stringify({
           query: memorizedPrint(params.query),
           variables: params.variables
@@ -586,6 +624,24 @@ export class Client {
     }
   }
 
+  private requireMode(mode: ClientMode, msg: string): void {
+    if (this.mode !== mode) {
+      throw new Error(msg)
+    }
+  }
+  private requireMPC(): void {
+    this.requireMode(
+      ClientMode.MPC,
+      'This feature requires logging in using an API Key'
+    )
+  }
+  private requireFull(): void {
+    this.requireMode(
+      ClientMode.FULL_SECRET,
+      'This feature requires logging in using username / password'
+    )
+  }
+
   /**
    * Sets up a websocket and authenticates it using the current token.
    *
@@ -596,7 +652,7 @@ export class Client {
    * import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
    *
    * const nash = new Client(EnvironmentConfiguration.sandbox)
-   * await nash.login({ email, password })
+   * await nash.login(...)
    *
    * const connection = nash.createSocketConnection()
    *
@@ -701,12 +757,7 @@ export class Client {
         c()
       }
     }
-    const updatedAccountOrdersString = print(UPDATED_ACCOUNT_ORDERS)
-    const updateOrderBookString = print(UPDATED_ORDER_BOOK)
-    const newAccountTradesString = print(NEW_ACCOUNT_TRADES)
-    const newTradesString = print(NEW_TRADES)
-    const updatedTickersString = print(UPDATED_TICKERS)
-    const updatedCandlesString = print(UPDATED_CANDLES)
+
     return {
       socket,
       onUpdatedAccountOrders: async (payload, handlers) => {
@@ -714,7 +765,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: updatedAccountOrdersString,
+            operation: memorizedPrint(UPDATED_ACCOUNT_ORDERS),
             variables: {
               payload
             }
@@ -726,7 +777,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: updatedCandlesString,
+            operation: memorizedPrint(UPDATED_CANDLES),
             variables
           }),
           handlers
@@ -735,7 +786,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: updatedTickersString,
+            operation: memorizedPrint(UPDATED_TICKERS),
             variables: {}
           }),
           handlers
@@ -745,7 +796,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: newTradesString,
+            operation: memorizedPrint(NEW_TRADES),
             variables
           }),
           handlers
@@ -755,7 +806,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: updateOrderBookString,
+            operation: memorizedPrint(UPDATED_ORDER_BOOK),
             variables
           }),
           handlers
@@ -766,7 +817,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: newAccountTradesString,
+            operation: memorizedPrint(NEW_ACCOUNT_TRADES),
             variables: {
               payload
             }
@@ -778,7 +829,8 @@ export class Client {
   }
 
   /**
-   * Login against the central account service. A login is required for all signed
+   * Login using an API key.
+   *
    * request.
    * @returns
    * @param secret string
@@ -801,15 +853,253 @@ export class Client {
     apiKey: string
     secret: string
   }): Promise<void> {
+    this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
     this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
+    this.headers = {
+      'Content-Type': 'application/json',
+      Authorization: this.authorization
+    }
     this.marketData = await this.fetchMarketData()
     this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
 
     this.currentOrderNonce = this.createTimestamp32()
     await this.updateTradedAssetNonces()
+  }
+
+  /**
+   * Login against the central account service. A login is required for all signed
+   * request.
+   *
+   * Be careful about using this feature, private keys are derived using the password.
+   * So this technically gives full access to the account. Because of this the following features are not supported using the login.
+   *
+   *  - transferToExternal
+   *  - depositToTradingContract
+   *  - withdrawFromTradingContract
+   *
+   * @returns
+   * @param email string
+   * @param password string
+   * @param twoFaCode string
+   * @returns
+   *
+   * Example
+   * ```
+   * try {
+   *   nash.legacyLogin({
+   *     email: "email@domain.com",
+   *     password: "example"
+   *   })
+   * } catch (e) {
+   *   console.error(`login failed ${e}`)
+   * }
+   * ```
+   */
+  public async legacyLogin({
+    email,
+    password,
+    twoFaCode,
+    walletIndices = { neo: 1, eth: 1, btc: 1 },
+    presetWallets,
+    salt = ''
+  }: LoginParams): Promise<void> {
+    this.walletIndices = walletIndices
+    const keys = await getHKDFKeysFromPassword(password, salt)
+    const loginUrl = this.casUri + '/user_login'
+    const body = {
+      email,
+      password: keys.authKey.toString('hex')
+    }
+
+    const response = await fetch(loginUrl, {
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      method: 'POST'
+    })
+
+    if (response.status !== 200) {
+      let msg = `Login error. API status code: ${response.status}`
+      if (response.data) {
+        msg += ` / body: ${response.data}`
+      }
+      throw new Error(msg)
+    }
+    this.mode = ClientMode.FULL_SECRET
+
+    this.casCookie = response.headers.get('set-cookie')
+    this.headers = {
+      'Content-Type': 'application/json',
+      Cookie: this.casCookie
+    }
+    const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
+    if (m != null) {
+      this.wsToken = m[1]
+    }
+    const result = await response.json()
+    if (result.error) {
+      throw new Error(result.message)
+    }
+
+    this.account = result.account
+    this.marketData = await this.fetchMarketData()
+    this.assetData = await this.fetchAssetData()
+    this.assetNonces = {}
+    this.currentOrderNonce = this.createTimestamp32()
+
+    if (result.message === 'Two factor required') {
+      if (twoFaCode !== undefined) {
+        this.account = await this.doTwoFactorLogin(twoFaCode)
+        if (this.account.type === 'error') {
+          throw new Error('Could not login')
+        }
+      } else {
+        // 2FA code is undefined. Check if needed by backend
+        throw new Error(
+          'Login requires 2 factor code, but no twoFaCode argument supplied'
+        )
+      }
+    }
+
+    if (this.account.encrypted_secret_key === null) {
+      console.log(
+        'keys not present in the CAS: creating and uploading as we speak.'
+      )
+
+      await this.createAndUploadKeys(
+        keys.encryptionKey,
+        this.casCookie,
+        presetWallets
+      )
+    }
+
+    const aead = {
+      encryptedSecretKey: bufferize(this.account.encrypted_secret_key),
+      nonce: bufferize(this.account.encrypted_secret_key_nonce),
+      tag: bufferize(this.account.encrypted_secret_key_tag)
+    }
+
+    this.initParams = {
+      walletIndices: this.walletIndices,
+      encryptionKey: keys.encryptionKey,
+      aead,
+      marketData: mapMarketsForNashProtocol(this.marketData),
+      assetData: this.assetData
+    }
+
+    this.nashCoreConfig = await initialize(this.initParams)
+    if (this.opts.debug) {
+      console.log(this.nashCoreConfig)
+    }
+
+    if (presetWallets !== undefined) {
+      const cloned: any = { ...this.nashCoreConfig }
+      cloned.wallets = presetWallets
+      this.nashCoreConfig = cloned
+    }
+
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
+    // after login we should always try to get asset nonces
+    await this.updateTradedAssetNonces()
+  }
+
+  private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
+    const twoFaResult = await this.gql.mutate({
+      mutation: USER_2FA_LOGIN_MUTATION,
+      variables: { code: twoFaCode }
+    })
+    try {
+      const result = twoFaResult.data.twoFactorLogin as TwoFactorLoginResponse
+      const twoFAaccount = result.account
+      const wallets = {}
+      twoFAaccount.wallets.forEach(w => {
+        wallets[w.blockchain.toLowerCase()] = w.chainIndex
+      })
+      this.walletIndices = wallets
+      return {
+        encrypted_secret_key: twoFAaccount.encryptedSecretKey,
+        encrypted_secret_key_nonce: twoFAaccount.encryptedSecretKeyNonce,
+        encrypted_secret_key_tag: twoFAaccount.encryptedSecretKeyTag
+      }
+    } catch (e) {
+      return {
+        type: 'error',
+        message: twoFaResult.errors
+      }
+    }
+  }
+  private async createAndUploadKeys(
+    encryptionKey: Buffer,
+    casCookie: string,
+    presetWallets?: object
+  ): Promise<void> {
+    const secretKey = getSecretKey()
+    const res = encryptSecretKey(encryptionKey, secretKey)
+    const aead = {
+      encryptedSecretKey: res.encryptedSecretKey,
+      tag: res.tag,
+      nonce: res.nonce
+    }
+
+    this.initParams = {
+      walletIndices: this.walletIndices,
+      encryptionKey,
+      aead,
+      marketData: mapMarketsForNashProtocol(this.marketData),
+      assetData: this.assetData
+    }
+
+    this.nashCoreConfig = await initialize(this.initParams)
+
+    if (presetWallets !== undefined) {
+      const cloned: any = { ...this.nashCoreConfig }
+      cloned.wallets = presetWallets
+      this.nashCoreConfig = cloned
+    }
+
+    this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
+
+    const url = this.casUri + '/auth/add_initial_wallets_and_client_keys'
+    const body = {
+      encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
+      encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),
+      encrypted_secret_key_tag: toHex(this.initParams.aead.tag),
+      signature_public_key: this.nashCoreConfig.payloadSigningKey.publicKey,
+      // TODO(@anthdm): construct the wallets object in more generic way.
+      wallets: [
+        {
+          address: this.nashCoreConfig.wallets.neo.address,
+          blockchain: 'neo',
+          public_key: this.nashCoreConfig.wallets.neo.publicKey
+        },
+        {
+          address: this.nashCoreConfig.wallets.eth.address,
+          blockchain: 'eth',
+          public_key: this.nashCoreConfig.wallets.eth.publicKey
+        },
+        {
+          address: this.nashCoreConfig.wallets.btc.address,
+          blockchain: 'btc',
+          public_key: this.nashCoreConfig.wallets.btc.publicKey
+        }
+      ]
+    }
+
+    const response = await fetch(url, {
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', cookie: casCookie },
+      method: 'POST'
+    })
+
+    const result = await response.json()
+    if (result.error) {
+      throw new Error(result.message)
+    }
+    if (this.opts.debug) {
+      console.log('successfully uploaded wallet keys to the CAS')
+    }
   }
 
   /**
@@ -2172,6 +2462,7 @@ export class Client {
     quantity: CurrencyAmount
     address: string
   }): Promise<{ txId: string; gasUsed?: number }> {
+    this.requireMPC()
     const {
       quantity: { currency, amount },
       address
@@ -2589,6 +2880,7 @@ export class Client {
     quantity: CurrencyAmount,
     movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
   ): Promise<{ txId: string }> {
+    this.requireMPC()
     if (this.assetData == null) {
       throw new Error('Asset data null')
     }
@@ -2895,7 +3187,7 @@ export class Client {
    * @param payload
    * @returns
    */
-  private async signPayload(
+  private signPayload(
     payloadAndKind: PayloadAndKind
   ): Promise<{
     payload: Record<string, any>
@@ -2916,6 +3208,37 @@ export class Client {
     blockchain_raw: string
     signedPayload: Record<string, any>
   }> {
+    switch (this.mode) {
+      case ClientMode.NONE:
+        throw new Error('Not logged in')
+      case ClientMode.FULL_SECRET:
+        return this.signPayloadFull(payloadAndKind)
+      case ClientMode.MPC:
+        return this.signPayloadMpc(payloadAndKind)
+    }
+  }
+  private async signPayloadMpc(
+    payloadAndKind: PayloadAndKind
+  ): Promise<{
+    payload: Record<string, any>
+    signature: {
+      publicKey: string
+      signedDigest: string
+    }
+    blockchain_data: {
+      address: string
+      amount: string
+      asset: string
+      nonce: string
+      prefix: string
+      r?: string
+      userPubKey: string
+      userSig?: string
+    }
+    blockchain_raw: string
+    signedPayload: Record<string, any>
+  }> {
+    this.requireMPC()
     const signedPayload = await preSignPayload(this.apiKey, payloadAndKind, {
       fillPoolFn: this.fillPoolFn,
       assetData: this.assetData,
@@ -2932,6 +3255,50 @@ export class Client {
       signedPayload: signedPayload.payload
     }
     return out
+  }
+  private async signPayloadFull(
+    payloadAndKind: PayloadAndKind
+  ): Promise<{
+    payload: Record<string, any>
+    signature: {
+      publicKey: string
+      signedDigest: string
+    }
+    blockchain_data: {
+      address: string
+      amount: string
+      asset: string
+      nonce: string
+      prefix: string
+      r?: string
+      userPubKey: string
+      userSig?: string
+    }
+    blockchain_raw: string
+    signedPayload: Record<string, any>
+  }> {
+    this.requireFull()
+    const privateKey = Buffer.from(
+      this.nashCoreConfig.payloadSigningKey.privateKey,
+      'hex'
+    )
+
+    const signedPayload = signPayload(
+      privateKey,
+      payloadAndKind,
+      this.nashCoreConfig
+    )
+
+    return {
+      payload: payloadAndKind.payload,
+      signature: {
+        publicKey: this.publicKey,
+        signedDigest: signedPayload.signature
+      },
+      blockchain_data: signedPayload.blockchainMovement,
+      blockchain_raw: signedPayload.blockchainRaw,
+      signedPayload: signedPayload.payload
+    }
   }
 
   private fillPoolFn = async (arg: {

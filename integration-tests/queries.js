@@ -1,10 +1,11 @@
 const Nash = require('../build/main')
+const { login } = require('./utils')
 
 const client = new Nash.Client(
   Nash.EnvironmentConfiguration[process.env.NASH_ENV]
 )
 async function run() {
-  await client.login(require('./key.json'))
+  await login(client)
 
   async function test(name, args) {
     try {
@@ -14,6 +15,7 @@ async function run() {
       )
     } catch (e) {
       console.log(name + ' Failed')
+      console.log(e)
     }
   }
 

@@ -1,12 +1,11 @@
 const Nash = require('../build/main')
-
-const { wait } = require('./utils')
+const { wait, login } = require('./utils')
 
 async function testDisconnect() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
   )
-  await client.login(require('./key.json'))
+  await login(client)
 
   const connection = client.createSocketConnection()
   let state = null
@@ -70,7 +69,7 @@ async function testSubscriptions() {
   })
   connection.socket.disconnect()
 
-  await client.login(require('./key.json'))
+  await login(client)
   connection = client.createSocketConnection()
   for (const interval of Object.values(Nash.CandleInterval)) {
     await runTest(connection, 'onUpdatedCandles', {
