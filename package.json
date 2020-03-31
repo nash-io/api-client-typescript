@@ -25,7 +25,7 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn",
     "clean": "rm -rf build test",
-    "doc": "./node_modules/.bin/typedoc --ignoreCompilerErrors --out docs src",
+    "doc": "typedoc --ignoreCompilerErrors --includeVersion --out docs src",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
     "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('nash-protocol must be installed with Yarn: https://yarnpkg.com/')\""
@@ -51,6 +51,7 @@
     "@cityofzion/neon-js": "4.7.2",
     "@neon-exchange/nash-protocol": "3.2.3",
     "@types/isomorphic-fetch": "0.0.35",
+    "@types/node": "^13.9.8",
     "@types/request": "2.48.1",
     "array-buffer-to-hex": "1.0.0",
     "bitcoinjs-lib": "5.1.7",
@@ -83,7 +84,7 @@
     "tslint": "5.11.0",
     "tslint-config-prettier": "1.17.0",
     "tslint-immutable": "5.0.0",
-    "typedoc": "0.13.0",
+    "typedoc": "^0.17.3",
     "typescript": "3.8.3"
   },
   "ava": {

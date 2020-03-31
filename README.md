@@ -1,6 +1,9 @@
 # api-client-typescript
 
-Official TypeScript client for interacting with the Nash Exchange.
+Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
+
+* Github: https://gitlab.com/nash-io-public/api-client-typescript
+* Documentation: https://nash-io-public.gitlab.io/api-client-typescript
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 

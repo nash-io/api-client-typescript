@@ -24,14 +24,13 @@ build_and_test:
     - yarn run doc
 
 # the docs job published the docs to gitlab pages
-docs:
+pages:
   stage: docs
   script:
     - yarn run doc
+    - mv docs public
   artifacts:
     paths:
-      - docs
+      - public
   only:
-    - master
-    - docs
     - tags
