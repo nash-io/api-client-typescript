@@ -17,7 +17,7 @@ NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The 
 
 ## Getting started
 
-To get started you need to create an API key. You can find instructions on how to do so on our [wiki](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Setting-up-API-keys) page.
+To get started you need to create an API key. You can find instructions on how to do so on our [wiki page](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Setting-up-API-keys).
 
 Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
 
