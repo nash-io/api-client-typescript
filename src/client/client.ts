@@ -879,7 +879,6 @@ export class Client {
    *  - depositToTradingContract
    *  - withdrawFromTradingContract
    *
-   * @returns
    * @param email string
    * @param password string
    * @param twoFaCode string
