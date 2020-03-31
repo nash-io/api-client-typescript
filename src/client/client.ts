@@ -870,8 +870,7 @@ export class Client {
   }
 
   /**
-   * Login against the central account service. A login is required for all signed
-   * request.
+   * Legacy login against the central account service. Note: you should prefer to use an API key with the `login` method.
    *
    * Be careful about using this feature, private keys are derived using the password.
    * So this technically gives full access to the account. Because of this the following features are not supported using the login.
