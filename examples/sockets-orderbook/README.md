@@ -5,6 +5,6 @@ This is an example on how to use the new sockets api, to run the example go to a
 After copying in the username / password you can run the project by yarn installing and running the orderbook.js file
 
 ```
-   yarn install
-   node orderbook.js
+yarn install
+node orderbook.js
 ```

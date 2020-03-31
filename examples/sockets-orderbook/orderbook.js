@@ -5,7 +5,7 @@ const USERNAME = ''
 const PASSWORD = ''
 
 if (USERNAME === '' || PASSWORD === '') {
-  throw new Error('You must supply a username and password to test the example')
+  throw new Error('You must supply a sandbox username and password to test the example')
 }
 
 const client = new Nash.Client(Nash.EnvironmentConfiguration.sandbox)

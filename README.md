@@ -2,17 +2,18 @@
 
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
-- Github: https://gitlab.com/nash-io-public/api-client-typescript
-- Documentation: https://nash-io-public.gitlab.io/api-client-typescript
+- [Gitlab repository](https://gitlab.com/nash-io-public/api-client-typescript)
+- [Documentation](https://nash-io-public.gitlab.io/api-client-typescript) 
+  - [`nash.Client` API reference](https://nash-io-public.gitlab.io/api-client-typescript/classes/_client_client_.client.html)
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
-NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The environment is automatically reset every four days.
+NOTE: In sandbox, testnet funds are automatically sent to new accounts. The sandbox environment is reset every couple of days.
 
 ## Installation
 
-```
-   yarn add @neon-exchange/api-client-typescript
+```sh
+yarn add @neon-exchange/api-client-typescript
 ```
 
 ## Getting started
@@ -108,8 +109,8 @@ connection.onUpdatedAccountOrders(
 )
 ```
 
-## Managing APIKey policies
+See also the [websockets example](https://gitlab.com/nash-io-public/api-client-typescript/-/tree/master/examples/sockets-orderbook).
 
-To find information about how to set up policies for APIkeys please consult the [wiki](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Apikey-policies).
+## Managing API key policies
 
-## For more function documentation, see [`docs/classes/_client_client_.client.html`](./classes/_client_client_.client.html)
+For more information on how to set up policies for API keys, consult the [API key policies wiki page](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Apikey-policies).
