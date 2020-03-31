@@ -11,11 +11,11 @@ NOTE: In the sandbox, testnet funds are sent to new accounts automatically. The 
 
 ## Getting started
 
-For the MPC version, we use this package: https://www.npmjs.com/package/@neon-exchange/api-client-typescript-mpc
+To get started you need to create an API key.
 
-Install it from NPM:
+Start by navigating to the API keys page from your Profile. Click on 'Generate new key', and step through the wizard to set up a new key. When you key is created, download it, and save if somewhere accessible from your project.
 
-    yarn add @neon-exchange/api-client-typescript-mpc
+Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
 
 ## Usage
 
