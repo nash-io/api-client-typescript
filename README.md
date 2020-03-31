@@ -28,7 +28,7 @@ Remember, API Keys contain sensitive infomation, if you are using version contro
 import {
   Client,
   EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript-mpc'
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
@@ -51,7 +51,7 @@ import {
   Client,
   EnvironmentConfiguration,
   CryptoCurrency
-} from '@neon-exchange/api-client-typescript-mpc'
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 
@@ -76,7 +76,7 @@ You can use websockets subscriptions like this:
 import {
   Client,
   EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript-mpc'
+} from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
 await nash.login(require('PATH_TO_KEY.json'))
