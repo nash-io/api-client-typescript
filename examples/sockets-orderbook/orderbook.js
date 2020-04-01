@@ -1,7 +1,7 @@
 const Nash = require('@neon-exchange/api-client-typescript')
 const blessed = require('blessed')
 
-const client = new Nash.Client(Nash.EnvironmentConfiguration.sandbox)
+const client = new Nash.Client(Nash.EnvironmentConfiguration.production)
 
 // Create a screen object.
 const screen = blessed.screen({
@@ -12,47 +12,12 @@ screen.key('q', function() {
 })
 screen.title = 'Orderbook'
 
-const bidList = blessed.list({
-  parent: screen,
-  label: ' {bold}{green-fg}Bids{/green-fg}{/bold} ',
-  tags: true,
-  top: 0,
-  mouse: true,
-  right: 0,
-  width: '100%',
-  height: '50%',
-  vi: true,
-  border: 'line',
-  scrollbar: {
-    ch: ' ',
-    track: {
-      bg: 'cyan'
-    },
-    style: {
-      inverse: true
-    }
-  },
-  style: {
-    item: {
-      bg: 'green',
-      fg: 'black',
-      hover: {
-        bg: 'cyan'
-      }
-    },
-    selected: {
-      bg: 'blue',
-      bold: true
-    }
-  }
-})
-
 const askList = blessed.list({
   parent: screen,
   label: ' {bold}{red-fg}Asks{/red-fg}{/bold} ',
   tags: true,
+  top: 0,
   mouse: true,
-  top: '50%',
   right: 0,
   width: '100%',
   height: '50%',
@@ -82,6 +47,41 @@ const askList = blessed.list({
   }
 })
 
+const bidList = blessed.list({
+  parent: screen,
+  label: ' {bold}{green-fg}Bids{/green-fg}{/bold} ',
+  tags: true,
+  mouse: true,
+  top: '50%',
+  right: 0,
+  width: '100%',
+  height: '50%',
+  vi: true,
+  border: 'line',
+  scrollbar: {
+    ch: ' ',
+    track: {
+      bg: 'cyan'
+    },
+    style: {
+      inverse: true
+    }
+  },
+  style: {
+    item: {
+      bg: 'green',
+      fg: 'black',
+      hover: {
+        bg: 'cyan'
+      }
+    },
+    selected: {
+      bg: 'blue',
+      bold: true
+    }
+  }
+})
+
 async function run() {
   const initialOrderbookData = await client.getOrderBook('neo_eth')
   const askOrderBook = new Map()
@@ -94,7 +94,7 @@ async function run() {
   function update() {
     const askValues = [...askOrderBook.values()]
     askValues.sort(
-      (l, r) => parseFloat(l.price.amount) - parseFloat(r.price.amount)
+      (r, l) => parseFloat(l.price.amount) - parseFloat(r.price.amount)
     )
     askList.setItems(
       askValues.map(
@@ -106,7 +106,7 @@ async function run() {
     )
     const bidValues = [...bidOrderBook.values()]
     bidValues.sort(
-      (l, r) => parseFloat(l.price.amount) - parseFloat(r.price.amount)
+      (r, l) => parseFloat(l.price.amount) - parseFloat(r.price.amount)
     )
     bidList.setItems(
       bidValues.map(
@@ -121,26 +121,28 @@ async function run() {
   update()
   try {
     const sub = client.createSocketConnection()
-    sub.onUpdatedOrderbook('neo_eth', order => {
-      order.data.updatedOrderBook.asks.forEach(ask => {
-        if (parseFloat(ask.amount.amount) === 0.0) {
-          if (askOrderBook.has(ask.price.amount)) {
-            askOrderBook.delete(ask.price.amount)
+    sub.onUpdatedOrderbook({ marketName: 'neo_eth' }, {
+      onResult: order => {
+        order.data.updatedOrderBook.asks.forEach(ask => {
+          if (parseFloat(ask.amount.amount) === 0.0) {
+            if (askOrderBook.has(ask.price.amount)) {
+              askOrderBook.delete(ask.price.amount)
+            }
+          } else {
+            askOrderBook.set(ask.price.amount, ask)
           }
-        } else {
-          askOrderBook.set(ask.price.amount, ask)
-        }
-      })
-      order.data.updatedOrderBook.bids.forEach(bid => {
-        if (parseFloat(bid.amount.amount) === 0.0) {
-          if (bidOrderBook.has(bid.price.amount)) {
-            bidOrderBook.delete(bid.price.amount)
+        })
+        order.data.updatedOrderBook.bids.forEach(bid => {
+          if (parseFloat(bid.amount.amount) === 0.0) {
+            if (bidOrderBook.has(bid.price.amount)) {
+              bidOrderBook.delete(bid.price.amount)
+            }
+          } else {
+            bidOrderBook.set(bid.price.amount, bid)
           }
-        } else {
-          bidOrderBook.set(bid.price.amount, bid)
-        }
-      })
-      update()
+        })
+        update()
+      }
     })
   } catch (e) {
     console.error(e)
