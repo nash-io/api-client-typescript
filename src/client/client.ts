@@ -533,7 +533,9 @@ export class Client {
   public marketData: { [key: string]: Market }
   public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
   private walletIndices: { [key: string]: number }
-  private headers: object
+  private headers: object = {
+    'Content-Type': 'application/json'
+  }
   public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []

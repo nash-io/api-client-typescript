@@ -1,14 +1,8 @@
 const Nash = require('@neon-exchange/api-client-typescript')
 const blessed = require('blessed')
 
-const USERNAME = ''
-const PASSWORD = ''
-
-if (USERNAME === '' || PASSWORD === '') {
-  throw new Error('You must supply a sandbox username and password to test the example')
-}
-
 const client = new Nash.Client(Nash.EnvironmentConfiguration.sandbox)
+
 // Create a screen object.
 const screen = blessed.screen({
   smartCSR: true
@@ -89,11 +83,6 @@ const askList = blessed.list({
 })
 
 async function run() {
-  await client.login({
-    email: USERNAME,
-    password: PASSWORD
-  })
-
   const initialOrderbookData = await client.getOrderBook('neo_eth')
   const askOrderBook = new Map()
   const bidOrderBook = new Map()
@@ -157,5 +146,8 @@ async function run() {
     console.error(e)
   }
 }
-
-run()
+try {
+  run()
+}catch(e) {
+  console.log(e)
+}
