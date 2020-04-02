@@ -279,6 +279,7 @@ const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.NEO]: BIP44.NEO
 }
 
+const NEP5_OLD_ASSETS = ['nos', 'phx', 'guard', 'lx', 'ava']
 export const sanitizeAddMovementPayload = (payload: {
   recycled_orders: []
   resigned_orders: []
@@ -3091,15 +3092,26 @@ export class Client {
             )
           ]
         )
+        let sendingFromSmartContract = false
         const transaction = new tx.InvocationTransaction({
           script: builder.str,
           gas: 0
-        })
-          .addAttribute(
+        }).addAttribute(
+          tx.TxAttrUsage.Script,
+          u.reverseHex(wallet.getScriptHashFromAddress(childKey.address))
+        )
+        if (
+          movementType === MovementTypeWithdrawal &&
+          NEP5_OLD_ASSETS.includes(quantity.currency)
+        ) {
+          sendingFromSmartContract = true
+          transaction.addAttribute(
             tx.TxAttrUsage.Script,
-            u.reverseHex(wallet.getScriptHashFromAddress(childKey.address))
+            u.reverseHex(
+              this.opts.neoNetworkSettings!.contracts!.vault!.contract!
+            )
           )
-          .addAttribute(tx.TxAttrUsage.Remark, timestamp)
+        }
         if (
           movementType === MovementTypeDeposit &&
           (quantity.currency === CryptoCurrency.NEO ||
@@ -3111,13 +3123,38 @@ export class Client {
             this.opts.neoNetworkSettings.contracts.vault.address
           )
         }
-        transaction.calculate(balance)
+        transaction
+          .addAttribute(tx.TxAttrUsage.Remark, timestamp)
+          .calculate(balance)
         const payload = transaction.serialize(false)
 
         const signature = await this.signNeoPayload(payload.toLowerCase())
         transaction.addWitness(
           tx.Witness.fromSignature(signature, childKey.public_key)
         )
+        if (sendingFromSmartContract) {
+          const acct = new wallet.Account(childKey.address)
+          if (
+            parseInt(
+              this.opts.neoNetworkSettings.contracts!.vault!.contract!,
+              16
+            ) > parseInt(acct.scriptHash, 16)
+          ) {
+            transaction.scripts.push(
+              new tx.Witness({
+                invocationScript: '0000',
+                verificationScript: ''
+              })
+            )
+          } else {
+            transaction.scripts.unshift(
+              new tx.Witness({
+                invocationScript: '0000',
+                verificationScript: ''
+              })
+            )
+          }
+        }
         const signedNeoPayload = transaction.serialize(true)
         const neoStatus = await rpcClient.sendRawTransaction(signedNeoPayload)
 
