@@ -28,7 +28,7 @@
     "doc": "typedoc --ignoreCompilerErrors --includeVersion --out docs src",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
-    "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('nash-protocol must be installed with Yarn: https://yarnpkg.com/')\""
+    "preinstall": "node preinstall.js"
   },
   "scripts-info": {
     "info": "Display information about the package scripts",
