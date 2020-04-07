@@ -21,7 +21,7 @@ if (platform === "darwin") {
     })
 
     if (libgmpPaths.length === 0) {
-      throw new Error("To use Nash SDK you must have libgmp installed, you can install it with homebrew by typing `brew install gmp`")
+      throw new Error("To install the Nash Typescript API client you must have libgmp installed. You can install it through homebrew with `brew install gmp`")
     }
   })
 }
