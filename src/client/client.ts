@@ -4,7 +4,6 @@ import { print } from 'graphql/language/printer'
 import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
 import https from 'https'
-
 import * as NeonJS from '@cityofzion/neon-js'
 import * as bitcoin from 'bitcoinjs-lib'
 import coinSelect from 'coinselect'
@@ -219,6 +218,7 @@ export interface ClientOptions {
   host: string
   maxEthCostPrTransaction?: string
   debug?: boolean
+  runRequestsOverWebsockets?: boolean
   neoScan?: string
   neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
   ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
@@ -227,7 +227,7 @@ export interface ClientOptions {
 export const EnvironmentConfiguration = {
   production: {
     host: 'app.nash.io',
-    neoScan: 'https://neoscan.io//api/main_net',
+    neoScan: 'https://neoscan.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
     neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
     btcNetworkSettings: BTC_NETWORK[Networks.MainNet]
@@ -440,6 +440,7 @@ interface NashSocketEvents {
    * See https://www.npmjs.com/package/phoenix-channels
    */
   socket: InstanceType<PhoenixSocket>
+  absintheSocket: InstanceType<AbsintheSocket>
   onUpdatedAccountOrders(
     variables: {
       buyOrSell?: OrderBuyOrSell
@@ -512,12 +513,16 @@ export const findBestNetworkNode = async (nodes): Promise<string> => {
 }
 
 export class Client {
+  private connection: NashSocketEvents
   private mode: ClientMode = ClientMode.NONE
   public ethVaultContract: Contract
   public apiKey: APIKey
   private maxEthCostPrTransaction: BigNumber
   private opts: ClientOptions
   private apiUri: string
+  private headers: object = {
+    'Content-Type': 'application/json'
+  }
 
   private initParams: InitParams
   private nashCoreConfig: Config
@@ -535,9 +540,6 @@ export class Client {
   public marketData: { [key: string]: Market }
   public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
   private walletIndices: { [key: string]: number }
-  private headers: object = {
-    'Content-Type': 'application/json'
-  }
   public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []
@@ -593,31 +595,54 @@ export class Client {
       SettlementABI,
       this.opts.ethNetworkSettings.contracts.vault.contract
     )
+
+    if (opts.runRequestsOverWebsockets) {
+      this.connection = this.createSocketConnection()
+    }
     const agent = new https.Agent({
       keepAlive: true
     })
     const query: GQL['query'] = async params => {
-      const resp = await fetch(this.apiUri, {
-        method: 'POST',
-        headers: this.headers,
-        body: JSON.stringify({
-          query: memorizedPrint(params.query),
-          variables: params.variables
-        }),
-        agent
-      })
-      if (resp.status !== 200) {
-        let msg = `API error. Status code: ${resp.status}`
-        if (resp.data) {
-          msg += ` / body: ${resp.data}`
-        }
-        throw new Error(msg)
-      }
-      const obj = await resp.json()
-      if (obj.errors) {
-        throw new ApolloError({
-          graphQLErrors: obj.errors
+      let obj: GQLResp<any>
+
+      if (opts.runRequestsOverWebsockets) {
+        obj = await new Promise((resolve, reject) =>
+          AbsintheSocket.observe(
+            this.connection.absintheSocket,
+            AbsintheSocket.send(this.connection.absintheSocket, {
+              operation: memorizedPrint(params.query),
+              variables: params.variables
+            }),
+            {
+              onResult: res => resolve(res),
+              onAbort: errs => reject(errs),
+              onError: errs => reject(errs)
+            }
+          )
+        )
+      } else {
+        const resp = await fetch(this.apiUri, {
+          method: 'POST',
+          headers: this.headers,
+          agent,
+          body: JSON.stringify({
+            query: memorizedPrint(params.query),
+            variables: params.variables
+          })
         })
+        if (resp.status !== 200) {
+          let msg = `API error. Status code: ${resp.status}`
+          if (resp.data) {
+            msg += ` / body: ${resp.data}`
+          }
+          throw new Error(msg)
+        }
+        obj = await resp.json()
+        if (obj.errors) {
+          throw new ApolloError({
+            graphQLErrors: obj.errors
+          })
+        }
       }
       return obj
     }
@@ -629,6 +654,13 @@ export class Client {
           query: params.mutation,
           variables: params.variables
         })
+    }
+  }
+  public disconnect() {
+    if (this.opts.runRequestsOverWebsockets) {
+      this.connection.socket.disconnect()
+    } else {
+      console.warn('Client is not in websocket mode, .disconnect() is a no-op')
     }
   }
 
@@ -768,6 +800,7 @@ export class Client {
 
     return {
       socket,
+      absintheSocket,
       onUpdatedAccountOrders: async (payload, handlers) => {
         authCheck('onUpdatedAccountOrders')
         AbsintheSocket.observe(
@@ -864,6 +897,10 @@ export class Client {
     this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
+    if (this.opts.runRequestsOverWebsockets) {
+      this.connection.socket.disconnect()
+      this.connection = this.createSocketConnection()
+    }
     this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
     this.headers = {
       'Content-Type': 'application/json',
@@ -943,6 +980,10 @@ export class Client {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m != null) {
       this.wsToken = m[1]
+      this.connection.socket.disconnect()
+      if (this.opts.runRequestsOverWebsockets) {
+        this.connection = this.createSocketConnection()
+      }
     }
     const result = await response.json()
     if (result.error) {
@@ -1972,10 +2013,13 @@ export class Client {
         Type: 'string'
       }
     )
+
+    console.time('getNoncesForTrade')
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
+    console.timeEnd('getNoncesForTrade')
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -1997,8 +2041,11 @@ export class Client {
       cancelAt
     )
 
+    console.time('signPayload')
     const signedPayload = await this.signPayload(placeLimitOrderParams)
+    console.timeEnd('signPayload')
     try {
+      console.time('gql.mutate')
       const result = await this.gql.mutate<{
         placeLimitOrder: OrderPlaced
       }>({
@@ -2008,6 +2055,7 @@ export class Client {
           signature: signedPayload.signature
         }
       })
+      console.timeEnd('gql.mutate')
       return result.data.placeLimitOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
