@@ -3,6 +3,7 @@ import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
 import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
+import https from 'https'
 
 import * as NeonJS from '@cityofzion/neon-js'
 import * as bitcoin from 'bitcoinjs-lib'
@@ -592,6 +593,9 @@ export class Client {
       SettlementABI,
       this.opts.ethNetworkSettings.contracts.vault.contract
     )
+    const agent = new https.Agent({
+      keepAlive: true
+    })
     const query: GQL['query'] = async params => {
       const resp = await fetch(this.apiUri, {
         method: 'POST',
@@ -599,7 +603,8 @@ export class Client {
         body: JSON.stringify({
           query: memorizedPrint(params.query),
           variables: params.variables
-        })
+        }),
+        agent
       })
       if (resp.status !== 200) {
         let msg = `API error. Status code: ${resp.status}`
