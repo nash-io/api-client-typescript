@@ -2,10 +2,10 @@ const Nash = require('../build/main')
 const { login } = require('./utils')
 
 const client = new Nash.Client(
+  Nash.EnvironmentConfiguration[process.env.NASH_ENV],
   {
-    ...Nash.EnvironmentConfiguration[process.env.NASH_ENV],
     runRequestsOverWebsockets: true
-  },
+  }
 )
 
 

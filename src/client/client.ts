@@ -214,15 +214,18 @@ import {
   getHashAndSighashType
 } from './btcUtils'
 
-export interface ClientOptions {
+export interface EnvironmentConfig {
   host: string
   maxEthCostPrTransaction?: string
   debug?: boolean
-  runRequestsOverWebsockets?: boolean
   neoScan?: string
   neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
   ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
   btcNetworkSettings?: typeof BTC_NETWORK[Networks.MainNet]
+}
+
+export interface ClientOptions {
+  runRequestsOverWebsockets?: boolean
 }
 export const EnvironmentConfiguration = {
   production: {
@@ -231,43 +234,43 @@ export const EnvironmentConfiguration = {
     ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
     neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
     btcNetworkSettings: BTC_NETWORK[Networks.MainNet]
-  } as ClientOptions,
+  } as EnvironmentConfig,
   sandbox: {
     host: 'app.sandbox.nash.io',
     neoScan: 'https://explorer.neo.sandbox.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
     neoNetworkSettings: NEO_NETWORK[Networks.Sandbox],
     btcNetworkSettings: BTC_NETWORK[Networks.Sandbox]
-  } as ClientOptions,
+  } as EnvironmentConfig,
   dev1: {
     host: 'app.dev1.nash.io',
     neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev1],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev1],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev1]
-  } as ClientOptions,
+  } as EnvironmentConfig,
   dev2: {
     host: 'app.dev2.nash.io',
     neoScan: 'https://neo-local-explorer.dev2.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev2],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev2],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev2]
-  } as ClientOptions,
+  } as EnvironmentConfig,
   dev3: {
     host: 'app.dev3.nash.io',
     neoScan: 'https://neo-local-explorer.dev3.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev3],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev3],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev3]
-  } as ClientOptions,
+  } as EnvironmentConfig,
   dev4: {
     host: 'app.dev4.nash.io',
     neoScan: 'https://neo-local-explorer.dev4.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev4],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev4],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev4]
-  } as ClientOptions,
-  local: { host: 'localhost:4000' } as ClientOptions
+  } as EnvironmentConfig,
+  local: { host: 'localhost:4000' } as EnvironmentConfig
 }
 
 async function sleep(ms: number) {
@@ -518,7 +521,8 @@ export class Client {
   public ethVaultContract: Contract
   public apiKey: APIKey
   private maxEthCostPrTransaction: BigNumber
-  private opts: ClientOptions
+  private opts: EnvironmentConfig
+  private clientOpts: ClientOptions
   private apiUri: string
   private headers: object = {
     'Content-Type': 'application/json'
@@ -559,10 +563,14 @@ export class Client {
    * const nash = new Client(EnvironmentConfiguration.sandbox)
    * ```
    */
-  constructor(opts: ClientOptions) {
+  constructor(opts: EnvironmentConfig, clientOpts: ClientOptions = {}) {
     this.opts = {
       maxEthCostPrTransaction: '0.01',
       ...opts
+    }
+    this.clientOpts = {
+      runRequestsOverWebsockets: false,
+      ...clientOpts
     }
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
@@ -596,7 +604,7 @@ export class Client {
       this.opts.ethNetworkSettings.contracts.vault.contract
     )
 
-    if (opts.runRequestsOverWebsockets) {
+    if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection = this.createSocketConnection()
     }
     const agent = new https.Agent({
@@ -605,7 +613,7 @@ export class Client {
     const query: GQL['query'] = async params => {
       let obj: GQLResp<any>
 
-      if (opts.runRequestsOverWebsockets) {
+      if (this.clientOpts.runRequestsOverWebsockets) {
         obj = await new Promise((resolve, reject) =>
           AbsintheSocket.observe(
             this.connection.absintheSocket,
@@ -657,7 +665,7 @@ export class Client {
     }
   }
   public disconnect() {
-    if (this.opts.runRequestsOverWebsockets) {
+    if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection.socket.disconnect()
     } else {
       console.warn('Client is not in websocket mode, .disconnect() is a no-op')
@@ -897,7 +905,7 @@ export class Client {
     this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
-    if (this.opts.runRequestsOverWebsockets) {
+    if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection.socket.disconnect()
       this.connection = this.createSocketConnection()
     }
@@ -981,7 +989,7 @@ export class Client {
     if (m != null) {
       this.wsToken = m[1]
       this.connection.socket.disconnect()
-      if (this.opts.runRequestsOverWebsockets) {
+      if (this.clientOpts.runRequestsOverWebsockets) {
         this.connection = this.createSocketConnection()
       }
     }
