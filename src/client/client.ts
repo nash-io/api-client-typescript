@@ -2014,12 +2014,10 @@ export class Client {
       }
     )
 
-    console.time('getNoncesForTrade')
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
     )
-    console.timeEnd('getNoncesForTrade')
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
@@ -2041,11 +2039,8 @@ export class Client {
       cancelAt
     )
 
-    console.time('signPayload')
     const signedPayload = await this.signPayload(placeLimitOrderParams)
-    console.timeEnd('signPayload')
     try {
-      console.time('gql.mutate')
       const result = await this.gql.mutate<{
         placeLimitOrder: OrderPlaced
       }>({
@@ -2055,7 +2050,6 @@ export class Client {
           signature: signedPayload.signature
         }
       })
-      console.timeEnd('gql.mutate')
       return result.data.placeLimitOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
