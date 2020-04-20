@@ -1,6 +1,7 @@
 import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { print } from 'graphql/language/printer'
+import setCookie from 'set-cookie-parser'
 import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
 import https from 'https'
@@ -980,7 +981,11 @@ export class Client {
     }
     this.mode = ClientMode.FULL_SECRET
 
-    this.casCookie = response.headers.get('set-cookie')
+    const cookies = setCookie.parse(
+      setCookie.splitCookiesString(response.headers.get('set-cookie'))
+    )
+    const cookie = cookies.find(c => c.name === 'nash-cookie')
+    this.casCookie = cookie.name + '=' + cookie.value
     this.headers = {
       'Content-Type': 'application/json',
       Cookie: this.casCookie
@@ -988,8 +993,8 @@ export class Client {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m != null) {
       this.wsToken = m[1]
-      this.connection.socket.disconnect()
       if (this.clientOpts.runRequestsOverWebsockets) {
+        this.connection.socket.disconnect()
         this.connection = this.createSocketConnection()
       }
     }
