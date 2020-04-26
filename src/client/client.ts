@@ -243,6 +243,13 @@ export const EnvironmentConfiguration = {
     neoNetworkSettings: NEO_NETWORK[Networks.Sandbox],
     btcNetworkSettings: BTC_NETWORK[Networks.Sandbox]
   } as EnvironmentConfig,
+  master: {
+    host: 'app.master.nash.io',
+    neoScan: 'https://neo-local-explorer.master.nash.io/api/main_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.Master],
+    neoNetworkSettings: NEO_NETWORK[Networks.Master],
+    btcNetworkSettings: BTC_NETWORK[Networks.Master]
+  } as EnvironmentConfig,
   dev1: {
     host: 'app.dev1.nash.io',
     neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
