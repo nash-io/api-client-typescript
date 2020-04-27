@@ -1,36 +1,236 @@
-image: node:10
-
-cache:
-  paths:
-    - node_modules/
-    - .yarn/
-
 stages:
+  - audit
+  - setup
+  - lint
   - test
+  - sonar
+  - build
   - docs
+  - publish
 
-before_script:
-  - node -v
-  - npm -v
-  - yarn -v
-  - npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-  - yarn --pure-lockfile --cache-folder .yarn
+variables: &global-variables
+  GIT_DEPTH: 1
+  GET_SOURCES_ATTEMPTS: 2
+  ARTIFACT_DOWNLOAD_ATTEMPTS: 2
+  RESTORE_CACHE_ATTEMPTS: 2
+  EXECUTOR_JOB_SECTION_ATTEMPTS: 2
+  NODE_IMAGE: us.gcr.io/nex-exchange-ops/docker-node:10.20.1-alpine
+  SEC_IMAGE: us.gcr.io/nex-exchange-ops/docker-sec-tools:10.20.1-alpine
+  SONAR_IMAGE: us.gcr.io/nex-exchange-ops/docker-sonar:4.2
+  SONAR_URL: $SONAR_URL
+  SONAR_TOKEN: $SONAR_TOKEN
 
-build_and_test:
+.print_versions: &print_versions |
+  echo "node version: $(node -v)"
+  echo "npm version: $(npm -v)"
+  echo "yarn version: $(yarn -v)"
+
+.install_deps: &install_deps |
+  npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+  yarn install --frozen-lockfile --cache-folder .yarn
+
+default:
+  image: $NODE_IMAGE
+  interruptible: true
+  tags:
+    - stable
+  before_script:
+    - *print_versions
+    - *install_deps
+  cache:
+    policy: pull
+    paths:
+      - node_modules
+      - .yarn
+    key:
+      files:
+        - yarn.lock
+        - package.json
+      prefix: $CI_PROJECT_NAME
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - scheduler_failure
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - stale_schedule
+      - data_integrity_failure
+      - unknown_failure
+      - runner_unsupported
+
+audit_deps:
+  image: $SEC_IMAGE
+  stage: audit
+  cache: {}
+  dependencies: []
+  before_script: []
+  script:
+    - audit-ci --critical --report-type important
+  needs: []
+
+lockfile_lint:
+  image: $SEC_IMAGE
+  stage: audit
+  cache: {}
+  dependencies: []
+  before_script: []
+  script:
+    - lockfile-lint --type yarn --path yarn.lock --allowed-hosts yarn --validate-https
+  needs: []
+
+install_deps:
+  stage: setup
+  script:
+    - echo "Dependencies installed, caching.."
+  dependencies: []
+  needs:
+    - job: audit_deps
+      artifacts: false
+    - job: lockfile_lint
+      artifacts: false
+  cache:
+    policy: pull-push
+    paths:
+      - node_modules
+      - .yarn
+    key:
+      files:
+        - yarn.lock
+        - package.json
+      prefix: $CI_PROJECT_NAME
+
+lint:
+  stage: lint
+  script:
+    - yarn test:lint
+  dependencies: []
+  needs:
+    - job: install_deps
+      artifacts: false
+
+unit:
   stage: test
+  except:
+    - master
   script:
-    - yarn run build
-    - yarn run test:lint
-    - yarn run doc
+    - yarn test:unit
+  dependencies: []
+  needs:
+    - job: install_deps
+      artifacts: false
 
-# the docs job published the docs to gitlab pages
-pages:
-  stage: docs
+unit:coverage:
+  stage: test
+  only:
+    - master
   script:
-    - yarn run doc
+    - yarn test:unit:cov
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  dependencies: []
+  artifacts:
+    when: always
+    expose_as: 'lcov report'
+    paths: ['coverage/lcov-report/index.html', 'coverage']
+  needs:
+    - job: install_deps
+      artifacts: false
+
+sonarqube:
+  stage: sonar
+  only:
+    - master
+  image: $SONAR_IMAGE
+  script:
+    - sonar-scanner -Dsonar.host.url=$SONAR_URL -Dproject.settings=sonar.properties -Dsonar.projectKey=$CI_PROJECT_NAME -Dsonar.projectVersion=$CI_COMMIT_SHORT_SHA -Dsonar.links.homepage=$CI_PROJECT_URL -Dsonar.links.ci=$CI_PIPELINE_URL -Dsonar.links.issue=$CI_PROJECT_URL/issues
+  dependencies: ['unit:coverage']
+  needs:
+    - job: unit:coverage
+      artifacts: true
+  variables:
+    <<: *global-variables
+    GIT_DEPTH: 0
+  allow_failure: true
+
+build:
+  stage: build
+  except:
+    - master
+  script:
+    - yarn build
+  dependencies: []
+  needs:
+    - job: lint
+      artifacts: false
+    - job: unit
+      artifacts: false
+  artifacts:
+    when: on_success
+    paths:
+      - build
+
+build:master:
+  stage: build
+  only:
+    - master
+  script:
+    - yarn build
+  dependencies: []
+  needs:
+    - job: lint
+      artifacts: false
+    - job: unit:coverage
+      artifacts: false
+  artifacts:
+    when: on_success
+    paths:
+      - build
+
+build:docs:
+  stage: docs
+  except:
+    - master
+  script:
+    - yarn doc
+  dependencies: []
+  needs:
+    - job: lint
+      artifacts: false
+    - job: unit
+      artifacts: false
+  artifacts:
+    when: on_success
+    paths:
+      - docs
+
+build:docs:master:
+  stage: docs
+  only:
+    - master
+  script:
+    - yarn doc
+  dependencies: []
+  needs:
+    - job: lint
+      artifacts: false
+    - job: unit:coverage
+      artifacts: false
+  artifacts:
+    when: on_success
+    paths:
+      - docs
+
+# publish docs to gitlab pages
+pages:
+  stage: publish
+  only:
+    - tags
+  script:
     - mv docs public
+  dependencies: ['build:docs']
+  needs:
+    - job: build:docs
+      artifacts: true
   artifacts:
     paths:
       - public
-  only:
-    - tags
