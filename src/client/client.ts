@@ -5,6 +5,7 @@ import setCookie from 'set-cookie-parser'
 import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
 import https from 'https'
+import http from 'http'
 import * as NeonJS from '@cityofzion/neon-js'
 import * as bitcoin from 'bitcoinjs-lib'
 import coinSelect from 'coinselect'
@@ -285,7 +286,13 @@ export const EnvironmentConfiguration = {
     neoNetworkSettings: NEO_NETWORK[Networks.Dev4],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev4]
   } as EnvironmentConfig,
-  local: { host: 'localhost:4000' } as EnvironmentConfig
+  local: {
+    host: 'localhost:4000',
+    neoScan: 'http://localhost:7000/api/test_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
+    neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
+    btcNetworkSettings: BTC_NETWORK[Networks.LocalNet]
+  } as EnvironmentConfig
 }
 
 async function sleep(ms: number) {
@@ -590,12 +597,16 @@ export class Client {
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
-    if (!opts.host || opts.host.indexOf('.') === -1) {
+    const isLocal = opts.host === 'localhost:4000'
+
+    if (!opts.host || (opts.host.indexOf('.') === -1 && !isLocal)) {
       throw new Error(`Invalid API host '${opts.host}'`)
     }
 
-    this.apiUri = `https://${opts.host}/api/graphql`
-    this.casUri = `https://${opts.host}/api`
+    const protocol = isLocal ? 'http' : 'https'
+
+    this.apiUri = `${protocol}://${opts.host}/api/graphql`
+    this.casUri = `${protocol}://${opts.host}/api`
     this.wsUri = `wss://${opts.host}/api/socket`
     this.maxEthCostPrTransaction = new BigNumber(
       this.web3.utils.toWei(this.opts.maxEthCostPrTransaction)
@@ -622,9 +633,16 @@ export class Client {
     if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection = this.createSocketConnection()
     }
-    const agent = new https.Agent({
-      keepAlive: true
-    })
+    let agent
+    if (isLocal) {
+      agent = new http.Agent({
+        keepAlive: true
+      })
+    } else {
+      agent = new https.Agent({
+        keepAlive: true
+      })
+    }
     const query: GQL['query'] = async params => {
       let obj: GQLResp<any>
 

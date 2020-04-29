@@ -12,4 +12,3 @@ export const UPDATED_CANDLES = gql`
   }
   ${CANDLE_FRAGMENT}
 `
-

@@ -75,7 +75,9 @@ export function normalizeAmountForMarketPrecision(
       return amountSplit[0]
     } else {
       throw new Error(
-        `to many decimals given expected: ${tradeSize} got ${amountSplit[1].length}`
+        `to many decimals given expected: ${tradeSize} got ${
+          amountSplit[1].length
+        }`
       )
     }
   }
@@ -121,7 +123,9 @@ export function normalizeAmountForMarket(
 
   if (parseFloat(normalizedAmount) < parseFloat(minAmount)) {
     console.warn(
-      `Amount ${normalizedAmount} for currency ${amount.currency} is less than min amount for market: ${minAmount}.  Defaulting to min amount`
+      `Amount ${normalizedAmount} for currency ${
+        amount.currency
+      } is less than min amount for market: ${minAmount}.  Defaulting to min amount`
     )
     normalizedAmount = normalizeAmountForMarketPrecision(
       minAmount + '',
