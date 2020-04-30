@@ -2082,9 +2082,7 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    const measurementPlaceOrder = this.perfClient.start(
-      'placeOrder_' + marketName
-    )
+    const measurementPlaceOrder = this.perfClient.start('placeLimitOrder')
     const measurementPlaceLimitOrder = this.perfClient.start(
       'placeLimitOrder_' + marketName
     )
@@ -2194,9 +2192,7 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string
   ): Promise<OrderPlaced> {
-    const measurementPlaceOrder = this.perfClient.start(
-      'placeOrder_' + marketName
-    )
+    const measurementPlaceOrder = this.perfClient.start('placeMarketOrder')
     const measurementPlaceMarketOrder = this.perfClient.start(
       'placeMarketOrder_' + marketName
     )
@@ -2293,9 +2289,7 @@ export class Client {
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    const measurementPlaceOrder = this.perfClient.start(
-      'placeOrder_' + marketName
-    )
+    const measurementPlaceOrder = this.perfClient.start('placeStopLimitOrder')
     const measurementPlaceMarketOrder = this.perfClient.start(
       'placeStopLimitOrder_' + marketName
     )
@@ -2404,6 +2398,10 @@ export class Client {
     marketName: string,
     stopPrice: CurrencyPrice
   ): Promise<OrderPlaced> {
+    const measurementPlaceOrder = this.perfClient.start('placeStopMarketOrder')
+    const measurementPlaceMarketOrder = this.perfClient.start(
+      'placeStopMarketOrder_' + marketName
+    )
     checkMandatoryParams(
       { amount, stopPrice, Type: 'object' },
       { buyOrSell, marketName, Type: 'string' }
@@ -2432,7 +2430,11 @@ export class Client {
       noncesTo,
       nonceOrder
     )
+    const measurementSignPayload = this.perfClient.start(
+      'signPayloadStopMarketOrder_' + marketName
+    )
     const signedPayload = await this.signPayload(placeStopMarketOrderParams)
+    measurementSignPayload.end()
     try {
       const result = await this.gql.mutate<{
         placeStopMarketOrder: OrderPlaced
@@ -2443,6 +2445,8 @@ export class Client {
           signature: signedPayload.signature
         }
       })
+      measurementPlaceOrder.end()
+      measurementPlaceMarketOrder.end()
       return result.data.placeStopMarketOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
