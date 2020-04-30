@@ -3066,13 +3066,7 @@ export class Client {
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
-    if (
-      blockchain === TSAPIBlockchain.ETH &&
-      movementType === MovementTypeDeposit &&
-      quantity.currency !== CryptoCurrency.ETH
-    ) {
-      await this.approveAndAwaitAllowance(assetData, childKey, quantity.amount)
-    }
+
     const address = childKey.address
 
     const preparedMovement = await this.prepareMovement({
@@ -3146,6 +3140,17 @@ export class Client {
 
     switch (blockchain) {
       case 'eth':
+        if (
+          blockchain === TSAPIBlockchain.ETH &&
+          movementType === MovementTypeDeposit &&
+          quantity.currency !== CryptoCurrency.ETH
+        ) {
+          await this.approveAndAwaitAllowance(
+            assetData,
+            childKey,
+            quantity.amount
+          )
+        }
         const {
           address: scriptAddress,
           asset,
