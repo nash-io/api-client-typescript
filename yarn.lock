@@ -808,6 +808,15 @@
     core-js "2.6.0"
     graphql "14.0.2"
 
+"@neon-exchange/nash-perf@1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-perf/-/nash-perf-1.0.4.tgz#29a8ea97f8923aa279eda7045d1b439c7974b0aa"
+  integrity sha512-SeHFGYzGRu/1Acy/boLvPh2zjkR+TcCjSUabr6NnFmEaNBI93EEiI9Dx7CvtljIsqvyg6u4dKF1+gSFF+HGi6Q==
+  dependencies:
+    "@types/node-fetch" "^2.5.7"
+    node-fetch "2.6.0"
+    semver "7.3.2"
+
 "@neon-exchange/nash-protocol@3.2.3":
   version "3.2.3"
   resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-3.2.3.tgz#01f7051ed07896e4cb5c4dedc55e0807c47779b7"
@@ -1006,6 +1015,14 @@
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/@types/loglevel/-/loglevel-1.5.4.tgz#6e296bf20d9f6b0a3274cfb01a918f1d634e4c32"
   integrity sha512-8dx4ckP0vndJeN+iKZwdGiapLqFjVQ3JLOt92uqK0C63acs5NcPLbUOpfXCJkKVRjZLBQjw8NIGNBSsnatFnFQ==
+
+"@types/node-fetch@^2.5.7":
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/@types/node-fetch/-/node-fetch-2.5.7.tgz#20a2afffa882ab04d44ca786449a276f9f6bbf3c"
+  integrity sha512-o2WVNf5UhWRkxlf6eq+jMZDu7kjgpgJfl4xVNlvryc95O/6F2ld8ztKX+qu+Rjyet93WAWm5LjeX9H5FGkODvw==
+  dependencies:
+    "@types/node" "*"
+    form-data "^3.0.0"
 
 "@types/node@*", "@types/node@^13.9.8":
   version "13.9.8"
@@ -3924,7 +3941,7 @@ forever-agent@~0.6.1:
   resolved "https://registry.yarnpkg.com/forever-agent/-/forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91"
   integrity sha1-+8cfDEGt6zf5bFd60e1C2P2sypE=
 
-form-data@*:
+form-data@*, form-data@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-3.0.0.tgz#31b7e39c85f1355b7139ee0c647cf0de7f83c682"
   integrity sha512-CKMFDglpbMi6PyN+brwB9Q/GOw0eAnsrEZDgcsH5Krhz5Od/haKHAX0NmQfha2zPPz0JpWzA7GJHGSnvCRLWsg==

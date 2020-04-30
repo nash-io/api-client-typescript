@@ -4,10 +4,11 @@ const { login } = require('./utils')
 const client = new Nash.Client(
   Nash.EnvironmentConfiguration[process.env.NASH_ENV],
   {
-    runRequestsOverWebsockets: true
+    runRequestsOverWebsockets: true,
+    // enablePerformanceTelemetry: true,
+    // performanceTelemetryTag: "ts-api-client-benchmark-jan"
   }
 )
-
 
 const benchmark = async (name, n, fn) => {
   const t0 = Date.now()
@@ -51,6 +52,7 @@ async function run() {
   await client.cancelAllOrders('eth_usdc')
   console.timeEnd('test')
   client.disconnect()
+  // client.perfClient.flush()
 }
 
 run()

@@ -1,5 +1,6 @@
 import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
+import { PerfClient } from '@neon-exchange/nash-perf'
 import { print } from 'graphql/language/printer'
 import setCookie from 'set-cookie-parser'
 import fetch from 'node-fetch'
@@ -228,6 +229,9 @@ export interface EnvironmentConfig {
 
 export interface ClientOptions {
   runRequestsOverWebsockets?: boolean
+
+  enablePerformanceTelemetry?: boolean
+  performanceTelemetryTag?: string
 }
 export const EnvironmentConfiguration = {
   production: {
@@ -538,6 +542,7 @@ export const findBestNetworkNode = async (nodes): Promise<string> => {
 }
 
 export class Client {
+  public perfClient: PerfClient
   private connection: NashSocketEvents
   private mode: ClientMode = ClientMode.NONE
   public ethVaultContract: Contract
@@ -546,7 +551,7 @@ export class Client {
   private opts: EnvironmentConfig
   private clientOpts: ClientOptions
   private apiUri: string
-  private headers: object = {
+  private headers: Record<string, string> = {
     'Content-Type': 'application/json'
   }
 
@@ -604,7 +609,43 @@ export class Client {
     }
 
     const protocol = isLocal ? 'http' : 'https'
-
+    let telemetrySend = async (_: any) => null
+    let agent
+    if (isLocal) {
+      agent = new http.Agent({
+        keepAlive: true
+      })
+    } else {
+      agent = new https.Agent({
+        keepAlive: true
+      })
+    }
+    if (!isLocal && this.clientOpts.enablePerformanceTelemetry === true) {
+      const telemetryUrl =
+        'https://telemetry.' + /^app.(.+)$/.exec(opts.host)[1]
+      telemetrySend = async data => {
+        const r = await fetch(telemetryUrl, {
+          method: 'post',
+          agent,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        })
+        if (r.status !== 200) {
+          throw new Error('status' + r.status)
+        }
+      }
+    }
+    this.perfClient = new PerfClient({
+      tag:
+        'ts-api-client-' +
+        (this.clientOpts.performanceTelemetryTag || 'unknown'),
+      post: telemetrySend
+    })
+    if (!this.clientOpts.enablePerformanceTelemetry) {
+      this.perfClient.measure = () => null
+    }
     this.apiUri = `${protocol}://${opts.host}/api/graphql`
     this.casUri = `${protocol}://${opts.host}/api`
     this.wsUri = `wss://${opts.host}/api/socket`
@@ -632,16 +673,6 @@ export class Client {
 
     if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection = this.createSocketConnection()
-    }
-    let agent
-    if (isLocal) {
-      agent = new http.Agent({
-        keepAlive: true
-      })
-    } else {
-      agent = new https.Agent({
-        keepAlive: true
-      })
     }
     const query: GQL['query'] = async params => {
       let obj: GQLResp<any>
@@ -673,8 +704,8 @@ export class Client {
         })
         if (resp.status !== 200) {
           let msg = `API error. Status code: ${resp.status}`
-          if (resp.data) {
-            msg += ` / body: ${resp.data}`
+          if (resp.body) {
+            msg += ` / body: ${resp.body.toString()}`
           }
           throw new Error(msg)
         }
@@ -1006,8 +1037,8 @@ export class Client {
 
     if (response.status !== 200) {
       let msg = `Login error. API status code: ${response.status}`
-      if (response.data) {
-        msg += ` / body: ${response.data}`
+      if (response.body.toString()) {
+        msg += ` / body: ${response.body.toString()}`
       }
       throw new Error(msg)
     }
@@ -1828,6 +1859,7 @@ export class Client {
     if (depth > MAX_SIGN_STATE_RECURSION) {
       throw new Error('Max sign state recursion reached.')
     }
+    const signStatesMeasure = this.perfClient.start('signStates')
 
     const signStateListPayload: PayloadAndKind = createSignStatesParams(
       this.state_map_from_states(getStatesData.states),
@@ -1883,7 +1915,9 @@ export class Client {
       // and all the states signed by the client in order to call syncStates
       signStatesData.signStates.serverSignedStates = all_server_signed_states
       signStatesData.signStates.states = all_states_to_sync
-
+      if (depth === 0) {
+        signStatesMeasure.end()
+      }
       return signStatesData
     } catch (e) {
       console.error('Could not sign states: ', e)
@@ -1945,6 +1979,8 @@ export class Client {
     orderID: string,
     marketName: string
   ): Promise<CancelledOrder> {
+    const m1 = this.perfClient.start('cancelOrder')
+    const m2 = this.perfClient.start('cancelOrder_' + marketName)
     const cancelOrderParams = createCancelOrderParams(orderID, marketName)
     const signedPayload = await this.signPayload(cancelOrderParams)
 
@@ -1956,7 +1992,8 @@ export class Client {
       }
     })
     const cancelledOrder = result.data.cancelOrder as CancelledOrder
-
+    m1.end()
+    m2.end()
     return cancelledOrder
   }
 
@@ -1973,6 +2010,8 @@ export class Client {
    * ```
    */
   public async cancelAllOrders(marketName?: string): Promise<boolean> {
+    const m1 = this.perfClient.start('cancelAllOrders')
+    const m2 = this.perfClient.start('cancelAllOrders_' + (marketName || 'all'))
     let cancelAllOrderParams: any = {
       timestamp: createTimestamp()
     }
@@ -1996,6 +2035,8 @@ export class Client {
       }
     })
     const cancelledOrder = result.data.cancelAllOrders.accepted
+    m1.end()
+    m2.end()
 
     return cancelledOrder
   }
@@ -2041,6 +2082,12 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const measurementPlaceOrder = this.perfClient.start(
+      'placeOrder_' + marketName
+    )
+    const measurementPlaceLimitOrder = this.perfClient.start(
+      'placeLimitOrder_' + marketName
+    )
     checkMandatoryParams(
       {
         allowTaker,
@@ -2083,8 +2130,11 @@ export class Client {
       nonceOrder,
       cancelAt
     )
-
+    const measurementSignPayload = this.perfClient.start(
+      'signPayloadLimitOrder_' + marketName
+    )
     const signedPayload = await this.signPayload(placeLimitOrderParams)
+    measurementSignPayload.end()
     try {
       const result = await this.gql.mutate<{
         placeLimitOrder: OrderPlaced
@@ -2095,6 +2145,8 @@ export class Client {
           signature: signedPayload.signature
         }
       })
+      measurementPlaceOrder.end()
+      measurementPlaceLimitOrder.end()
       return result.data.placeLimitOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
@@ -2142,6 +2194,12 @@ export class Client {
     buyOrSell: OrderBuyOrSell,
     marketName: string
   ): Promise<OrderPlaced> {
+    const measurementPlaceOrder = this.perfClient.start(
+      'placeOrder_' + marketName
+    )
+    const measurementPlaceMarketOrder = this.perfClient.start(
+      'placeMarketOrder_' + marketName
+    )
     checkMandatoryParams({
       buyOrSell,
       marketName,
@@ -2163,7 +2221,12 @@ export class Client {
       noncesTo,
       nonceOrder
     )
+
+    const measurementSignPayload = this.perfClient.start(
+      'signPayloadMarketOrder_' + marketName
+    )
     const signedPayload = await this.signPayload(placeMarketOrderParams)
+    measurementSignPayload.end()
     try {
       const result = await this.gql.mutate<{
         placeMarketOrder: OrderPlaced
@@ -2174,6 +2237,8 @@ export class Client {
           signature: signedPayload.signature
         }
       })
+      measurementPlaceOrder.end()
+      measurementPlaceMarketOrder.end()
       return result.data.placeMarketOrder
     } catch (e) {
       if (e.message.includes(MISSING_NONCES)) {
@@ -2228,6 +2293,12 @@ export class Client {
     stopPrice: CurrencyPrice,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
+    const measurementPlaceOrder = this.perfClient.start(
+      'placeOrder_' + marketName
+    )
+    const measurementPlaceMarketOrder = this.perfClient.start(
+      'placeStopLimitOrder_' + marketName
+    )
     checkMandatoryParams(
       { allowTaker, Type: 'boolean' },
       { buyOrSell, marketName, cancellationPolicy, Type: 'string' },
@@ -2263,7 +2334,11 @@ export class Client {
       nonceOrder,
       cancelAt
     )
+    const measurementSignPayload = this.perfClient.start(
+      'signPayloadStopLimitOrder_' + marketName
+    )
     const signedPayload = await this.signPayload(placeStopLimitOrderParams)
+    measurementSignPayload.end()
     try {
       const result = await this.gql.mutate<{
         placeStopLimitOrder: OrderPlaced
@@ -2274,6 +2349,8 @@ export class Client {
           signature: signedPayload.signature
         }
       })
+      measurementPlaceOrder.end()
+      measurementPlaceMarketOrder.end()
 
       return result.data.placeStopLimitOrder
     } catch (e) {
@@ -3367,6 +3444,7 @@ export class Client {
     blockchain_raw: string
     signedPayload: Record<string, any>
   }> {
+    const m = this.perfClient.start('signPayloadMpc')
     this.requireMPC()
     const signedPayload = await preSignPayload(this.apiKey, payloadAndKind, {
       fillPoolFn: this.fillPoolFn,
@@ -3383,6 +3461,7 @@ export class Client {
       blockchain_raw: signedPayload.blockchainRaw,
       signedPayload: signedPayload.payload
     }
+    m.end()
     return out
   }
   private async signPayloadFull(
@@ -3406,6 +3485,7 @@ export class Client {
     blockchain_raw: string
     signedPayload: Record<string, any>
   }> {
+    const m = this.perfClient.start('signPayload')
     this.requireFull()
     const privateKey = Buffer.from(
       this.nashCoreConfig.payloadSigningKey.privateKey,
@@ -3417,7 +3497,7 @@ export class Client {
       payloadAndKind,
       this.nashCoreConfig
     )
-
+    m.end()
     return {
       payload: payloadAndKind.payload,
       signature: {
