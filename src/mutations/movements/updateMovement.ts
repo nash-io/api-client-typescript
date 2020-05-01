@@ -30,14 +30,14 @@ export const UPDATE_MOVEMENT_MUTATION = gql`
 `
 
 export interface UpdateMovementData {
-  movement: Movement
+  updateMovement: Movement
 }
 
 export interface UpdateMovementVariables {
   payload: {
     movementId: string
-    tranasactionHash?: string
-    tranasactionPayload?: string
+    transactionHash?: string
+    transactionPayload?: string
     status?: MovementStatus
     timestamp: number
     fee: string

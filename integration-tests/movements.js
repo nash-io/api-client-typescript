@@ -31,17 +31,18 @@ async function run() {
       console.log(e.message)
     }
   }
-  await testDeposit(Nash.CryptoCurrency.GAS)
-  await testDeposit(Nash.CryptoCurrency.NOS)
+  // await testDeposit(Nash.CryptoCurrency.GAS)
+  // await testDeposit(Nash.CryptoCurrency.NEO)
+  // await testDeposit(Nash.CryptoCurrency.NOS)
   await testDeposit(Nash.CryptoCurrency.ETH)
-  await testDeposit(Nash.CryptoCurrency.USDC)
-  await testDeposit(Nash.CryptoCurrency.BAT)
-  await testDeposit(Nash.CryptoCurrency.BTC)
-  await testTransfer(Nash.CryptoCurrency.ETH, client.getEthAddress())
-  await testTransfer(Nash.CryptoCurrency.BAT, client.getEthAddress())
-  await testTransfer(Nash.CryptoCurrency.GAS, client.getNeoAddress())
-  await testTransfer(Nash.CryptoCurrency.NOS, client.getNeoAddress())
-  await testTransfer(Nash.CryptoCurrency.BTC, client.getBtcAddress())
+  // await testDeposit(Nash.CryptoCurrency.USDC)
+  // await testDeposit(Nash.CryptoCurrency.BAT)
+  // await testDeposit(Nash.CryptoCurrency.BTC)
+  // await testTransfer(Nash.CryptoCurrency.ETH, client.getEthAddress())
+  // await testTransfer(Nash.CryptoCurrency.BAT, client.getEthAddress())
+  // await testTransfer(Nash.CryptoCurrency.GAS, client.getNeoAddress())
+  // await testTransfer(Nash.CryptoCurrency.NOS, client.getNeoAddress())
+  // await testTransfer(Nash.CryptoCurrency.BTC, client.getBtcAddress())
 }
 
 run()

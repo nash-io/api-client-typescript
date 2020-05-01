@@ -52,6 +52,26 @@ interface SubscriptionHandlers<T> {
   onStart: (p: object) => void
 }
 
+export interface PayloadSignature {
+  payload: Record<string, any>
+  signature: {
+    publicKey: string
+    signedDigest: string
+  }
+  blockchain_data: {
+    address: string
+    amount: string
+    asset: string
+    nonce: string
+    prefix: string
+    r?: string
+    userPubKey: string
+    userSig?: string
+  }
+  blockchain_raw: string
+  signedPayload: Record<string, any>
+}
+
 export interface NashSocketEvents {
   /**
    * See https://www.npmjs.com/package/phoenix-channels

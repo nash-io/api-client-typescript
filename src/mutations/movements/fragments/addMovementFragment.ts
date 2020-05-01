@@ -20,7 +20,7 @@ export enum MovementStatus {
 export interface AddMovement {
   address: string
   confirmations: number
-  id: number
+  id: string
   currency: CryptoCurrency
   quantity: CurrencyAmount
   receivedAt: DateTime

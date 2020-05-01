@@ -1,11 +1,15 @@
 import { CryptoCurrency } from '../constants/currency'
 import { CurrencyAmount, DateTime } from '../types'
 
-export enum MovementType {
-  DEPOSIT = 'DEPOSIT',
-  WITHDRAWAL = 'WITHDRAWAL'
-}
+import {
+  MovementTypeDeposit,
+  MovementTypeWithdrawal
+} from '@neon-exchange/nash-protocol'
 
+export type MovementType =
+  | typeof MovementTypeDeposit
+  | typeof MovementTypeWithdrawal
+  | 'TRANSFER'
 export enum MovementStatus {
   COMPLETED = 'COMPLETED',
   CREATED = 'CREATED',
@@ -16,7 +20,7 @@ export enum MovementStatus {
 export interface Movement {
   address: string
   confirmations: number
-  id: number
+  id: string
   currency: CryptoCurrency
   quantity: CurrencyAmount
   receivedAt: DateTime

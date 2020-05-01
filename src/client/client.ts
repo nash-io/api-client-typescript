@@ -70,6 +70,11 @@ import {
   PrepareMovementData,
   PrepareMovementVariables
 } from '../mutations/movements/prepareMovement'
+import {
+  UPDATE_MOVEMENT_MUTATION,
+  UpdateMovementData,
+  UpdateMovementVariables
+} from '../mutations/movements/updateMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
 import {
   GET_ACCOUNT_PORTFOLIO,
@@ -157,6 +162,7 @@ import {
   OrderBuyOrSell,
   OrderCancellationPolicy,
   CurrencyAmount,
+  MovementStatus,
   CurrencyPrice,
   LegacyLoginParams,
   NonceSet,
@@ -167,7 +173,14 @@ import {
   MissingNonceError,
   InsufficientFundsError
 } from '../types'
-import { ClientMode, GQL, NashSocketEvents, GQLResp } from '../types/client'
+import {
+  ClientMode,
+  GQL,
+  NashSocketEvents,
+  GQLResp,
+  PayloadSignature
+} from '../types/client'
+import { BlockchainError } from './movements'
 import { gqlToString } from './queryPrinter'
 import { CryptoCurrency } from '../constants/currency'
 
@@ -243,7 +256,6 @@ const BLOCKCHAIN_TO_BIP44 = {
 }
 
 const NEP5_OLD_ASSETS = ['nos', 'phx', 'guard', 'lx', 'ava']
-
 export const MISSING_NONCES = 'missing_asset_nonces'
 export const MAX_SIGN_STATE_RECURSION = 5
 
@@ -2730,12 +2742,15 @@ export class Client {
     })
     return invocationSignature
   }
+
   public depositToTradingContract(quantity: CurrencyAmount) {
     return this.transferToTradingContract(quantity, MovementTypeDeposit)
   }
+
   public withdrawFromTradingContract(quantity: CurrencyAmount) {
     return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
   }
+
   private async prepareMovement(
     payload: Omit<PrepareMovementVariables['payload'], 'timestamp'>
   ): Promise<PrepareMovementData['prepareMovement']> {
@@ -2760,6 +2775,32 @@ export class Client {
 
     return data.data.prepareMovement
   }
+
+  private async updateMovement(
+    payload: Omit<UpdateMovementVariables['payload'], 'timestamp'>
+  ): Promise<UpdateMovementData['updateMovement']> {
+    const signature = await this.signPayload({
+      kind: SigningPayloadID.updateMovementPayload,
+      payload: {
+        ...payload,
+        timestamp: new Date().getTime()
+      }
+    })
+
+    const data = await this.gql.mutate<
+      UpdateMovementData,
+      UpdateMovementVariables
+    >({
+      mutation: UPDATE_MOVEMENT_MUTATION,
+      variables: {
+        payload: signature.payload as UpdateMovementVariables['payload'],
+        signature: signature.signature
+      }
+    })
+
+    return data.data.updateMovement
+  }
+
   private async transferToTradingContract(
     quantity: CurrencyAmount,
     movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
@@ -2779,62 +2820,141 @@ export class Client {
 
     const address = childKey.address
     const bnAmount = new BigNumber(quantity.amount)
-    const preparedMovement = await this.prepareMovement({
-      address,
-      quantity: {
-        amount: bnAmount.toFormat(8),
-        currency: assetData.symbol
-      },
-      type: movementType
-    })
-
     const amountBN = bnAmount
+
+    let preparedMovement: PrepareMovementData['prepareMovement']
     let movementAmount = bnAmount
-
-    if (
-      quantity.currency === CryptoCurrency.BTC &&
-      movementType === MovementTypeWithdrawal
-    ) {
-      const withdrawalFee = new BigNumber(preparedMovement.fees.amount)
-      movementAmount = amountBN.plus(withdrawalFee)
-    }
-
-    const signedAddMovementPayload = await this.signPayload({
-      payload: {
-        address: childKey.address,
-        nonce: preparedMovement.nonce,
+    const prepareAMovement = async () => {
+      preparedMovement = await this.prepareMovement({
+        address,
         quantity: {
-          amount: movementAmount.toFormat(8),
+          amount: bnAmount.toFormat(8),
           currency: assetData.symbol
         },
-        type: movementType,
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        recycled_orders: preparedMovement.recycledOrders.map(
-          ({ blockchain: orderBlockchain, message }) => ({
-            blockchain: orderBlockchain,
-            message
-          })
-        ),
-        digests: preparedMovement.transactionElements.map(
-          ({ digest: digest }) => ({ digest })
-        ),
-        timestamp: new Date().getTime()
-      },
-      kind: SigningPayloadID.addMovementPayload
-    })
+        type: movementType
+      })
 
-    const sanitizedPayload = sanitizeAddMovementPayload(
-      signedAddMovementPayload.signedPayload as never
-    )
-    const addMovementResult = await this.gql.mutate<{
-      addMovement: AddMovement
-    }>({
-      mutation: ADD_MOVEMENT_MUTATION,
-      variables: {
-        payload: sanitizedPayload,
-        signature: signedAddMovementPayload.signature
+      movementAmount = bnAmount
+      if (
+        quantity.currency === CryptoCurrency.BTC &&
+        movementType === MovementTypeWithdrawal
+      ) {
+        const withdrawalFee = new BigNumber(preparedMovement.fees.amount)
+        movementAmount = amountBN.plus(withdrawalFee)
       }
-    })
+    }
+
+    while (true) {
+      try {
+        console.log('preparing movement')
+        await prepareAMovement()
+        break
+      } catch (e) {
+        console.log(e.message)
+        if (!e.message.startsWith('GraphQL error: ')) {
+          throw e
+        }
+        const blockchainError = e.message.slice(
+          'GraphQL error: '.length
+        ) as BlockchainError
+        switch (blockchainError) {
+          case BlockchainError.MISSING_SIGNATURES:
+          case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
+            console.log('sync states and retry in 15 seconds')
+            await this.getSignAndSyncStates()
+            await sleep(15000)
+            break
+          case BlockchainError.WAITING_FOR_BALANCE_SYNC:
+            console.log('waiting for balance sync, retrying in 15 seconds')
+            await sleep(15000)
+            break
+          case BlockchainError.MOVEMENT_ALREADY_IN_PROGRESS:
+            console.log('movement in progress, retrying in 15 seconds')
+            await sleep(15000)
+            break
+          default:
+            throw e
+        }
+      }
+    }
+
+    let signedAddMovementPayload: Parameters<
+      Parameters<ReturnType<Client['signPayload']>['then']>[0]
+    >[0]
+    let addMovementResult: GQLResp<{
+      addMovement: AddMovement
+    }>
+    while (true) {
+      signedAddMovementPayload = await this.signPayload({
+        payload: {
+          address: childKey.address,
+          nonce: preparedMovement.nonce,
+          quantity: {
+            amount: movementAmount.toFormat(8),
+            currency: assetData.symbol
+          },
+          type: movementType,
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          recycled_orders: preparedMovement.recycledOrders.map(
+            ({ blockchain: orderBlockchain, message }) => ({
+              blockchain: orderBlockchain,
+              message
+            })
+          ),
+          digests: preparedMovement.transactionElements.map(
+            ({ digest: digest }) => ({ digest })
+          ),
+          timestamp: new Date().getTime()
+        },
+        kind: SigningPayloadID.addMovementPayload
+      })
+
+      const sanitizedPayload = sanitizeAddMovementPayload(
+        signedAddMovementPayload.signedPayload as never
+      )
+      try {
+        console.log('adding movement')
+        addMovementResult = await this.gql.mutate<{
+          addMovement: AddMovement
+        }>({
+          mutation: ADD_MOVEMENT_MUTATION,
+          variables: {
+            payload: sanitizedPayload,
+            signature: signedAddMovementPayload.signature
+          }
+        })
+        break
+      } catch (e) {
+        console.log(e.message)
+        if (!e.message.startsWith('GraphQL error: ')) {
+          throw e
+        }
+        const blockchainError = e.message.slice(
+          'GraphQL error: '.length
+        ) as BlockchainError
+        switch (blockchainError) {
+          case BlockchainError.BAD_NONCE:
+            console.log('preparing movement again')
+            await sleep(15000)
+            await prepareAMovement()
+            break
+          case BlockchainError.MOVEMENT_ALREADY_IN_PROGRESS:
+          case BlockchainError.WAITING_FOR_BALANCE_SYNC:
+            console.log('waiting for balance sync, retrying in 15 seconds')
+            await sleep(15000)
+            break
+          case BlockchainError.MISSING_SIGNATURES:
+          case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
+            console.log('sync states and retry in 15 seconds')
+            await this.getSignAndSyncStates()
+            await sleep(15000)
+            break
+          default:
+            throw e
+        }
+      }
+    }
+
     if (quantity.currency === CryptoCurrency.BTC) {
       return {
         txId: addMovementResult.data.addMovement.id.toString()
@@ -2926,6 +3046,21 @@ export class Client {
         const invocationSignature = await this.signEthTransaction(movementTx)
 
         setEthSignature(movementTx, invocationSignature)
+        if (false) {
+          const serializedEthTx = movementTx.serialize().toString('hex')
+          const hash = movementTx.hash().toString('hex')
+          const ethMovement = await this.updateMovement({
+            movementId: addMovementResult.data.addMovement.id,
+            status: MovementStatus.PENDING,
+            transactionHash: hash,
+            transactionPayload: serializedEthTx,
+            fee: (parseInt(gasPrice, 10) * estimate * 2).toString()
+          })
+          console.log(ethMovement)
+          return {
+            txId: prefixWith0xIfNeeded(hash)
+          }
+        }
 
         const ethReceipt = await this.web3.eth.sendSignedTransaction(
           '0x' + movementTx.serialize().toString('hex')
@@ -2935,9 +3070,6 @@ export class Client {
         }
       case 'neo':
         const timestamp = new BigNumber(this.createTimestamp32()).toString(16)
-        const nodes = this.opts.neoNetworkSettings.nodes.reverse()
-        const node = await findBestNetworkNode(nodes)
-        const rpcClient = new NeonJS.rpc.RPCClient(node)
         const balance = await NeonJS.api.neoscan.getBalance(
           this.opts.neoScan,
           childKey.address
@@ -2983,7 +3115,7 @@ export class Client {
           ]
         )
         let sendingFromSmartContract = false
-        const transaction = new tx.InvocationTransaction({
+        const neoTransaction = new tx.InvocationTransaction({
           script: builder.str,
           gas: 0
         }).addAttribute(
@@ -2995,7 +3127,7 @@ export class Client {
           NEP5_OLD_ASSETS.includes(quantity.currency)
         ) {
           sendingFromSmartContract = true
-          transaction.addAttribute(
+          neoTransaction.addAttribute(
             tx.TxAttrUsage.Script,
             u.reverseHex(
               this.opts.neoNetworkSettings!.contracts!.vault!.contract!
@@ -3007,19 +3139,19 @@ export class Client {
           (quantity.currency === CryptoCurrency.NEO ||
             quantity.currency === CryptoCurrency.GAS)
         ) {
-          transaction.addIntent(
+          neoTransaction.addIntent(
             quantity.currency.toUpperCase(),
             bnAmount.toNumber(),
             this.opts.neoNetworkSettings.contracts.vault.address
           )
         }
-        transaction
+        neoTransaction
           .addAttribute(tx.TxAttrUsage.Remark, timestamp)
           .calculate(balance)
-        const payload = transaction.serialize(false)
+        const payload = neoTransaction.serialize(false)
 
         const signature = await this.signNeoPayload(payload.toLowerCase())
-        transaction.addWitness(
+        neoTransaction.addWitness(
           tx.Witness.fromSignature(signature, childKey.public_key)
         )
         if (sendingFromSmartContract) {
@@ -3030,14 +3162,14 @@ export class Client {
               16
             ) > parseInt(acct.scriptHash, 16)
           ) {
-            transaction.scripts.push(
+            neoTransaction.scripts.push(
               new tx.Witness({
                 invocationScript: '0000',
                 verificationScript: ''
               })
             )
           } else {
-            transaction.scripts.unshift(
+            neoTransaction.scripts.unshift(
               new tx.Witness({
                 invocationScript: '0000',
                 verificationScript: ''
@@ -3045,15 +3177,34 @@ export class Client {
             )
           }
         }
-        const signedNeoPayload = transaction.serialize(true)
-        const neoStatus = await rpcClient.sendRawTransaction(signedNeoPayload)
+        const signedNeoPayload = neoTransaction.serialize(true)
 
-        if (!neoStatus) {
-          throw new Error('Could not send neo')
-        }
+        // if (false) {
+        const neoMovement = await this.updateMovement({
+          movementId: addMovementResult.data.addMovement.id,
+          status: MovementStatus.PENDING,
+          transactionHash: neoTransaction.hash,
+          transactionPayload: signedNeoPayload,
+          fee: neoTransaction.fees.toString()
+        })
+        console.log(neoMovement)
         return {
-          txId: transaction.hash
+          txId: neoTransaction.hash
         }
+      // }
+
+      // const node = await findBestNetworkNode(
+      //   this.opts.neoNetworkSettings.nodes.reverse()
+      // )
+      // const rpcClient = new NeonJS.rpc.RPCClient(node)
+      // const neoStatus = await rpcClient.sendRawTransaction(signedNeoPayload)
+
+      // if (!neoStatus) {
+      //   throw new Error('Could not send neo')
+      // }
+      // return {
+      //   txId: neoTransaction.hash
+      // }
       default:
         throw new Error('not implemented')
     }
@@ -3116,25 +3267,7 @@ export class Client {
    */
   private signPayload(
     payloadAndKind: PayloadAndKind
-  ): Promise<{
-    payload: Record<string, any>
-    signature: {
-      publicKey: string
-      signedDigest: string
-    }
-    blockchain_data: {
-      address: string
-      amount: string
-      asset: string
-      nonce: string
-      prefix: string
-      r?: string
-      userPubKey: string
-      userSig?: string
-    }
-    blockchain_raw: string
-    signedPayload: Record<string, any>
-  }> {
+  ): Promise<PayloadSignature> {
     switch (this.mode) {
       case ClientMode.NONE:
         throw new Error('Not logged in')
@@ -3146,25 +3279,7 @@ export class Client {
   }
   private async signPayloadMpc(
     payloadAndKind: PayloadAndKind
-  ): Promise<{
-    payload: Record<string, any>
-    signature: {
-      publicKey: string
-      signedDigest: string
-    }
-    blockchain_data: {
-      address: string
-      amount: string
-      asset: string
-      nonce: string
-      prefix: string
-      r?: string
-      userPubKey: string
-      userSig?: string
-    }
-    blockchain_raw: string
-    signedPayload: Record<string, any>
-  }> {
+  ): Promise<PayloadSignature> {
     const m = this.perfClient.start('signPayloadMpc')
     this.requireMPC()
     const signedPayload = await preSignPayload(this.apiKey, payloadAndKind, {
@@ -3187,25 +3302,7 @@ export class Client {
   }
   private async signPayloadFull(
     payloadAndKind: PayloadAndKind
-  ): Promise<{
-    payload: Record<string, any>
-    signature: {
-      publicKey: string
-      signedDigest: string
-    }
-    blockchain_data: {
-      address: string
-      amount: string
-      asset: string
-      nonce: string
-      prefix: string
-      r?: string
-      userPubKey: string
-      userSig?: string
-    }
-    blockchain_raw: string
-    signedPayload: Record<string, any>
-  }> {
+  ): Promise<PayloadSignature> {
     const m = this.perfClient.start('signPayload')
     this.requireFull()
     const privateKey = Buffer.from(
