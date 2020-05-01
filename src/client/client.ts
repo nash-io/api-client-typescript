@@ -1,7 +1,6 @@
 import * as AbsintheSocket from '@absinthe/socket'
 import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { PerfClient } from '@neon-exchange/nash-perf'
-import { print } from 'graphql/language/printer'
 import setCookie from 'set-cookie-parser'
 import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
@@ -19,19 +18,29 @@ import BigNumber from 'bignumber.js'
 import { ApolloError } from './ApolloError'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
 import { GET_MARKET_QUERY } from '../queries/market/getMarket'
-import { LIST_ACCOUNT_TRANSACTIONS } from '../queries/account/listAccountTransactions'
+import {
+  LIST_ACCOUNT_TRANSACTIONS,
+  ListAccountTransactionsParams
+} from '../queries/account/listAccountTransactions'
 import {
   LIST_ACCOUNT_ORDERS,
-  LIST_ACCOUNT_ORDERS_WITH_TRADES
+  LIST_ACCOUNT_ORDERS_WITH_TRADES,
+  ListAccountOrderParams
 } from '../queries/order/listAccountOrders'
-import { LIST_ACCOUNT_TRADES } from '../queries/trade/listAccountTrades'
+import {
+  LIST_ACCOUNT_TRADES,
+  ListAccountTradeParams
+} from '../queries/trade/listAccountTrades'
 import {
   GET_ACCOUNT_ADDRESS,
   GetAccountAddressParams,
   GetAccountAddressResult
 } from '../queries/account/getAccountAddress'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
-import { LIST_MOVEMENTS } from '../queries/movement/listMovements'
+import {
+  LIST_MOVEMENTS,
+  ListMovementsParams
+} from '../queries/movement/listMovements'
 import { GET_ACCOUNT_BALANCE } from '../queries/account/getAccountBalance'
 import { GET_ACCOUNT_ORDER } from '../queries/order/getAccountOrder'
 import { GET_MOVEMENT } from '../queries/movement/getMovement'
@@ -44,9 +53,12 @@ import {
   TwoFactorLoginResponse
 } from '../mutations/account/twoFactorLoginMutation'
 
-import { LIST_CANDLES } from '../queries/candlestick/listCandles'
+import {
+  LIST_CANDLES,
+  ListCandlesParams
+} from '../queries/candlestick/listCandles'
 import { LIST_TICKERS } from '../queries/market/listTickers'
-import { LIST_TRADES } from '../queries/market/listTrades'
+import { LIST_TRADES, ListTradeParams } from '../queries/market/listTrades'
 import { GET_ORDERBOOK } from '../queries/market/getOrderBook'
 import { PLACE_LIMIT_ORDER_MUTATION } from '../mutations/orders/placeLimitOrder'
 import { PLACE_MARKET_ORDER_MUTATION } from '../mutations/orders/placeMarketOrder'
@@ -59,7 +71,10 @@ import {
   PrepareMovementVariables
 } from '../mutations/movements/prepareMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
-import { GET_ACCOUNT_PORTFOLIO } from '../queries/account/getAccountPortfolio'
+import {
+  GET_ACCOUNT_PORTFOLIO,
+  GetAccountPortfolioParams
+} from '../queries/account/getAccountPortfolio'
 import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
@@ -84,7 +99,13 @@ import {
   OrdersForMovementData
 } from '../queries/movement/getOrdersForMovementQuery'
 
-import { checkMandatoryParams, detectBlockchain } from './utils'
+import {
+  checkMandatoryParams,
+  detectBlockchain,
+  findBestNetworkNode,
+  sleep,
+  sanitizeAddMovementPayload
+} from './utils'
 
 import {
   GetStatesData,
@@ -113,7 +134,6 @@ import {
   SendBlockchainRawTransactionResult
 } from '../mutations/blockchain/sendBlockchainRawTransaction'
 
-import { FiatCurrency } from '../constants/currency'
 import {
   normalizePriceForMarket,
   mapMarketsForNashProtocol,
@@ -123,14 +143,9 @@ import {
   OrderBook,
   TradeHistory,
   Ticker,
-  Trade,
   CandleRange,
-  CandleInterval,
   Movement,
-  MovementStatus,
-  MovementType,
   AccountPortfolio,
-  Period,
   CancelledOrder,
   AccountBalance,
   AccountTransaction,
@@ -143,9 +158,8 @@ import {
   OrderCancellationPolicy,
   CurrencyAmount,
   CurrencyPrice,
-  PaginationCursor,
-  OrderStatus,
-  OrderType,
+  LegacyLoginParams,
+  NonceSet,
   SignMovementResult,
   Blockchain as TSAPIBlockchain,
   AssetData,
@@ -153,7 +167,8 @@ import {
   MissingNonceError,
   InsufficientFundsError
 } from '../types'
-
+import { ClientMode, GQL, NashSocketEvents, GQLResp } from '../types/client'
+import { gqlToString } from './queryPrinter'
 import { CryptoCurrency } from '../constants/currency'
 
 import {
@@ -197,11 +212,9 @@ import {
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
-import { NEO_NETWORK, BTC_NETWORK, Networks, ETH_NETWORK } from './networks'
-
 import {
   prefixWith0xIfNeeded,
-  setSignature,
+  setEthSignature,
   transferExternalGetAmount,
   serializeEthTx
 } from './ethUtils'
@@ -214,95 +227,15 @@ import {
   BTC_SATOSHI_MULTIPLIER,
   networkFromName,
   calculateFeeRate,
+  P2shP2wpkhScript,
   getHashAndSighashType
 } from './btcUtils'
-
-export interface EnvironmentConfig {
-  host: string
-  maxEthCostPrTransaction?: string
-  debug?: boolean
-  neoScan?: string
-  neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
-  ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
-  btcNetworkSettings?: typeof BTC_NETWORK[Networks.MainNet]
-}
-
-export interface ClientOptions {
-  runRequestsOverWebsockets?: boolean
-
-  enablePerformanceTelemetry?: boolean
-  performanceTelemetryTag?: string
-}
-export const EnvironmentConfiguration = {
-  production: {
-    host: 'app.nash.io',
-    neoScan: 'https://neoscan.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
-    neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
-    btcNetworkSettings: BTC_NETWORK[Networks.MainNet]
-  } as EnvironmentConfig,
-  sandbox: {
-    host: 'app.sandbox.nash.io',
-    neoScan: 'https://explorer.neo.sandbox.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
-    neoNetworkSettings: NEO_NETWORK[Networks.Sandbox],
-    btcNetworkSettings: BTC_NETWORK[Networks.Sandbox]
-  } as EnvironmentConfig,
-  master: {
-    host: 'app.master.nash.io',
-    neoScan: 'https://neo-local-explorer.master.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Master],
-    neoNetworkSettings: NEO_NETWORK[Networks.Master],
-    btcNetworkSettings: BTC_NETWORK[Networks.Master]
-  } as EnvironmentConfig,
-  staging: {
-    host: 'app.staging.nash.io',
-    neoScan: 'https://neo-local-explorer.staging.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Staging],
-    neoNetworkSettings: NEO_NETWORK[Networks.Staging],
-    btcNetworkSettings: BTC_NETWORK[Networks.Staging]
-  } as EnvironmentConfig,
-  dev1: {
-    host: 'app.dev1.nash.io',
-    neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Dev1],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev1],
-    btcNetworkSettings: BTC_NETWORK[Networks.Dev1]
-  } as EnvironmentConfig,
-  dev2: {
-    host: 'app.dev2.nash.io',
-    neoScan: 'https://neo-local-explorer.dev2.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Dev2],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev2],
-    btcNetworkSettings: BTC_NETWORK[Networks.Dev2]
-  } as EnvironmentConfig,
-  dev3: {
-    host: 'app.dev3.nash.io',
-    neoScan: 'https://neo-local-explorer.dev3.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Dev3],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev3],
-    btcNetworkSettings: BTC_NETWORK[Networks.Dev3]
-  } as EnvironmentConfig,
-  dev4: {
-    host: 'app.dev4.nash.io',
-    neoScan: 'https://neo-local-explorer.dev4.nash.io/api/main_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.Dev4],
-    neoNetworkSettings: NEO_NETWORK[Networks.Dev4],
-    btcNetworkSettings: BTC_NETWORK[Networks.Dev4]
-  } as EnvironmentConfig,
-  local: {
-    host: 'localhost:4000',
-    neoScan: 'http://localhost:7000/api/test_net',
-    ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
-    neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
-    btcNetworkSettings: BTC_NETWORK[Networks.LocalNet]
-  } as EnvironmentConfig
-}
-
-async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
+export * from './environments'
+import {
+  EnvironmentConfig,
+  ClientOptions,
+  EnvironmentConfiguration
+} from './environments'
 const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.ETH]: BIP44.ETH,
   [Blockchain.BTC]: BIP44.BTC,
@@ -310,236 +243,9 @@ const BLOCKCHAIN_TO_BIP44 = {
 }
 
 const NEP5_OLD_ASSETS = ['nos', 'phx', 'guard', 'lx', 'ava']
-export const sanitizeAddMovementPayload = (payload: {
-  recycled_orders: []
-  resigned_orders: []
-  recycledOrders: []
-  resignedOrders: []
-  digests: []
-  signed_transaction_elements: []
-  signedTransactionElements: []
-}) => {
-  const submitPayload = { ...payload }
-  if (
-    payload.recycled_orders != null ||
-    payload.resigned_orders != null ||
-    payload.recycledOrders != null
-  ) {
-    delete submitPayload.recycled_orders
-    delete submitPayload.recycledOrders
-    submitPayload.resignedOrders = submitPayload.resigned_orders
-    delete submitPayload.resigned_orders
-  }
-  if (payload.digests != null) {
-    delete submitPayload.digests
-  }
-  if (payload.signed_transaction_elements != null) {
-    submitPayload.signedTransactionElements =
-      payload.signed_transaction_elements
-    delete submitPayload.signed_transaction_elements
-  }
-  return submitPayload
-}
-
-export interface NonceSet {
-  noncesFrom: number[]
-  noncesTo: number[]
-  nonceOrder: number
-}
-
-interface LoginParams {
-  email: string
-  password: string
-  twoFaCode?: string
-  walletIndices?: { [key: string]: number }
-  presetWallets?: object
-  salt?: string
-}
-
-interface ListAccountTradeParams {
-  before?: PaginationCursor
-  limit?: number
-  marketName?: string
-}
-
-interface ListAccountTransactionsParams {
-  cursor?: string
-  fiatSymbol?: string
-  limit?: number
-}
-
-interface GetAccountPortfolioParams {
-  fiatSymbol?: FiatCurrency
-  period?: Period
-}
-
-interface ListTradeParams {
-  marketName: string
-  limit?: number
-  before?: PaginationCursor
-}
-
-interface ListCandlesParams {
-  marketName: string
-  before?: DateTime
-  interval?: CandleInterval
-  limit?: number
-}
-
-interface ListMovementsParams {
-  currency?: CryptoCurrency
-  status?: MovementStatus
-  type?: MovementType
-}
-
-interface ListAccountOrderParams {
-  before?: PaginationCursor
-  buyOrSell?: OrderBuyOrSell
-  limit?: number
-  marketName?: string
-  rangeStart?: DateTime
-  rangeStop?: DateTime
-  status?: [OrderStatus]
-  type?: [OrderType]
-  shouldIncludeTrades?: boolean
-}
-
-enum ClientMode {
-  NONE = 'NONE',
-  MPC = 'MPC',
-  FULL_SECRET = 'FULL_SECRET'
-}
-/**
- * These interfaces are just here to
- */
-interface GQLQueryParams<V> {
-  query: any
-  variables?: V
-}
-interface GQLMutationParams<V> {
-  mutation: any
-  variables?: V
-}
-
-interface GQLError {
-  message: string
-}
-
-interface GQLResp<T> {
-  data: T
-  errors?: GQLError[]
-}
-
-interface GQL {
-  query<T = any, V = any>(params: GQLQueryParams<V>): Promise<GQLResp<T>>
-  mutate<T = any, V = any>(params: GQLMutationParams<V>): Promise<GQLResp<T>>
-}
-
-const previousPrintResults = new Map<any, string>()
-
-// Print will instantiate a new visitor every time. Lets cache previously printed queries.
-const memorizedPrint = (ast: any): string => {
-  if (previousPrintResults.has(ast)) {
-    return previousPrintResults.get(ast)
-  }
-  const str = print(ast) as string
-  previousPrintResults.set(ast, str)
-  return str
-}
-
-const P2shP2wpkhScript = (pubkeyBuffer: Buffer): Buffer => {
-  // HASH160 len(20) {script} OP_EQUAL
-  const addrHash = bitcoin.crypto.hash160(pubkeyBuffer)
-  const script = 'a914' + addrHash.toString('hex') + '87'
-  return Buffer.from(script, 'hex')
-}
 
 export const MISSING_NONCES = 'missing_asset_nonces'
 export const MAX_SIGN_STATE_RECURSION = 5
-
-interface SubscriptionHandlers<T> {
-  onResult: (p: T) => void
-  onError: (p: Error) => void
-  onAbort: (p: Error) => void
-  onStart: (p: object) => void
-}
-
-interface NashSocketEvents {
-  /**
-   * See https://www.npmjs.com/package/phoenix-channels
-   */
-  socket: InstanceType<PhoenixSocket>
-  absintheSocket: InstanceType<AbsintheSocket>
-  onUpdatedAccountOrders(
-    variables: {
-      buyOrSell?: OrderBuyOrSell
-      marketName?: string
-      rangeStart?: DateTime
-      rangeStop?: DateTime
-      status?: OrderStatus[]
-      type?: OrderType[]
-    },
-    handlers: SubscriptionHandlers<{
-      data: {
-        updatedAccountOrders: Order[]
-      }
-    }>
-  ): void
-  onUpdatedCandles(
-    variables: { interval: CandleInterval; marketName: string },
-    handlers: SubscriptionHandlers<{
-      data: {
-        updatedCandles: CandleRange[]
-      }
-    }>
-  ): void
-  onUpdatedTickers(
-    handlers: SubscriptionHandlers<{
-      data: {
-        updatedTickers: Ticker[]
-      }
-    }>
-  ): void
-  onNewTrades(
-    variables: { marketName: string },
-    handlers: SubscriptionHandlers<{
-      data: {
-        newTrades: Trade[]
-      }
-    }>
-  ): void
-  onUpdatedOrderbook(
-    variables: { marketName: string },
-    handlers: SubscriptionHandlers<{
-      data: {
-        updatedOrderBook: OrderBook
-      }
-    }>
-  ): void
-  onAccountTrade(
-    variables: { marketName: string },
-    handlers: SubscriptionHandlers<{
-      data: {
-        newAccountTrades: Trade[]
-      }
-    }>
-  ): void
-}
-
-export const findBestNetworkNode = async (nodes): Promise<string> => {
-  for (const url of nodes) {
-    try {
-      const s = await fetch(url)
-      if (s.status >= 400) {
-        throw new Error('invalid')
-      }
-      return url
-    } catch (e) {
-      console.info(url, 'is down. Trying next node')
-    }
-  }
-  throw new Error('No neo nodes up')
-}
 
 export class Client {
   public perfClient: PerfClient
@@ -682,7 +388,7 @@ export class Client {
           AbsintheSocket.observe(
             this.connection.absintheSocket,
             AbsintheSocket.send(this.connection.absintheSocket, {
-              operation: memorizedPrint(params.query),
+              operation: gqlToString(params.query),
               variables: params.variables
             }),
             {
@@ -698,7 +404,7 @@ export class Client {
           headers: this.headers,
           agent,
           body: JSON.stringify({
-            query: memorizedPrint(params.query),
+            query: gqlToString(params.query),
             variables: params.variables
           })
         })
@@ -878,7 +584,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(UPDATED_ACCOUNT_ORDERS),
+            operation: gqlToString(UPDATED_ACCOUNT_ORDERS),
             variables: {
               payload
             }
@@ -890,7 +596,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(UPDATED_CANDLES),
+            operation: gqlToString(UPDATED_CANDLES),
             variables
           }),
           handlers
@@ -899,7 +605,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(UPDATED_TICKERS),
+            operation: gqlToString(UPDATED_TICKERS),
             variables: {}
           }),
           handlers
@@ -909,7 +615,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(NEW_TRADES),
+            operation: gqlToString(NEW_TRADES),
             variables
           }),
           handlers
@@ -919,7 +625,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(UPDATED_ORDER_BOOK),
+            operation: gqlToString(UPDATED_ORDER_BOOK),
             variables
           }),
           handlers
@@ -930,7 +636,7 @@ export class Client {
         AbsintheSocket.observe(
           absintheSocket,
           AbsintheSocket.send(absintheSocket, {
-            operation: memorizedPrint(NEW_ACCOUNT_TRADES),
+            operation: gqlToString(NEW_ACCOUNT_TRADES),
             variables: {
               payload
             }
@@ -1020,7 +726,7 @@ export class Client {
     walletIndices = { neo: 1, eth: 1, btc: 1 },
     presetWallets,
     salt = ''
-  }: LoginParams): Promise<void> {
+  }: LegacyLoginParams): Promise<void> {
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, salt)
     const loginUrl = this.casUri + '/user_login'
@@ -1737,7 +1443,11 @@ export class Client {
     status,
     type
   }: ListMovementsParams): Promise<Movement[]> {
-    const listMovementParams = createListMovementsParams(currency, status, type)
+    const listMovementParams = createListMovementsParams(
+      currency as string,
+      status,
+      type
+    )
     const signedPayload = await this.signPayload(listMovementParams)
 
     const result = await this.gql.query<{ listMovements: Movement[] }>({
@@ -2594,7 +2304,7 @@ export class Client {
     approveTx.getChainId = () => chainId
 
     const approveSignature = await this.signEthTransaction(approveTx)
-    setSignature(approveTx, approveSignature)
+    setEthSignature(approveTx, approveSignature)
 
     const p = this.web3.eth.sendSignedTransaction(
       '0x' + approveTx.serialize().toString('hex')
@@ -2723,7 +2433,7 @@ export class Client {
         ethTx.getChainId = () => chainId
 
         const ethTxSignature = await this.signEthTransaction(ethTx)
-        setSignature(ethTx, ethTxSignature)
+        setEthSignature(ethTx, ethTxSignature)
         const receipt = await this.web3.eth.sendSignedTransaction(
           '0x' + ethTx.serialize().toString('hex')
         )
@@ -3068,18 +2778,18 @@ export class Client {
     ]
 
     const address = childKey.address
-
+    const bnAmount = new BigNumber(quantity.amount)
     const preparedMovement = await this.prepareMovement({
       address,
       quantity: {
-        amount: new BigNumber(quantity.amount).toFormat(8),
+        amount: bnAmount.toFormat(8),
         currency: assetData.symbol
       },
       type: movementType
     })
 
-    const amountBN = new BigNumber(quantity.amount)
-    let movementAmount = new BigNumber(quantity.amount)
+    const amountBN = bnAmount
+    let movementAmount = bnAmount
 
     if (
       quantity.currency === CryptoCurrency.BTC &&
@@ -3112,6 +2822,7 @@ export class Client {
       },
       kind: SigningPayloadID.addMovementPayload
     })
+
     const sanitizedPayload = sanitizeAddMovementPayload(
       signedAddMovementPayload.signedPayload as never
     )
@@ -3129,6 +2840,7 @@ export class Client {
         txId: addMovementResult.data.addMovement.id.toString()
       }
     }
+
     const blockchainSignature = await this.completePayloadSignature({
       blockchain: blockchain.toUpperCase() as Blockchain,
       payload: signedAddMovementPayload.blockchain_raw.toLowerCase(),
@@ -3213,7 +2925,7 @@ export class Client {
 
         const invocationSignature = await this.signEthTransaction(movementTx)
 
-        setSignature(movementTx, invocationSignature)
+        setEthSignature(movementTx, invocationSignature)
 
         const ethReceipt = await this.web3.eth.sendSignedTransaction(
           '0x' + movementTx.serialize().toString('hex')
@@ -3297,7 +3009,7 @@ export class Client {
         ) {
           transaction.addIntent(
             quantity.currency.toUpperCase(),
-            new BigNumber(quantity.amount).toNumber(),
+            bnAmount.toNumber(),
             this.opts.neoNetworkSettings.contracts.vault.address
           )
         }

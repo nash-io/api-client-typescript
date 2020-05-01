@@ -24,7 +24,7 @@ export function serializeEthTx(tx: EthTransaction): string {
     .toString('hex')
 }
 
-export function setSignature(tx: EthTransaction, sig: string) {
+export function setEthSignature(tx: EthTransaction, sig: string) {
   tx.r = Buffer.from(sig.slice(0, 64), 'hex')
   tx.s = Buffer.from(sig.slice(64, 128), 'hex')
   tx.v = Buffer.from(

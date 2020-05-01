@@ -1,4 +1,6 @@
 import { Blockchain } from '../types'
+
+import fetch from 'node-fetch'
 export function checkMandatoryParams(
   ...args: Array<Record<string, any>>
 ): void {
@@ -66,4 +68,54 @@ export const detectBlockchain = (address: string): Blockchain | null => {
     return Blockchain.BTC
   }
   return null
+}
+
+export async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export const sanitizeAddMovementPayload = (payload: {
+  recycled_orders: []
+  resigned_orders: []
+  recycledOrders: []
+  resignedOrders: []
+  digests: []
+  signed_transaction_elements: []
+  signedTransactionElements: []
+}) => {
+  const submitPayload = { ...payload }
+  if (
+    payload.recycled_orders != null ||
+    payload.resigned_orders != null ||
+    payload.recycledOrders != null
+  ) {
+    delete submitPayload.recycled_orders
+    delete submitPayload.recycledOrders
+    submitPayload.resignedOrders = submitPayload.resigned_orders
+    delete submitPayload.resigned_orders
+  }
+  if (payload.digests != null) {
+    delete submitPayload.digests
+  }
+  if (payload.signed_transaction_elements != null) {
+    submitPayload.signedTransactionElements =
+      payload.signed_transaction_elements
+    delete submitPayload.signed_transaction_elements
+  }
+  return submitPayload
+}
+
+export const findBestNetworkNode = async (nodes): Promise<string> => {
+  for (const url of nodes) {
+    try {
+      const s = await fetch(url)
+      if (s.status >= 400) {
+        throw new Error('invalid')
+      }
+      return url
+    } catch (e) {
+      console.info(url, 'is down. Trying next node')
+    }
+  }
+  throw new Error('No neo nodes up')
 }

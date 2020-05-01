@@ -21,6 +21,14 @@ export interface TwoFactorLoginAccount {
   wallets: AccountWallet[]
 }
 
+export interface LegacyLoginParams {
+  email: string
+  password: string
+  twoFaCode?: string
+  walletIndices?: { [key: string]: number }
+  presetWallets?: object
+  salt?: string
+}
 export interface AccountPortfolioBalance {
   allocation: number
   asset: Asset

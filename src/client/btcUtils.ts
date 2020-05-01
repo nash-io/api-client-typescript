@@ -17,6 +17,12 @@ interface Output {
   value: number
 }
 
+export const P2shP2wpkhScript = (pubkeyBuffer: Buffer): Buffer => {
+  // HASH160 len(20) {script} OP_EQUAL
+  const addrHash = crypto.hash160(pubkeyBuffer)
+  const script = 'a914' + addrHash.toString('hex') + '87'
+  return Buffer.from(script, 'hex')
+}
 export interface Utxos {
   txid: string
   vout: number

@@ -28,3 +28,8 @@ export interface TradeHistory {
   trades: Trade[]
   next: any
 }
+export interface NonceSet {
+  noncesFrom: number[]
+  noncesTo: number[]
+  nonceOrder: number
+}

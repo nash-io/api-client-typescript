@@ -1,6 +1,7 @@
 import gql from 'graphql-tag'
 
 import { CANDLE_FRAGMENT } from './fragments/candleFragment'
+import { DateTime, CandleInterval } from '../../types'
 
 export const LIST_CANDLES = gql`
   query listCandles(
@@ -22,3 +23,10 @@ export const LIST_CANDLES = gql`
   }
   ${CANDLE_FRAGMENT}
 `
+
+export interface ListCandlesParams {
+  marketName: string
+  before?: DateTime
+  interval?: CandleInterval
+  limit?: number
+}

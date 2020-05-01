@@ -5,6 +5,8 @@ import {
   GRAPH_POINT_FRAGMENT,
   ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT
 } from './fragments'
+import { FiatCurrency } from '../../constants/currency'
+import { Period } from '../../types'
 
 export const GET_ACCOUNT_PORTFOLIO = gql`
   query getAccountPortfolio($payload: GetAccountPortfolioParams!) {
@@ -24,3 +26,8 @@ export const GET_ACCOUNT_PORTFOLIO = gql`
   ${GRAPH_POINT_FRAGMENT}
   ${ACCOUNT_PORTFOLIO_TOTAL_FRAGMENT}
 `
+
+export interface GetAccountPortfolioParams {
+  fiatSymbol?: FiatCurrency
+  period?: Period
+}
