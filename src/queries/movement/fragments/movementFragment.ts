@@ -7,12 +7,18 @@ export const MOVEMENT_FRAGMENT = gql`
     address
     confirmations
     id
+    transactionHash
+    fee
+    publicKey
+    signature
+    transactionPayload
     currency
     quantity {
       ...currencyAmountFields
     }
     receivedAt
     status
+    type
   }
   ${CURRENCY_AMOUNT_FRAGMENT}
 `

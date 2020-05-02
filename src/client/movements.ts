@@ -1,4 +1,5 @@
 export enum BlockchainError {
+  PREPARE_MOVEMENT_MUST_BE_CALLED_FIRST = 'Prepare movement must be called first',
   BLOCKCHAIN_BALANCE_OUT_OF_SYNC = 'Blockchain balance out of sync',
   WAITING_FOR_BALANCE_SYNC = 'Waiting for balance sync',
   BAD_NONCE = 'Supplied nonce does not match expected nonce',

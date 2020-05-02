@@ -25,6 +25,12 @@ export interface Movement {
   quantity: CurrencyAmount
   receivedAt: DateTime
   status: MovementStatus
+  transactionHash: string
+  fee: string
+  publicKey: string
+  signature: string
+  transactionPayload: string
+  type: MovementType
 }
 
 export interface SignMovement {

@@ -1,34 +1,8 @@
 import gql from 'graphql-tag'
 
-import { CURRENCY_AMOUNT_FRAGMENT } from '../../../queries/currency/fragments'
-import { CryptoCurrency } from 'constants/currency'
-import { DateTime, CurrencyAmount } from '../../../types'
+import { Movement } from '../../../types'
 
-export enum MovementType {
-  DEPOSIT = 'DEPOSIT',
-  WITHDRAWAL = 'WITHDRAWAL',
-  TRANSFER = 'TRANSFER'
-}
-
-export enum MovementStatus {
-  CREATED = 'CREATED',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  PENDING = 'PENDING'
-}
-
-export interface AddMovement {
-  address: string
-  confirmations: number
-  id: string
-  currency: CryptoCurrency
-  quantity: CurrencyAmount
-  receivedAt: DateTime
-  status: MovementStatus
-  publicKey: string
-  signature: string
-}
-
+export type AddMovement = Movement
 export const ADD_MOVEMENT_FRAGMENT = gql`
   fragment addMovementFields on Movement {
     address
@@ -36,13 +10,19 @@ export const ADD_MOVEMENT_FRAGMENT = gql`
     id
     currency
     quantity {
-      ...currencyAmountFields
+      amount
+      currency
     }
     receivedAt
     status
-
     publicKey
     signature
+    type
+    nonce
+    blockchain
+    transactionPayload
+    transactionHash
+    fee
+    type
   }
-  ${CURRENCY_AMOUNT_FRAGMENT}
 `

@@ -7,13 +7,15 @@ const client = new Nash.Client({
 })
 async function run() {
   await client.login(require('./key.json'))
-  async function testDeposit(currency) {
+  async function testDeposit(currency, amount='0.0001') {
     try {
-      await client.depositToTradingContract(
-        Nash.createCurrencyAmount('0.0001', currency)
+      const p = client.depositToTradingContract(
+        Nash.createCurrencyAmount(amount, currency)
       )
+      await p
       console.log('ok ' + currency + ' personal -> trading')
     } catch (e) {
+      console.log(e)
       console.log('failed ' + currency + ' personal -> trading')
       console.log(e.message)
     }
@@ -31,12 +33,12 @@ async function run() {
       console.log(e.message)
     }
   }
-  // await testDeposit(Nash.CryptoCurrency.GAS)
-  // await testDeposit(Nash.CryptoCurrency.NEO)
   // await testDeposit(Nash.CryptoCurrency.NOS)
+  // await testDeposit(Nash.CryptoCurrency.NEO, '1.00000')
+  // await testDeposit(Nash.CryptoCurrency.GAS)
   await testDeposit(Nash.CryptoCurrency.ETH)
-  // await testDeposit(Nash.CryptoCurrency.USDC)
-  // await testDeposit(Nash.CryptoCurrency.BAT)
+  await testDeposit(Nash.CryptoCurrency.USDC)
+  await testDeposit(Nash.CryptoCurrency.BAT)
   // await testDeposit(Nash.CryptoCurrency.BTC)
   // await testTransfer(Nash.CryptoCurrency.ETH, client.getEthAddress())
   // await testTransfer(Nash.CryptoCurrency.BAT, client.getEthAddress())
