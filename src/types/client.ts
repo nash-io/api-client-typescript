@@ -13,7 +13,7 @@ import {
   OrderStatus,
   OrderType
 } from '../types'
-
+import { Headers } from 'node-fetch'
 export enum ClientMode {
   NONE = 'NONE',
   MPC = 'MPC',
@@ -38,6 +38,7 @@ interface GQLError {
 export interface GQLResp<T> {
   data: T
   errors?: GQLError[]
+  headers?: Headers
 }
 
 export interface GQL {

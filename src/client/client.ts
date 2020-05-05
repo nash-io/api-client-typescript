@@ -55,6 +55,18 @@ import {
 } from '../mutations/account/twoFactorLoginMutation'
 
 import {
+  SIGN_IN_MUTATION,
+  SignInArgs,
+  SignInResult
+} from '../mutations/account/signIn'
+
+import {
+  ADD_KEYS_WITH_WALLETS_MUTATION,
+  AddKeysArgs,
+  AddKeysResult
+} from '../mutations/account/addKeysWithWallets'
+
+import {
   LIST_CANDLES,
   ListCandlesParams
 } from '../queries/candlestick/listCandles'
@@ -278,10 +290,9 @@ export class Client {
   private nashCoreConfig: Config
   private casCookie: string
   private publicKey: string
-  private account: any
+  private account?: SignInResult['signIn']['account']
 
   private wsToken: string
-  private casUri: string
   private wsUri: string
   private isMainNet: boolean
   private gql: GQL
@@ -366,7 +377,6 @@ export class Client {
       this.perfClient.measure = () => null
     }
     this.apiUri = `${protocol}://${opts.host}/api/graphql`
-    this.casUri = `${protocol}://${opts.host}/api`
     this.wsUri = `wss://${opts.host}/api/socket`
     this.maxEthCostPrTransaction = new BigNumber(
       this.web3.utils.toWei(this.opts.maxEthCostPrTransaction)
@@ -429,6 +439,7 @@ export class Client {
           throw new Error(msg)
         }
         obj = await resp.json()
+        obj.headers = resp.headers
         if (obj.errors) {
           throw new ApolloError({
             graphQLErrors: obj.errors
@@ -742,29 +753,19 @@ export class Client {
   }: LegacyLoginParams): Promise<void> {
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, salt)
-    const loginUrl = this.casUri + '/user_login'
-    const body = {
-      email,
-      password: keys.authKey.toString('hex')
-    }
 
-    const response = await fetch(loginUrl, {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-      method: 'POST'
+    const resp = await this.gql.mutate<SignInResult, SignInArgs>({
+      mutation: SIGN_IN_MUTATION,
+      variables: {
+        email,
+        password: keys.authKey.toString('hex')
+      }
     })
 
-    if (response.status !== 200) {
-      let msg = `Login error. API status code: ${response.status}`
-      if (response.body.toString()) {
-        msg += ` / body: ${response.body.toString()}`
-      }
-      throw new Error(msg)
-    }
     this.mode = ClientMode.FULL_SECRET
 
     const cookies = setCookie.parse(
-      setCookie.splitCookiesString(response.headers.get('set-cookie'))
+      setCookie.splitCookiesString(resp.headers.get('set-cookie'))
     )
     const cookie = cookies.find(c => c.name === 'nash-cookie')
     this.casCookie = cookie.name + '=' + cookie.value
@@ -780,23 +781,18 @@ export class Client {
         this.connection = this.createSocketConnection()
       }
     }
-    const result = await response.json()
-    if (result.error) {
-      throw new Error(result.message)
+    if (resp.errors) {
+      throw new Error(resp.errors[0].message)
     }
 
-    this.account = result.account
+    this.account = resp.data.signIn.account
     this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
     this.assetNonces = {}
     this.currentOrderNonce = this.createTimestamp32()
-
-    if (result.message === 'Two factor required') {
+    if (resp.data.signIn.twoFaRequired) {
       if (twoFaCode !== undefined) {
         this.account = await this.doTwoFactorLogin(twoFaCode)
-        if (this.account.type === 'error') {
-          throw new Error('Could not login')
-        }
       } else {
         // 2FA code is undefined. Check if needed by backend
         throw new Error(
@@ -804,23 +800,22 @@ export class Client {
         )
       }
     }
+    if (this.account == null) {
+      throw new Error('Failed to sign in')
+    }
 
-    if (this.account.encrypted_secret_key === null) {
+    if (resp.data.signIn.account.encryptedSecretKey === null) {
       console.log(
         'keys not present in the CAS: creating and uploading as we speak.'
       )
 
-      await this.createAndUploadKeys(
-        keys.encryptionKey,
-        this.casCookie,
-        presetWallets
-      )
+      await this.createAndUploadKeys(keys.encryptionKey, presetWallets)
     }
 
     const aead = {
-      encryptedSecretKey: bufferize(this.account.encrypted_secret_key),
-      nonce: bufferize(this.account.encrypted_secret_key_nonce),
-      tag: bufferize(this.account.encrypted_secret_key_tag)
+      encryptedSecretKey: bufferize(this.account.encryptedSecretKey),
+      nonce: bufferize(this.account.encryptedSecretKeyNonce),
+      tag: bufferize(this.account.encryptedSecretKeyTag)
     }
 
     this.initParams = {
@@ -874,7 +869,6 @@ export class Client {
   }
   private async createAndUploadKeys(
     encryptionKey: Buffer,
-    casCookie: string,
     presetWallets?: object
   ): Promise<void> {
     const secretKey = getSecretKey()
@@ -902,46 +896,35 @@ export class Client {
     }
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
-
-    const url = this.casUri + '/auth/add_initial_wallets_and_client_keys'
-    const body = {
-      encrypted_secret_key: toHex(this.initParams.aead.encryptedSecretKey),
-      encrypted_secret_key_nonce: toHex(this.initParams.aead.nonce),
-      encrypted_secret_key_tag: toHex(this.initParams.aead.tag),
-      signature_public_key: this.nashCoreConfig.payloadSigningKey.publicKey,
-      // TODO(@anthdm): construct the wallets object in more generic way.
-      wallets: [
-        {
-          address: this.nashCoreConfig.wallets.neo.address,
-          blockchain: 'neo',
-          public_key: this.nashCoreConfig.wallets.neo.publicKey
-        },
-        {
-          address: this.nashCoreConfig.wallets.eth.address,
-          blockchain: 'eth',
-          public_key: this.nashCoreConfig.wallets.eth.publicKey
-        },
-        {
-          address: this.nashCoreConfig.wallets.btc.address,
-          blockchain: 'btc',
-          public_key: this.nashCoreConfig.wallets.btc.publicKey
-        }
-      ]
-    }
-
-    const response = await fetch(url, {
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json', cookie: casCookie },
-      method: 'POST'
+    await this.gql.mutate<AddKeysResult, AddKeysArgs>({
+      mutation: ADD_KEYS_WITH_WALLETS_MUTATION,
+      variables: {
+        encryptedSecretKey: toHex(this.initParams.aead.encryptedSecretKey),
+        encryptedSecretKeyNonce: toHex(this.initParams.aead.nonce),
+        encryptedSecretKeyTag: toHex(this.initParams.aead.tag),
+        signaturePublicKey: this.nashCoreConfig.payloadSigningKey.publicKey,
+        wallets: [
+          {
+            address: this.nashCoreConfig.wallets.neo.address,
+            blockchain: 'neo',
+            publicKey: this.nashCoreConfig.wallets.neo.publicKey,
+            chainIndex: this.nashCoreConfig.wallets.neo.index
+          },
+          {
+            address: this.nashCoreConfig.wallets.eth.address,
+            blockchain: 'eth',
+            publicKey: this.nashCoreConfig.wallets.eth.publicKey,
+            chainIndex: this.nashCoreConfig.wallets.eth.index
+          },
+          {
+            address: this.nashCoreConfig.wallets.btc.address,
+            blockchain: 'btc',
+            publicKey: this.nashCoreConfig.wallets.btc.publicKey,
+            chainIndex: this.nashCoreConfig.wallets.btc.index
+          }
+        ]
+      }
     })
-
-    const result = await response.json()
-    if (result.error) {
-      throw new Error(result.message)
-    }
-    if (this.opts.debug) {
-      console.log('successfully uploaded wallet keys to the CAS')
-    }
   }
 
   /**
