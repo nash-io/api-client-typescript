@@ -334,16 +334,14 @@ export class Client {
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
-    const isLocal = opts.host === 'localhost:4000'
-
-    if (!opts.host || (opts.host.indexOf('.') === -1 && !isLocal)) {
+    if (!opts.host || (opts.host.indexOf('.') === -1 && opts.isLocal)) {
       throw new Error(`Invalid API host '${opts.host}'`)
     }
 
-    const protocol = isLocal ? 'http' : 'https'
+    const protocol = opts.isLocal ? 'http' : 'https'
     let telemetrySend = async (_: any) => null
     let agent
-    if (isLocal) {
+    if (opts.isLocal) {
       agent = new http.Agent({
         keepAlive: true
       })
@@ -352,7 +350,7 @@ export class Client {
         keepAlive: true
       })
     }
-    if (!isLocal && this.clientOpts.enablePerformanceTelemetry === true) {
+    if (!opts.isLocal && this.clientOpts.enablePerformanceTelemetry === true) {
       const telemetryUrl =
         'https://telemetry.' + /^app.(.+)$/.exec(opts.host)[1]
       telemetrySend = async data => {
@@ -769,6 +767,7 @@ export class Client {
     const cookies = setCookie.parse(
       setCookie.splitCookiesString(resp.headers.get('set-cookie'))
     )
+
     const cookie = cookies.find(c => c.name === 'nash-cookie')
     this.casCookie = cookie.name + '=' + cookie.value
     this.headers = {
@@ -869,16 +868,22 @@ export class Client {
       }
     }
   }
+
   private async createAndUploadKeys(
     encryptionKey: Buffer,
     presetWallets?: object
   ): Promise<void> {
     const secretKey = getSecretKey()
     const res = encryptSecretKey(encryptionKey, secretKey)
+
+    this.account.encryptedSecretKey = res.encryptedSecretKey.toString('hex')
+    this.account.encryptedSecretKeyTag = res.tag.toString('hex')
+    this.account.encryptedSecretKeyNonce = res.nonce.toString('hex')
+
     const aead = {
-      encryptedSecretKey: res.encryptedSecretKey,
-      tag: res.tag,
-      nonce: res.nonce
+      encryptedSecretKey: bufferize(this.account.encryptedSecretKey),
+      nonce: bufferize(this.account.encryptedSecretKeyNonce),
+      tag: bufferize(this.account.encryptedSecretKeyTag)
     }
 
     this.initParams = {
@@ -908,21 +913,27 @@ export class Client {
         wallets: [
           {
             address: this.nashCoreConfig.wallets.neo.address,
-            blockchain: 'neo',
+            blockchain: 'NEO',
             publicKey: this.nashCoreConfig.wallets.neo.publicKey,
             chainIndex: this.nashCoreConfig.wallets.neo.index
+              ? this.nashCoreConfig.wallets.neo.index
+              : 0
           },
           {
             address: this.nashCoreConfig.wallets.eth.address,
-            blockchain: 'eth',
+            blockchain: 'ETH',
             publicKey: this.nashCoreConfig.wallets.eth.publicKey,
             chainIndex: this.nashCoreConfig.wallets.eth.index
+              ? this.nashCoreConfig.wallets.eth.index
+              : 0
           },
           {
             address: this.nashCoreConfig.wallets.btc.address,
-            blockchain: 'btc',
+            blockchain: 'BTC',
             publicKey: this.nashCoreConfig.wallets.btc.publicKey,
             chainIndex: this.nashCoreConfig.wallets.btc.index
+              ? this.nashCoreConfig.wallets.btc.index
+              : 0
           }
         ]
       }
@@ -2244,39 +2255,6 @@ export class Client {
     return {
       result: addMovementResult.data.addMovement,
       blockchain_data: signedMovement.blockchain_data
-    }
-  }
-
-  public async signDepositRequest(
-    address: string,
-    quantity: CurrencyAmount,
-    nonce?: number
-  ): Promise<SignMovementResult> {
-    const signMovementParams = createAddMovementParams(
-      address,
-      quantity,
-      MovementTypeDeposit,
-      nonce
-    )
-    const signedPayload = await this.signPayload(signMovementParams)
-    const result = await this.gql.mutate<{ addMovement: AddMovement }>({
-      mutation: ADD_MOVEMENT_MUTATION,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-
-    // after deposit or withdrawal we want to update nonces
-    await this.updateTradedAssetNonces()
-
-    return {
-      result: {
-        signature: result.data.addMovement.signature,
-        publicKey: result.data.addMovement.publicKey,
-        movement: (result.data.addMovement as never) as Movement
-      },
-      blockchain_data: signedPayload.blockchain_data
     }
   }
 
