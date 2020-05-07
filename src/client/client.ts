@@ -334,7 +334,7 @@ export class Client {
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
-    if (!opts.host || (opts.host.indexOf('.') === -1 && opts.isLocal)) {
+    if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {
       throw new Error(`Invalid API host '${opts.host}'`)
     }
 
