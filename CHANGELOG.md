@@ -3,44 +3,36 @@
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
 <a name="5.0.9"></a>
+
 ## [5.0.9](https://gitlab.com/nash-io-public/api-client-typescript/compare/v5.0.3...v5.0.9) (2020-04-20)
 
-
-
 <a name="5.0.7"></a>
+
 ## [5.0.7](https://gitlab.com/nash-io-public/api-client-typescript/compare/v5.0.3...v5.0.7) (2020-04-16)
 
-
-
 <a name="5.0.5"></a>
+
 ## [5.0.5](https://gitlab.com/nash-io-public/api-client-typescript/compare/v5.0.3...v5.0.5) (2020-04-02)
 
-
-
 <a name="5.0.3"></a>
+
 ## [5.0.3](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.6...v5.0.3) (2020-04-01)
 
-
-
 <a name="5.0.1"></a>
+
 ## [5.0.1](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.6...v5.0.1) (2020-03-31)
 
-
-
 <a name="0.4.4"></a>
+
 ## [0.4.4](https://gitlab.com/nash-io-public/api-client-typescript/compare/v0.4.2...v0.4.4) (2020-03-25)
 
-
-
 <a name="0.4.2"></a>
+
 ## [0.4.2](https://gitlab.com/nash-io-public/api-client-typescript/compare/v0.3.3...v0.4.2) (2020-03-24)
 
-
-
 <a name="0.3.3"></a>
+
 ## [0.3.3](https://gitlab.com/nash-io-public/api-client-typescript/compare/v4.0.6...v0.3.3) (2020-03-23)
-
-
 
 <a name="4.0.6"></a>
 

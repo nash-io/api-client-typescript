@@ -174,6 +174,7 @@ import {
   AccountOrder,
   OrderBuyOrSell,
   OrderCancellationPolicy,
+  MovementType,
   CurrencyAmount,
   MovementStatus,
   CurrencyPrice,
@@ -215,6 +216,7 @@ import {
   createPlaceMarketOrderParams,
   createPlaceStopLimitOrderParams,
   createPlaceStopMarketOrderParams,
+  createPrepareMovementParams,
   createSendBlockchainRawTransactionParams,
   createSignStatesParams,
   createSyncStatesParams,
@@ -2179,6 +2181,70 @@ export class Client {
         signedPayload.blockchain_raw
       )}`
     )
+  }
+
+  /**
+   * Used by our internal trading bot
+   * @param  {string}                      address
+   * @param  {CurrencyAmount}              quantity
+   * @param  {MovementType}                type
+   * @return {Promise<SignMovementResult>}
+   */
+  public async legacyAddMovement(
+    address: string,
+    quantity: CurrencyAmount,
+    type: MovementType
+  ): Promise<SignMovementResult> {
+    this.requireFull()
+    const prepareMovementMovementParams = createPrepareMovementParams(
+      address,
+      quantity,
+      type
+    )
+
+    const preparePayload = await this.signPayload(prepareMovementMovementParams)
+    const result = await this.gql.mutate({
+      mutation: PREPARE_MOVEMENT_MUTATION,
+      variables: {
+        payload: preparePayload.payload,
+        signature: preparePayload.signature
+      }
+    })
+
+    const movementPayloadParams = createAddMovementParams(
+      address,
+      quantity,
+      type,
+      result.data.prepareMovement.nonce,
+      null,
+      result.data.prepareMovement.recycledOrders,
+      result.data.prepareMovement.transactionElements
+    )
+
+    const signedMovement = await this.signPayload(movementPayloadParams)
+    const payload = { ...signedMovement.payload }
+    payload.signedTransactionElements =
+      signedMovement.signedPayload.signed_transaction_elements
+    payload.resignedOrders = payload.recycled_orders
+    delete payload.digests
+    delete payload.recycled_orders
+    delete payload.blockchainSignatures
+
+    const addMovementResult = await this.gql.mutate({
+      mutation: ADD_MOVEMENT_MUTATION,
+      variables: {
+        payload,
+        signature: signedMovement.signature
+      }
+    })
+
+    // after deposit or withdrawal we want to update nonces
+    await this.updateTradedAssetNonces()
+
+    return {
+      result: addMovementResult.data.addMovement,
+      blockchain_data: signedMovement.blockchain_data
+    }
   }
 
   public async signDepositRequest(
