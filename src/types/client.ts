@@ -79,6 +79,7 @@ export interface NashSocketEvents {
    */
   socket: InstanceType<PhoenixSocket>
   absintheSocket: InstanceType<AbsintheSocket>
+  disconnect: () => void
   onUpdatedAccountOrders(
     variables: {
       buyOrSell?: OrderBuyOrSell

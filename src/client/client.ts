@@ -484,6 +484,92 @@ export class Client {
     )
   }
 
+
+  private _socket = null
+  private _createSocket() {
+    const socket = new PhoenixSocket(this.wsUri, {
+      decode: (rawPayload, callback) => {
+        const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
+
+        if (payload.status === 'error') {
+          if (typeof payload.response !== 'string') {
+            payload.response = JSON.stringify(payload.response)
+          }
+        }
+
+        return callback({
+          join_ref,
+          ref,
+          topic,
+          event,
+          payload
+        })
+      },
+      params:
+        this.wsToken != null
+          ? {
+              token: this.wsToken
+            }
+          : {}
+    })
+    socket._users = 0
+
+    // The disconnect event is implemented incorrectly
+    // as it does not trigger the correct events.
+    //
+    // This implementation triggers the correct events
+    socket.disconnect = (c, code, reason) => {
+      socket._users -= 1
+      if (!socket.conn) {
+        if (socket === this._socket) {
+          this._socket = null
+        }
+        if (c) {
+          c()
+        }
+        return
+      }
+
+      if (socket._users > 0) {
+        return
+      }
+      // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
+      socket.conn.onclose = event => {
+        socket.log('transport', 'close', event)
+        // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
+        socket.channels.forEach(channel => channel.trigger('phx_close'))
+        clearInterval(socket.heartbeatTimer)
+        socket.stateChangeCallbacks.close.forEach(callback => callback(event))
+      }
+
+      if (code) {
+        socket.conn.close(code, reason || '')
+      } else {
+        socket.conn.close()
+      }
+      socket.conn = null
+      if (c) {
+        c()
+      }
+    }
+
+    return socket
+  }
+
+  private getSocket() {
+    if (this._socket != null) {
+      this._socket._users += 1
+      return this._socket
+    }
+    this._socket = this._createSocket()
+    this._socket._users = 1
+
+    this._socket.onClose(() => {
+      this._socket = null
+    })
+    return this._socket
+  }
+
   /**
    * Sets up a websocket and authenticates it using the current token.
    *
@@ -542,67 +628,19 @@ export class Client {
         )
       }
     }
-    const socket = new PhoenixSocket(this.wsUri, {
-      decode: (rawPayload, callback) => {
-        const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
-
-        if (payload.status === 'error') {
-          if (typeof payload.response !== 'string') {
-            payload.response = JSON.stringify(payload.response)
-          }
-        }
-
-        return callback({
-          join_ref,
-          ref,
-          topic,
-          event,
-          payload
-        })
-      },
-      params:
-        this.wsToken != null
-          ? {
-              token: this.wsToken
-            }
-          : {}
-    })
-
+    const socket = this.getSocket()
     const absintheSocket = AbsintheSocket.create(socket)
-
-    // The disconnect event is implemented incorrectly
-    // as it does not trigger the correct events.
-    //
-    // This implementation triggers the correct events
-    socket.disconnect = (c, code, reason) => {
-      if (!socket.conn) {
-        if (c) {
-          c()
-        }
-        return
-      }
-      // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
-      socket.conn.onclose = event => {
-        socket.log('transport', 'close', event)
-        // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
-        socket.channels.forEach(channel => channel.trigger('phx_close'))
-        clearInterval(socket.heartbeatTimer)
-        socket.stateChangeCallbacks.close.forEach(callback => callback(event))
-      }
-      if (code) {
-        socket.conn.close(code, reason || '')
-      } else {
-        socket.conn.close()
-      }
-      socket.conn = null
-      if (c) {
-        c()
-      }
-    }
-
+    let disconnected = false
     return {
       socket,
       absintheSocket,
+      disconnect: () => {
+        if (disconnected) {
+          return
+        }
+        disconnected = true
+        socket.disconnect()
+      },
       onUpdatedAccountOrders: async (payload, handlers) => {
         authCheck('onUpdatedAccountOrders')
         AbsintheSocket.observe(
@@ -699,6 +737,7 @@ export class Client {
     this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
+    this._socket = null
     if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection.socket.disconnect()
       this.connection = this.createSocketConnection()
@@ -777,6 +816,7 @@ export class Client {
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
     if (m != null) {
       this.wsToken = m[1]
+      this._socket = null
       if (this.clientOpts.runRequestsOverWebsockets) {
         this.connection.socket.disconnect()
         this.connection = this.createSocketConnection()
