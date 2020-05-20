@@ -8,7 +8,7 @@ import {
 } from './fragments'
 
 export const SIGN_STATES_MUTATION = gql`
-  mutation signStates($payload: SignStatesParams!, $signature: String!) {
+  mutation signStates($payload: SignStatesParams!, $signature: Signature!) {
     signStates(payload: $payload, signature: $signature) {
       states {
         message

@@ -1,0 +1,2240 @@
+schema {
+  query: RootQueryType
+  mutation: RootMutationType
+  subscription: RootSubscriptionType
+}
+
+type AccountAddress {
+  address: String
+  currency: CurrencySymbol
+  vins: [Vin]
+}
+
+"""Account balances in a given currency"""
+type AccountBalance {
+  asset: Asset
+  available: CurrencyAmount
+  depositAddress: String
+  inOrders: CurrencyAmount
+  pending: CurrencyAmount
+  personal: CurrencyAmount
+}
+
+type AccountDepositAddress {
+  address: String
+  currency: CurrencySymbol
+  vins: [Vin]
+}
+
+type AccountPortfolio {
+  balances: [AccountPortfolioBalance]
+  graph: [GraphPoint]
+  total: AccountPortfolioTotal
+
+  """Total active staked tokens"""
+  totalStakedTokens: CurrencyAmount
+}
+
+type AccountPortfolioBalance {
+  allocation: Float
+  asset: Asset
+  fiatPrice: Float
+  fiatPriceChange: Float
+  fiatPriceChangePercent: Float
+  total: Float
+  totalFiatPrice: Float
+  totalFiatPriceChange: Float
+}
+
+type AccountPortfolioTotal {
+  availableAllocation: Float
+  availableFiatPrice: Float
+  inOrdersAllocation: Float
+  inOrdersFiatPrice: Float
+  inStakesAllocation: Float
+  inStakesFiatPrice: Float
+  pendingAllocation: Float
+  pendingFiatPrice: Float
+  personalAllocation: Float
+  personalFiatPrice: Float
+  totalFiatPrice: Float
+  totalFiatPriceChange: Float
+  totalFiatPriceChangePercent: Float
+}
+
+type AccountResponse {
+  creatingAccount: Boolean
+  email: String!
+  encryptedSecretKey: String
+  encryptedSecretKeyNonce: String
+  encryptedSecretKeyTag: String
+  id: ID
+  identity: IdentityResponse
+  insertedAt: NaiveDateTime!
+  isDuplicate: Boolean
+  loginErrorCount: Int
+  options: Options
+  settings: Json
+  signaturePublicKey: Base16
+  twoFactor: Boolean
+  twoFactorErrorCount: String
+  verified: Boolean
+  wallets: [Wallet]
+}
+
+type AccountStake {
+  estimatedNextPayment: DateTime
+  id: ID
+  returnRate: Float
+  stakedTokens: CurrencyAmount
+  stakeId: String
+  start: Date
+  status: StakeStatus
+  stop: Date
+  totalDividends: CurrencyAmount
+}
+
+type AccountStakes {
+  stakes: [AccountStake]
+
+  """Total dividends received all time"""
+  totalDividends: CurrencyAmount
+
+  """Total active staked tokens"""
+  totalStakedTokens: CurrencyAmount
+}
+
+type AccountStakingDividend {
+  asset: Asset
+  assetName: String
+  dividend: CurrencyAmount
+  id: ID
+  paidAt: DateTime
+  usdDividend: CurrencyAmount
+}
+
+type AccountStakingDividends {
+  dividends: [AccountStakingDividend]
+  paidDaysThisMonth: Int
+  stakesCompleted: Int
+  stakesInProgress: Int
+  totalDividends: CurrencyAmount
+}
+
+type AccountStakingStatement {
+  activeStakes: Int
+  id: ID
+  month: Int
+  totalDividends: CurrencyAmount
+  year: Int
+}
+
+enum AccountTradeSide {
+  """The requesting account was the maker in this trade"""
+  MAKER
+
+  """The requesting account played no role in this trade"""
+  NONE
+
+  """The requesting account was the taker in this trade"""
+  TAKER
+}
+
+type AccountTransaction {
+  address: String
+  blockchain: String
+  blockDatetime: String
+  blockIndex: Int
+  confirmations: Confirmations
+  fiatValue: Float
+  status: String
+  txid: String
+  type: String
+  value: CurrencyAmount
+}
+
+"""Account transfer"""
+type AccountTransfer {
+  address: String!
+  id: String!
+  logicalTimestamp: DateTime!
+  quote: FiatRampQuote
+  type: TransferType!
+  value: CurrencyAmount!
+}
+
+type AccountVolume {
+  """Volumes for the current calendar day"""
+  daily: AccountVolumePeriod
+
+  """Estimated maker trade fee rate based on 30 day volume"""
+  makerFeeRate: Float
+
+  """Volumes for the last 30 calendar days - including today"""
+  monthly: AccountVolumePeriod
+
+  """Estimated taker trade fee rate based on 30 day volume"""
+  takerFeeRate: Float
+
+  """Volume for the last 365 calendar days - including today"""
+  yearly: AccountVolumePeriod
+}
+
+type AccountVolumePeriod {
+  """Spend limit for given period"""
+  accountLimit: CurrencyAmount
+
+  """Volume plus open order amounts"""
+  accountSpend: CurrencyAmount
+
+  """Volume from executed trades during period"""
+  accountVolume: CurrencyAmount
+
+  """Total volume on the exchange"""
+  exchangeVolume: CurrencyAmount
+}
+
+type Activity {
+  browser: String!
+  city: String
+  countryCode: String!
+  insertedAt: DateTime!
+  ipAddress: ip_address!
+  platform: String!
+  status: String!
+  type: String!
+}
+
+input AddMovementParams {
+  address: String!
+  nonce: Int!
+  quantity: CurrencyAmountParams!
+  resignedOrders: [ClientSignedMessage]
+  signedTransactionElements: [ClientSignedMessage]
+  targetAddress: String
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  transactionHash: Base16
+  transactionPayload: Base16
+  type: MovementType!
+}
+
+type AddressResponse {
+  city: String!
+  country: String!
+  fullAddress: String!
+  roadAddress: String!
+  state: String
+  zipCode: String!
+}
+
+type ApiLimit {
+  maxCallsPerTimePeriod: Int
+  requestName: String
+  timePeriod: String
+}
+
+type Asset {
+  blockchain: String
+  blockchainPrecision: Int
+  depositPrecision: Int
+  fiatPrice(fiatSymbol: String): Float
+  hash: Base16
+  name: String
+  symbol: CurrencySymbol
+  withdrawalPrecision: Int
+}
+
+type AssetNonces {
+  asset: CurrencySymbol!
+  nonces: [Int]
+}
+
+type BankDepositInstructions {
+  bic: String!
+  iban: String!
+  recipientName: String!
+  referenceCode: String!
+}
+
+type BankDepositReceived {
+  amount: CurrencyAmount!
+  receivedAt: Date!
+  senderIban: String!
+}
+
+"""
+Binary data represented in base 16, it should be lowercase and not have 0x prefix
+"""
+scalar Base16
+
+enum Blockchain {
+  BTC
+  ETH
+  NEO
+}
+
+enum BlockchainName {
+  """bitcoin."""
+  BTC
+
+  """ethereum"""
+  ETH
+
+  """neo"""
+  NEO
+}
+
+input BlockchainSignature {
+  blockchain: Blockchain!
+  nonceFrom: Int
+  nonceTo: Int
+  publicKey: Base16
+
+  """
+  The r part of the MPC signature only required when using MPC signatures, should be a base16 string
+  """
+  r: Base16
+  signature: Base16!
+}
+
+input CancelAllOrdersParams {
+  """If provided only cancel orders in given market. Otherwise cancel all."""
+  marketName: MarketName
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+type CanceledOrder {
+  orderId: ID
+}
+
+type CanceledOrders {
+  accepted: Boolean
+}
+
+input CancelOrderParams {
+  marketName: MarketName!
+  orderId: ID!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+type Candle {
+  aVolume: CurrencyAmount
+  bVolume: CurrencyAmount
+  closePrice: CurrencyPrice
+  highPrice: CurrencyPrice
+  interval: CandleInterval
+  intervalStartingAt: DateTime
+  lowPrice: CurrencyPrice
+  openPrice: CurrencyPrice
+}
+
+enum CandleInterval {
+  FIFTEEN_MINUTE
+  ONE_DAY
+  ONE_HOUR
+  ONE_MINUTE
+  ONE_MONTH
+  ONE_WEEK
+  SIX_HOUR
+  THIRTY_MINUTE
+  TWELVE_HOUR
+}
+
+type CandleRange {
+  candles: [Candle]
+  market: Market
+}
+
+input ClientSignedMessage {
+  blockchain: Blockchain
+  message: Base16
+  r: Base16
+  signature: Base16
+}
+
+type CompletePayloadSignatureResponse {
+  signature: Base16
+}
+
+enum CompletePayloadSignatureType {
+  BLOCKCHAIN
+  MOVEMENT
+}
+
+type Confirmations {
+  denominator: Int
+  numerator: Int
+}
+
+type Contact {
+  country: String
+  countryCode: String
+  email: String
+  firstName: String
+  id: String!
+  lastName: String
+  phone: String
+  wallets: [ContactWallet]
+}
+
+"""Contact input"""
+input ContactInput {
+  country: String
+  countryCode: String
+  email: String
+  firstName: String
+  lastName: String
+  phone: String
+}
+
+input ContactSearchFilters {
+  blockchain: BlockchainName
+  email: String
+  firstName: String
+  lastName: String
+  phone: String
+  textSearch: String
+  withWallets: Boolean
+}
+
+type ContactWallet {
+  address: String!
+  blockchain: BlockchainName!
+  id: String!
+  label: String
+}
+
+"""Contact Wallet input"""
+input ContactWalletInput {
+  address: String
+  blockchain: BlockchainName
+  contactId: String
+  label: String
+}
+
+type CorrectKeyProof {
+  sigmaVec: [Base16]!
+}
+
+enum CountryStatusEnum {
+  """Allowed country"""
+  ALLOWED
+
+  """Blocked country"""
+  BLOCKED
+
+  """Restricted country"""
+  RESTRICTED
+}
+
+type CreateTokenResponse {
+  token: String!
+}
+
+type CreateTwoFactorResponse {
+  twoFactorCode: String!
+  uriString: String!
+}
+
+"""
+A graphql representation of an amount of crypto or fiat currency.
+
+"""
+type CurrencyAmount {
+  amount: CurrencyNumber
+  currency: CurrencySymbol
+}
+
+"""
+A graphql representation of an amount of crypto or fiat currency for input.
+
+"""
+input CurrencyAmountParams {
+  amount: CurrencyNumber!
+  currency: CurrencySymbol!
+}
+
+"""
+The number portion of a currency as a String - must contain only numbers and a single period
+"""
+scalar CurrencyNumber
+
+"""
+A graphql representation of a price rate for crypto or fiat currency.
+
+"""
+type CurrencyPrice {
+  amount: CurrencyNumber
+  currencyA: CurrencySymbol
+  currencyB: CurrencySymbol
+}
+
+"""
+A graphql representation of a price rate for crypto or fiat currency input.
+
+"""
+input CurrencyPriceParams {
+  amount: CurrencyNumber!
+  currencyA: CurrencySymbol!
+  currencyB: CurrencySymbol!
+}
+
+"""Unit of a currency as a String"""
+scalar CurrencySymbol
+
+"""
+The `Date` scalar type represents a date. The Date appears in a JSON
+response as an ISO8601 formatted string, without a time component.
+"""
+scalar Date
+
+"""
+The `DateTime` scalar type represents a date and time in the UTC
+timezone. The DateTime appears in a JSON response as an ISO8601 formatted
+string, including UTC timezone ("Z"). The parsed date and time string will
+be converted to UTC if there is an offset.
+"""
+scalar DateTime
+
+type Device {
+  activity: Activity
+  id: ID
+  verified: Boolean
+}
+
+enum Direction {
+  BUY
+  SELL
+}
+
+type DiscourseAccountStatusResponse {
+  externalEmail: String
+  externalId: String
+  new: Boolean!
+  username: String
+}
+
+type DiscourseLoginResponse {
+  url: String!
+}
+
+"""Aggregated exchange metrics over a period"""
+type ExchangeAssetMetric {
+  asset: Asset
+  assetSymbol: CurrencySymbol
+  circulatingSupply: CurrencyAmount
+  closePriceUsd: CurrencyPrice
+  id: ID
+  period: MetricPeriod
+  priceChangePercent: Float
+  priceChangeUsd: CurrencyPrice
+  priceHistory: [PricePoint]
+  volume: CurrencyAmount
+  volumeUsd: CurrencyAmount
+}
+
+"""Aggregated exchange metrics over a period"""
+type ExchangeMarketMetric {
+  closePrice: CurrencyPrice
+  closePriceUsd: CurrencyPrice
+  highPrice: CurrencyPrice
+  highPriceUsd: CurrencyPrice
+  id: ID
+  lowPrice: CurrencyPrice
+  lowPriceUsd: CurrencyPrice
+  market: Market
+  marketName: MarketName
+  openPrice: CurrencyPrice
+  openPriceUsd: CurrencyPrice
+  period: MetricPeriod
+  priceChange: CurrencyPrice
+  priceChangePercent: Float
+  priceChangeUsd: CurrencyPrice
+  priceChangeUsdPercent: Float
+  priceHistory: [PricePoint]
+  volume: CurrencyAmount
+  volumeUsd: CurrencyAmount
+}
+
+type ExchangePublicKey {
+  publicKey: Base16
+  timestamp: Int
+}
+
+type ExchangeStatus {
+  apiLimits: [ApiLimit]
+  serverTimestamp: Int
+  status: String
+}
+
+"""Parameters to send feedback back to us"""
+input FeedbackDetails {
+  formId: String!
+  selectedOptionContent: String
+  selectedOptionId: String!
+}
+
+type FiatGatewayCredential {
+  id: String!
+  partnerAccountId: String!
+  partnerAccountKey: String!
+  partnerId: String!
+}
+
+"""Add credential input"""
+input FiatGatewayCredentialInput {
+  partnerAccountId: String!
+  partnerAccountKey: String!
+  partnerId: String!
+}
+
+type FiatPriceDetails {
+  price: CurrencyPrice
+  priceChange24hPct: Float
+}
+
+type FiatRampAsset {
+  blockchain: String!
+  blockchainPrecision: Int!
+  depositPrecision: Int!
+  fiatPrice(fiatSymbol: String): FiatPriceDetails
+  hash: Base16!
+  minPurchaseAmount(fiatSymbol: String): CurrencyAmount!
+  name: String!
+  symbol: CurrencySymbol!
+  withdrawalPrecision: Int!
+}
+
+type FiatRampLimits {
+  yearlyLimits: [FiatRampTierLimit!]!
+}
+
+type FiatRampQuote {
+  bankDepositInstructions: BankDepositInstructions!
+  bankDepositReceived: BankDepositReceived
+  base: CurrencyAmount!
+  confirmedAt: DateTime
+  confirmUntil: DateTime!
+  id: ID!
+  insertedAt: DateTime!
+  rate: CurrencyPrice!
+  reconfirmationReviewedAt: DateTime
+  reconfirmationReviewUntil: DateTime
+  reconfirmationSeenAt: DateTime
+  reconfirmedRate: CurrencyPrice
+  reconfirmedTarget: CurrencyAmount
+  reconfirmUntil: DateTime
+  status: FiatRampQuoteStatus!
+  target: CurrencyAmount!
+  transferUntil: DateTime
+  type: FiatRampQuoteType!
+}
+
+input FiatRampQuoteFilters {
+  currency: String
+  searchString: String
+  status: [FiatRampQuoteStatus]
+}
+
+enum FiatRampQuoteStatus {
+  """Order has been cancelled by the user."""
+  CANCELLED_BY_USER
+
+  """The quote has been settled"""
+  COMPLETED
+
+  """The quote is confirmed by the user and waiting bank transfer."""
+  CONFIRMED_WAITING_FOR_PAYMENT
+
+  """We did not receive or detect the user's bank deposit on time."""
+  FAILED_EXPIRED_ON_BANK_TRANSFER
+
+  """We did not receive the user's confirmation on time."""
+  FAILED_EXPIRED_ON_CONFIRMATION
+
+  """A refund is being processed."""
+  PENDING_REFUND
+
+  """Order is created and needs to be confirmed by the user."""
+  PENDING_USER_CONFIRMATION
+
+  """
+  After bank deposit approval, price has changed unfavorably for the user. A new price must be agreed upon.
+  """
+  PENDING_USER_RATE_RECONFIRMATION
+
+  """
+  The relevant bank deposit has been approved and is being processed for settlement.
+  """
+  PROCESSING
+
+  """A new price was not accepted in time. User will receive a refund"""
+  RECONFIRMATION_EXPIRED
+
+  """The new price has been rejected by user. User will receive a refund."""
+  RECONFIRMATION_REJECTED
+
+  """The user has received a refund for his bank deposit."""
+  REFUNDED
+}
+
+enum FiatRampQuoteType {
+  """A buying quote"""
+  BUY
+
+  """A selling quote"""
+  SELL
+}
+
+type FiatRampTierLimit {
+  key: NfrSupportedKycTier!
+  value: CurrencyAmount!
+}
+
+input GetAccountAddressParams {
+  currency: CurrencySymbol!
+  timestamp: Int
+}
+
+input GetAccountBalanceParams {
+  currency: CurrencySymbol!
+  timestamp: Int
+}
+
+input GetAccountOrderParams {
+  orderId: ID!
+  timestamp: Int
+}
+
+input GetAccountPortfolioParams {
+  fiatSymbol: String
+
+  """If set to false, all account balances will be returned"""
+  ignoreLowBalance: Boolean = false
+  period: PortfolioGraphPeriod
+  timestamp: Int
+}
+
+input GetAccountVolumesParams {
+  timestamp: Int
+}
+
+input GetAssetsNoncesParams {
+  assets: [CurrencySymbol]
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input GetDepositAddressParams {
+  currency: CurrencySymbol!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input GetMovementParams {
+  atomic: Boolean
+  movementId: String!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input GetOrdersForMovementParams {
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  unit: CurrencySymbol
+}
+
+type GetOrdersForMovementResponse {
+  assetNonce: Int
+  recycledOrders: [RecycledOrder]
+}
+
+input GetStatesParams {
+  """
+  Whether to force get_states to return a balance sync for all user assets
+  """
+  syncAll: Boolean
+
+  """When the request was generated - integer timestamp in seconds"""
+  timestamp: Int!
+}
+
+type GetStatesResponse {
+  recycledOrders: [RecycledOrder]
+  states: [State]
+}
+
+type GraphPoint {
+  time: DateTime
+  value: Float
+}
+
+type IdentityResponse {
+  accountId: ID
+
+  """ISO 3166 alpha 2 code"""
+  countryCode: String
+  countryMatch: Boolean
+  countryStatus: CountryStatusEnum
+  fullName: String
+  id: ID
+  occupation: String
+  sourceOfFunds: String
+  stateCode: String
+  verificationLevel: VerificationLevelEnum
+}
+
+input InputPresig {
+  amount: Int!
+  r: Base16!
+  signature: Base16!
+}
+
+input InputServerSignedState {
+  blockchain: Blockchain!
+  message: Base16!
+}
+
+"""The `ip address` scalar type represents an ipv4 or ipv6 address."""
+scalar ip_address
+
+"""
+The `Json` scalar type represents arbitrary json string data, represented as UTF-8
+character sequences. The Json type is most often used to represent a free-form
+human-readable json string.
+"""
+scalar Json
+
+enum KycErrorDetailsEnum {
+  BAD_QUALITY
+  BIRTHDATE_INVALID_ON_ID
+  BLACK_AND_WHITE
+  BLURRED
+  CAMERA_BLACK_WHITE
+  DAMAGED_DOCUMENT
+  DENIED_FRAUD
+  DIFFERENT_PERSONS_SHOWN
+  DIGITAL_COPY
+  DUPLICATE_ACCOUNT
+  FACE_NOT_FULLY_VISIBLE
+  FOUND_SCREENING_RESULTS
+  HIDDEN_PART_DOCUMENT
+  IDENTITY_VERIFICATION_TOO_MANY_ATTEMPTS
+  IP_ADDRESS_AND_ADDRESS_MISMATCH
+  IP_ADDRESS_IS_CRAWLER
+  IP_ADDRESS_IS_DANGEROUS
+  IP_ADDRESS_IS_PROXY
+  IP_ADDRESS_IS_TOR
+  LIVENESS_FAILED
+  LOCATION_BANNED
+  MANUAL_REJECTION
+  MISSING_BACK
+  MISSING_PART_DOCUMENT
+  MISSING_SIGNATURE
+  MULTIPLE_PEOPLE
+  NO_DOCUMENT
+  NO_FACE_PRESENT
+  NO_MATCH
+  NONE
+  NOT_READABLE_DOCUMENT
+  PHOTOCOPY_BLACK_WHITE
+  PHOTOCOPY_COLOR
+  SAMPLE_DOCUMENT
+  UNDERAGE
+  UNKNOWN_ERROR
+  WRONG_DOCUMENT_PAGE
+}
+
+type KycGetRedirectUrlResponse {
+  redirectUrl: String!
+}
+
+type KycIdentityResponse {
+  address: String!
+  birthdate: Date!
+  countryCode: String!
+  fullName: String!
+}
+
+enum KycStatusEnum {
+  """Age has been approved."""
+  APPROVED_AGE_VERIFICATION
+
+  """System is processing. Location has been approved"""
+  APPROVED_LOCATION_VERIFICATION
+
+  """
+  Sanction screening was successful you can proceed with identity verification.
+  """
+  APPROVED_SANCTION_SCREENING
+
+  """Banned from trading"""
+  BANNED
+
+  """The ID verification failed, check details."""
+  FAILED_IDENTITY_VERIFICATION
+
+  """The location verification failed, check details."""
+  FAILED_LOCATION_VERIFICATION
+
+  """Approved no limit"""
+  NO_LIMIT
+
+  """Rejected please contact support."""
+  REJECTED
+
+  """System is processing. Age has been approved"""
+  SUBMITTED_AGE_LOCATION
+
+  """First step, user have to submit their name and address."""
+  TIER_0
+
+  """Approved tier one"""
+  TIER_1
+
+  """Approved tier two"""
+  TIER_2
+
+  """Approved tier three"""
+  TIER_3
+
+  """System is processing. ID is being processed."""
+  UPLOADED_IDENTITY_VERIFICATION
+}
+
+type KycStatusResponse {
+  """
+   When status is failed_identity_verification or failed_document_submit, details
+  will contain the reason and should be used to inform the user.
+  
+  """
+  details: KycErrorDetailsEnum
+  status: KycStatusEnum!
+}
+
+type KycSubmitScanReferenceResponse {
+  scanReference: String!
+}
+
+input ListAccountBalancesParams {
+  """If set to false, all account balances will be returned"""
+  ignoreLowBalance: Boolean!
+  timestamp: Int
+}
+
+input ListAccountOrdersParams {
+  before: PaginationCursor
+  buyOrSell: OrderBuyOrSell
+
+  """Specify the max number of elements to return"""
+  limit: Int = 50
+  marketName: MarketName
+  rangeStart: DateTime
+  rangeStop: DateTime
+  status: [OrderStatus]
+  timestamp: Int
+  type: [OrderType]
+}
+
+input ListAccountStakesParams {
+  timestamp: Int
+}
+
+input ListAccountStakingDividendsParams {
+  month: Int!
+  timestamp: Int
+  year: Int!
+}
+
+input ListAccountStakingStatementsParams {
+  timestamp: Int
+}
+
+input ListAccountTradesParams {
+  before: PaginationCursor
+
+  """Specify the max number of elements to return"""
+  limit: Int = 50
+  marketName: MarketName
+  rangeStart: DateTime
+  rangeStop: DateTime
+  timestamp: Int
+}
+
+input ListAccountTransactionsParams {
+  cursor: PaginationCursor
+  fiatSymbol: String
+  limit: Int
+  timestamp: Int
+}
+
+type ListAccountTransactionsResponse {
+  nextCursor: PaginationCursor
+  transactions: [AccountTransaction]
+}
+
+input ListMovementsParams {
+  atomic: Boolean
+  currency: CurrencySymbol
+  status: MovementStatus
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  type: MovementType
+}
+
+type ListTransactionsAndTransfersResponse {
+  nextCursor: PaginationCursor
+  transactionsAndTransfers: [TransactionsAndTransfers]
+}
+
+type LocationResponse {
+  countryCode: String
+  regionCode: String
+}
+
+"""A market defined by a trading pair - eg Neo/Eth"""
+type Market {
+  aAsset: Asset
+  aUnit: CurrencySymbol
+  aUnitPrecision: Int
+  bAsset: Asset
+  bUnit: CurrencySymbol
+  bUnitPrecision: Int
+  id: ID
+  minTickSize: String
+  minTradeIncrement: String
+  minTradeIncrementB: String
+  minTradeSize: String
+  minTradeSizeB: String
+  name: MarketName
+  priceGranularity: Int
+  primary: Boolean
+  status: MarketStatus
+  tradeBlocked: Boolean
+}
+
+"""
+A market name, represented by two currency units separated by an underscore.
+
+For example:
+  * neo_eth
+  * eth_neo
+  * btc_eth
+  * eth_btc
+
+
+"""
+scalar MarketName
+
+enum MarketStatus {
+  PAUSED
+  RUNNING
+  STOPPED
+}
+
+enum MetricPeriod {
+  DAY
+  HOUR
+  MONTH
+  WEEK
+}
+
+type Movement {
+  address: String
+  blockchain: Blockchain
+  confirmations: Int
+  currency: CurrencySymbol
+  fee: String
+  id: String
+  nonce: Int
+  publicKey: Base16
+  quantity: CurrencyAmount
+  receivedAt: DateTime
+  signature: Base16
+  status: MovementStatus
+  targetAddress: String
+  transactionHash: Base16
+  transactionPayload: Base16
+  type: MovementType
+}
+
+enum MovementStatus {
+  COMPLETED
+  CREATED
+  FAILED
+  PENDING
+}
+
+enum MovementType {
+  DEPOSIT
+  TRANSFER
+  WITHDRAWAL
+}
+
+"""
+The `Naive DateTime` scalar type represents a naive date and time without
+timezone. The DateTime appears in a JSON response as an ISO8601 formatted
+string.
+"""
+scalar NaiveDateTime
+
+input NewAccountTradesParams {
+  marketName: MarketName
+  timestamp: Int
+}
+
+enum NfrSupportedKycTier {
+  """Approved no limit"""
+  NO_LIMIT
+
+  """Approved tier one"""
+  TIER_1
+
+  """Approved tier two"""
+  TIER_2
+
+  """Approved tier three"""
+  TIER_3
+}
+
+type Options {
+  allowTwelveWordsReset: Boolean
+  webKycEnabled: Boolean
+}
+
+type OptionsType {
+  name: String
+}
+
+type Order {
+  """The amount the order was placed for"""
+  amount: CurrencyAmount
+
+  """The amount executed on the order book"""
+  amountExecuted: CurrencyAmount
+
+  """The amount remaining to buy/sell"""
+  amountRemaining: CurrencyAmount
+
+  """The average execution price for the order"""
+  avgExecutedPrice: CurrencyPrice
+  buyOrSell: OrderBuyOrSell
+  cancelAt: DateTime
+  cancellationPolicy: OrderCancellationPolicy
+  cancellationReason: OrderCancellationReason
+  id: ID
+  limitPrice: CurrencyPrice
+  market: Market
+
+  """The opposite amount executed on the order book, based on average price"""
+  oppositeAmountExecuted: CurrencyAmount
+  placedAt: DateTime
+  status: OrderStatus
+  stopPrice: CurrencyPrice
+  trades: [Trade]
+  type: OrderType
+}
+
+type OrderBook {
+  asks: [OrderBookRecord]
+  bids: [OrderBookRecord]
+  lastUpdateId: Int
+  market: Market
+  updateId: Int
+}
+
+type OrderBookRecord {
+  amount: CurrencyAmount
+  myAmount: CurrencyAmount
+  price: CurrencyPrice
+  status: OrderBookRecordStatus
+}
+
+enum OrderBookRecordStatus {
+  DELETED
+  UPDATED
+}
+
+enum OrderBuyOrSell {
+  BUY
+  SELL
+}
+
+"""Specification for how long order should remain on the order book"""
+enum OrderCancellationPolicy {
+  """Order will ether fill completely or immediately cancel"""
+  FILL_OR_KILL
+
+  """Order is good until manually cancelled"""
+  GOOD_TIL_CANCELLED
+
+  """Order will be cancelled automatically at the `cancel_at' time"""
+  GOOD_TIL_TIME
+
+  """
+  Order will partially fill as much as possible immediately before cancelling
+  """
+  IMMEDIATE_OR_CANCEL
+}
+
+"""Specification of why an order was cancelled"""
+enum OrderCancellationReason {
+  """Order was canceled by admin"""
+  ADMIN_CANCELED
+
+  """Order has expired"""
+  EXPIRATION
+
+  """
+  Order has invalid amounts/precisions for the current state of the orderbook
+  """
+  INVALID_FOR_ORDERBOOK_STATE
+
+  """Order was cancelled because there was no fills"""
+  NO_FILL
+
+  """Order was canceled by the user"""
+  USER
+}
+
+type OrderHistory {
+  next: PaginationCursor
+  orders: [Order]
+}
+
+type OrderPlaced {
+  id: ID
+  ordersTillSignState: Int
+  status: OrderStatus
+}
+
+enum OrderStatus {
+  CANCELLED
+  FILLED
+  OPEN
+  PENDING
+}
+
+enum OrderType {
+  LIMIT
+  MARKET
+  STOP_LIMIT
+  STOP_MARKET
+}
+
+type PaginatedActivity {
+  entries: [Activity]
+  metadata: PaginationMetadata!
+}
+
+type PaginatedContacts {
+  entries: [Contact]
+  metadata: PaginationMetadata!
+}
+
+type PaginatedDevices {
+  entries: [Device]
+  metadata: PaginationMetadata!
+}
+
+type PaginatedFiatRampQuotes {
+  entries: [FiatRampQuote!]!
+  metadata: PaginationMetadata!
+}
+
+"""
+Opaque pagination cursor. Value is returned as `next` value in previous response.
+"""
+scalar PaginationCursor
+
+type PaginationMetadata {
+  pageNumber: Int
+  pageSize: Int
+  totalEntries: Int
+  totalPages: Int
+}
+
+input PaginationOptions {
+  page: Int
+  pageSize: Int
+}
+
+type PaillierPk {
+  n: [Base16]!
+}
+
+type PaillierProof {
+  correctKeyProof: CorrectKeyProof!
+  paillierPk: PaillierPk!
+}
+
+input PlaceLimitOrderParams {
+  """If false the order will straight to the order book as a maker"""
+  allowTaker: Boolean!
+
+  """Quantity of quote currency to trade in order"""
+  amount: CurrencyAmountParams!
+
+  """Contains 1 signature or 2 signature for cross blockchain order"""
+  blockchainSignatures: [BlockchainSignature]!
+  buyOrSell: OrderBuyOrSell!
+
+  """Cancellation time for the `GOOD_TIL_TIME` cancellation policy."""
+  cancelAt: DateTime
+  cancellationPolicy: OrderCancellationPolicy!
+
+  """
+  Price to submit order at. Units should be flipped -- in market `A_B`,
+  `currencyA` should be `B` and `currencyB` should be `A`.
+  """
+  limitPrice: CurrencyPriceParams!
+  marketName: MarketName!
+  nonceFrom: Int!
+  nonceOrder: Int!
+  nonceTo: Int!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input PlaceMarketOrderParams {
+  """Quantity of quote currency to trade in order"""
+  amount: CurrencyAmountParams!
+
+  """Contains 1 signature or 2 signature for cross blockchain order"""
+  blockchainSignatures: [BlockchainSignature]!
+  buyOrSell: OrderBuyOrSell!
+  marketName: MarketName!
+  nonceFrom: Int
+  nonceOrder: Int!
+  nonceTo: Int
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input PlaceStopLimitOrderParams {
+  """If false the order will straight to the order book as a maker"""
+  allowTaker: Boolean!
+
+  """Quantity of quote currency to trade in order"""
+  amount: CurrencyAmountParams!
+
+  """Contains 1 signature or 2 signature for cross blockchain order"""
+  blockchainSignatures: [BlockchainSignature]!
+  buyOrSell: OrderBuyOrSell!
+
+  """Cancellation time for the `GOOD_TIL_TIME` cancellation policy."""
+  cancelAt: DateTime
+  cancellationPolicy: OrderCancellationPolicy!
+
+  """
+  Price to submit order at. Units should be flipped -- in market `A_B`,
+  `currencyA` should be `B` and `currencyB` should be `A`.
+  """
+  limitPrice: CurrencyPriceParams!
+  marketName: MarketName!
+  nonceFrom: Int!
+  nonceOrder: Int!
+  nonceTo: Int!
+
+  """
+  Price at which to trigger stop-loss or stop-limit type orders. Units should be
+  flipped -- in market `A_B`, `currencyA` should be `B` and `currencyB` should be `A`.
+  """
+  stopPrice: CurrencyPriceParams!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+input PlaceStopMarketOrderParams {
+  """Quantity of quote currency to trade in order"""
+  amount: CurrencyAmountParams!
+
+  """Contains 1 signature or 2 signature for cross blockchain order"""
+  blockchainSignatures: [BlockchainSignature]!
+  buyOrSell: OrderBuyOrSell!
+  marketName: MarketName!
+  nonceFrom: Int!
+  nonceOrder: Int!
+  nonceTo: Int!
+
+  """Price at which to trigger stop-loss or stop-limit type orders."""
+  stopPrice: CurrencyPriceParams!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+enum PortfolioGraphPeriod {
+  DAY
+  HOUR
+  MONTH
+  SEMESTER
+  WEEK
+}
+
+input PrepareMovementParams {
+  address: String!
+
+  """
+  (default: false)
+  If true and quantity exceeds the largest possible value, the quantity is reduced to the largest possible value.
+  The reduced quantity is returned.
+  
+  """
+  capQuantityToMaximum: Boolean = false
+  quantity: CurrencyAmountParams!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  type: MovementType!
+}
+
+type PrepareMovementResponse {
+  fees: CurrencyAmount!
+  nonce: Int
+  quantity: CurrencyAmount!
+  recycledOrders: [RecycledOrder]
+  transactionElements: [TransactionElement]
+}
+
+type PricePoint {
+  at: DateTime
+  price: CurrencyPrice
+}
+
+type PushableDevice {
+  accountId: String
+  disabledAt: String
+  fcmToken: String
+  platform: String
+}
+
+"""PushableDevice input"""
+input PushableDeviceInput {
+  fcmToken: String
+  platform: String
+}
+
+type RecycledOrder {
+  blockchain: Blockchain
+  message: Base16
+}
+
+type ReferralCode {
+  code: String!
+}
+
+type ReferralRecipientsTicket {
+  activated: Int!
+  fullName: String!
+  pending: Int!
+}
+
+type RestrictedJurisdictionResponse {
+  banned: [String]!
+  restricted: [String]!
+}
+
+enum RestrictionEnum {
+  BANNED
+  EXCHANGE
+  STAKING
+}
+
+type RootMutationType {
+  """add fiat gateway credentials"""
+  addFiatGatewayCredentials(credentials: FiatGatewayCredentialInput!): FiatGatewayCredential
+
+  """
+  Wallets must be a list of 2-3 objects (one for Ethereum, one for Neo, and
+  possibly one for Bitcoin) that include three fields: blockchain, public_key, and address.
+  """
+  addKeysWithWallets(
+    encryptedSecretKey: String!
+    encryptedSecretKeyNonce: String!
+    encryptedSecretKeyTag: String!
+
+    """Add keys with wallets."""
+    signaturePublicKey: Base16!
+    wallets: [WalletInput]
+  ): AccountResponse
+
+  """Add movement"""
+  addMovement(payload: AddMovementParams!, signature: Signature!): Movement
+  addWhitelistedAddress(whitelistedAddress: WhitelistedAddressInput!): WhitelistedAddress
+
+  """Cancel all orders"""
+  cancelAllOrders(payload: CancelAllOrdersParams!, signature: Signature!): CanceledOrders
+
+  """Cancel an order"""
+  cancelOrder(payload: CancelOrderParams!, signature: Signature!): CanceledOrder
+
+  """
+  Completes the account creation process; indicating to the frontend exchange
+  client to push the user to the dashboard upon logging in
+  """
+  completeAccount: AccountResponse
+  completeBtcPayloadSignature(inputPresigs: [InputPresig]!, payload: Base16!, publicKey: Base16!): [Base16]
+  completePayloadSignature(blockchain: Blockchain!, payload: Base16!, publicKey: Base16!, r: Base16!, signature: Base16!, type: CompletePayloadSignatureType!): CompletePayloadSignatureResponse
+  createApiKey(name: String!): CreateTokenResponse
+
+  """Create a contact"""
+  createContact(params: ContactInput!): Contact
+
+  """Create a contact wallet"""
+  createContactWallet(params: ContactWalletInput!): ContactWallet
+
+  """
+  Creates a new two factor code for the user who will still need to verify they set this up correctly.
+  """
+  createTwoFactor: CreateTwoFactorResponse
+
+  """Delete a contact"""
+  deleteContact(id: String!): SuccessMessage
+
+  """Delete a contact wallet"""
+  deleteContactWallet(id: String!): SuccessMessage
+
+  """delete tokens."""
+  deleteToken(id: String!): Token
+  deleteWhitelistedAddress(id: ID!): SuccessMessage
+  dhFillPool(blockchain: Blockchain!, dhPublics: [Base16]!): [Base16]
+
+  """Disable a pushable_device"""
+  disablePushableDevice(fcmToken: String!): PushableDevice
+  disableTwoFactor(password: String!, twoFa: String!): AccountResponse
+
+  """Login with discourse sso"""
+  discourseLogin(sig: String!, sso: String!, username: String): DiscourseLoginResponse
+
+  """Migrate discourse account"""
+  discourseMigration(sig: String!, sso: String!): DiscourseLoginResponse
+
+  """Enable a new two factor code the user has already created."""
+  enableTwoFactor(twoFa: String!): AccountResponse
+
+  """Cancel a quote."""
+  fiatRampCancelQuote(id: ID!): FiatRampQuote
+
+  """Accept an initial fiat ramp quote price."""
+  fiatRampConfirmQuote(id: ID!): FiatRampQuote
+
+  """Create a quote based on the base currency amount (eg. EUR)"""
+  fiatRampCreateBaseBuyQuote(base: CurrencyAmountParams!, targetAsset: CurrencySymbol!): FiatRampQuote
+
+  """Create a quote based on the target currency amount (eg. in BTC)"""
+  fiatRampCreateTargetBuyQuote(baseAsset: CurrencySymbol!, target: CurrencyAmountParams!): FiatRampQuote
+
+  """Accept a recalculated price for a fiat ramp quote."""
+  fiatRampReconfirmQuote(id: ID!): FiatRampQuote
+
+  """Initiate quote review"""
+  fiatRampStartQuoteRecalculation(id: ID!): FiatRampQuote
+
+  """Get states"""
+  getStates(payload: GetStatesParams!, signature: Signature!): GetStatesResponse @deprecated(reason: "use sign_states instead")
+
+  """create token for KYC mobile usage."""
+  kycCreateToken: CreateTokenResponse
+
+  """redirect url is used in an the iframe/new tab"""
+  kycGetRedirectUrl: KycGetRedirectUrlResponse
+
+  """submit jumio scan reference"""
+  kycSubmitScanReference(scanReference: String!): KycSubmitScanReferenceResponse
+
+  """update identity informations."""
+  kycUpdateIdentity(
+    address: String!
+
+    """ISO8601"""
+    birthdate: Date!
+    fullName: String!
+  ): KycIdentityResponse
+
+  """
+  Allows a user to reset their password if they have access to their email
+  """
+  lostPassword(email: String!): SuccessMessage
+
+  """Place a new limit order"""
+  placeLimitOrder(payload: PlaceLimitOrderParams!, signature: Signature!): OrderPlaced
+
+  """Place a new market order"""
+  placeMarketOrder(payload: PlaceMarketOrderParams!, signature: Signature!): OrderPlaced
+
+  """Place a new stop limit order"""
+  placeStopLimitOrder(payload: PlaceStopLimitOrderParams!, signature: Signature!): OrderPlaced
+
+  """Place a new stop market order"""
+  placeStopMarketOrder(payload: PlaceStopMarketOrderParams!, signature: Signature!): OrderPlaced
+
+  """Prepare movement"""
+  prepareMovement(payload: PrepareMovementParams!, signature: Signature!): PrepareMovementResponse
+
+  """
+  Will refresh for another 15 minutes, any call is refreshing the token and this
+  is only needed if the account is not using the api.
+  """
+  refreshToken: SuccessMessage @deprecated(reason: "Any request is refreshing the token this is not needed")
+
+  """Register a pushable_device"""
+  registerPushableDevice(params: PushableDeviceInput!): PushableDevice
+
+  """Resends a user their registration email if they lose their original"""
+  resendVerificationEmail(email: String!, recaptcha: String): SuccessMessage
+
+  """device device_mutations"""
+  revokeDevice(id: ID): SuccessMessage
+
+  """Send a raw transaction"""
+  sendBlockchainRawTransaction(payload: SendBlockchainRawTransactionParams!, signature: Signature!): Base16
+
+  """Send user feedback to tracking service."""
+  sendFeedback(feedbackDetails: FeedbackDetails!): Boolean
+
+  """
+    Returns the user account details along with encrypted key data and a server
+  encryption key to more securely store private keys locally in an encrypted format.
+  
+    two fa can be passed with the email and password or in a second call alone
+  after successfully verifying email and password.
+  
+  """
+  signIn(duration: TokenDuration = SHORT, email: String, password: String, twoFa: String): SignInResponse
+
+  """Removes an account session immediately"""
+  signOut: Boolean
+
+  """Sign states"""
+  signStates(payload: SignStatesParams!, signature: Signature!): SignStatesResponse
+
+  """sign up account"""
+  signUp(account: SignUpInput, analytics: SignupAnalytics, recaptcha: String, referralCode: String): SuccessMessage
+
+  """Sync states"""
+  syncStates(payload: SyncStatesParams!, signature: Signature!): SyncStatesResponse
+
+  """
+  Allows a user to input their two factor code if they have a valid two_factor_login token in the cookie.
+  """
+  twoFactorLogin(twoFa: String!): SignInResponse @deprecated(reason: "Use SignIn")
+  updateAccountSettings(settings: Json!): AccountResponse
+
+  """Update a contact"""
+  updateContact(id: String, params: ContactInput!): Contact
+
+  """Update a contact wallet"""
+  updateContactWallet(id: String, params: ContactWalletInput!): ContactWallet
+
+  """
+    Changes a user email for the CAS. Requires confirmation from the original email and then the new email after that.
+    Each confirmation step is only valid for 30 minutes. You can pass null to
+  maybe_two_factor_code if the user doesn't have 2FA enabled.
+  
+  """
+  updateEmail(email: String!, twoFa: String): SuccessMessage
+  updateIdentityAddCountryAndState(
+    """ISO 3166 alpha 2 code"""
+    countryCode: String!
+    stateCode: String
+  ): IdentityResponse
+
+  """Update a movement"""
+  updateMovement(payload: UpdateMovementParams!, signature: Signature!): Movement
+
+  """
+  Changes a user password for the CAS. If a user has wallets, they must also
+  send their new encrypted key, tag, and nonce for the server to store as well.
+  In addition a 2FA code is needed if required, but you can pass null here if the user doesn't have 2FA enabled
+  
+  """
+  updatePassword(
+    encryptedSecretKey: String
+    encryptedSecretKeyNonce: String
+    encryptedSecretKeyTag: String
+    newPassword: String!
+    oldPassword: String!
+
+    """Update account password."""
+    twoFa: String
+  ): AccountResponse
+  updateSourceOfFundsOrOccupation(occupation: String, sourceOfFunds: String): IdentityResponse
+
+  """
+    Can be used to replace a wallet blockchain or create a new wallet for a blockchain not created on an account.
+  
+  """
+  updateWallet(wallet: WalletInput!): Wallet
+  verificationSkip(email: String): String
+
+  """
+  A generic abstraction for Nash email verification serving multiple purposes.
+  When resetting the password, it can be done in two different ways.
+  - Sending password only, that will remove keys and wallets from the account. Seed can be added back after login.
+  - Sending password and keys without wallets, that will make sure you are using
+  the same `signature_public_key` it has be used to make sure the user is
+  resetting the account with the same seed.
+  
+  """
+  verifyHash(email: String!, options: VerificationOptions, verificationHash: UUID4!): SuccessMessage
+}
+
+type RootQueryType {
+  canResetTwelveWords(email: String!, verificationHash: UUID4!): Boolean
+  discourseAccountStatus: DiscourseAccountStatusResponse
+
+  """A fiat ramp quote"""
+  fiatRampQuote(id: String!): FiatRampQuote
+
+  """A list of paginated fiat ramp quotes"""
+  fiatRampQuotes(filters: FiatRampQuoteFilters, paginationOptions: PaginationOptions!, sortingOptions: SortingOptions): PaginatedFiatRampQuotes
+
+  """Get all fiat ramp available assets with prices and changes"""
+  fiatRampRatesAndAssets(fiatSymbol: String): [FiatRampAsset]
+
+  """Get the users' limits for the fiat ramp"""
+  fiatRampUserLimit: UserLimit!
+
+  """get account."""
+  getAccount: AccountResponse
+
+  """Get account address for a given currency"""
+  getAccountAddress(payload: GetAccountAddressParams!, signature: Signature): AccountAddress
+
+  """Get account balance for a given currency"""
+  getAccountBalance(payload: GetAccountBalanceParams!, signature: Signature): AccountBalance
+
+  """Get a specific order"""
+  getAccountOrder(payload: GetAccountOrderParams!, signature: Signature): Order
+
+  """Get account portfolio"""
+  getAccountPortfolio(payload: GetAccountPortfolioParams!, signature: Signature): AccountPortfolio
+
+  """Get account volumes in USD"""
+  getAccountVolumes(payload: GetAccountVolumesParams!, signature: Signature): AccountVolume
+
+  """Return a specific asset by asset symbol or name"""
+  getAsset(assetIdentifier: String!): Asset
+
+  """Get asset nonces"""
+  getAssetsNonces(payload: GetAssetsNoncesParams!, signature: Signature!): [AssetNonces]
+
+  """Get deposit address for a given currency"""
+  getDepositAddress(payload: GetDepositAddressParams!, signature: Signature): AccountDepositAddress @deprecated(reason: "use get_account_address instead")
+
+  """Get device_queries"""
+  getDevices(paginationOptions: PaginationOptions): PaginatedDevices
+
+  """Get metrics for an asset, can specify a period or get all periods"""
+  getExchangeAssetMetrics(assetSymbol: String!, period: MetricPeriod): [ExchangeAssetMetric]
+
+  """Get metrics for a market, can specify a period or get all periods"""
+  getExchangeMarketMetrics(marketName: String!, period: MetricPeriod): [ExchangeMarketMetric]
+
+  """Get a matching engine public key"""
+  getExchangePublicKey: ExchangePublicKey
+
+  """Return the exchange status, including server time and API rate limits"""
+  getExchangeStatus: ExchangeStatus
+
+  """get a list of fiat gateway credentials."""
+  getFiatGatewayCredentials: [FiatGatewayCredential]
+  getIdentity: IdentityResponse
+
+  """Get details of one market"""
+  getMarket(marketName: MarketName!): Market
+
+  """Get a currency movement"""
+  getMovement(payload: GetMovementParams!, signature: Signature!): Movement
+
+  """Get order book for a given market"""
+  getOrderBook(marketName: MarketName!): OrderBook
+  getOrdersForMovement(payload: GetOrdersForMovementParams!, signature: Signature!): GetOrdersForMovementResponse @deprecated(reason: "use prepare_movement instead")
+  getPaillierProof: PaillierProof
+
+  """
+  Get the referrals codes for a user, most of the time it will be one but it can be multiple
+  """
+  getReferralCodes: [ReferralCode]
+
+  """
+  Get the list of referral_recipients and the tickets count. It contains the
+  tickets directly owned and the one from gran parent relationship.
+  """
+  getReferralRecipientsTickets: [ReferralRecipientsTicket]
+
+  """Get key for encrypting and decrypting secret key client-side"""
+  getServerEncryptionKey(password: String!, twoFa: String): String
+
+  """Return ticker details for a market"""
+  getTicker(marketName: MarketName!): Ticker
+
+  """Get activated and pending tickets count."""
+  getTicketsCount: TicketsCount
+  getToken(id: String!): Token
+
+  """
+    Get the kyc status of the current account.
+  
+  
+  """
+  kycStatus: KycStatusResponse
+
+  """Get all account balances"""
+  listAccountBalances(payload: ListAccountBalancesParams!, signature: Signature): [AccountBalance]
+
+  """List all your orders, optionally filtered by market and/or status"""
+  listAccountOrders(payload: ListAccountOrdersParams!, signature: Signature): OrderHistory
+
+  """Get account stakes"""
+  listAccountStakes(payload: ListAccountStakesParams!, signature: Signature): AccountStakes
+
+  """Get account staking dividends for a given year/month"""
+  listAccountStakingDividends(payload: ListAccountStakingDividendsParams!, signature: Signature): AccountStakingDividends
+
+  """Get account staking statements"""
+  listAccountStakingStatements(payload: ListAccountStakingStatementsParams!, signature: Signature): [AccountStakingStatement]
+
+  """List all your trades optionally filtered by market"""
+  listAccountTrades(payload: ListAccountTradesParams!, signature: Signature): TradeHistory
+
+  """List transactions"""
+  listAccountTransactions(payload: ListAccountTransactionsParams!, signature: Signature): ListAccountTransactionsResponse
+
+  """list activity"""
+  listActivity(paginationOptions: PaginationOptions): PaginatedActivity
+
+  """Return a list of assets"""
+  listAssets: [Asset]
+
+  """List candle records for a market by given interval aggregation."""
+  listCandles(
+    """Pagination Timestamp - returns candles starting before this datetime"""
+    before: DateTime
+    interval: CandleInterval = ONE_MINUTE
+
+    """Specify the max number of elements to return"""
+    limit: Int = 25
+    marketName: MarketName!
+  ): CandleRange
+
+  """List aggregated metrics for each asset for given period"""
+  listExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric]
+
+  """List aggregated metrics for each market for given period"""
+  listExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric]
+
+  """List all markets (currency pair)"""
+  listMarkets: [Market]
+
+  """List all movement for a given a type/status/currency"""
+  listMovements(payload: ListMovementsParams!, signature: Signature!): [Movement]
+
+  """List orders - public"""
+  listOrders(
+    before: PaginationCursor
+    buyOrSell: OrderBuyOrSell
+
+    """Specify the max number of elements to return"""
+    limit: Int = 50
+    marketName: MarketName
+    rangeStart: DateTime
+    rangeStop: DateTime
+    status: [OrderStatus]
+    type: [OrderType]
+  ): OrderHistory
+
+  """Return ticker details for all markets"""
+  listTickers: [Ticker]
+
+  """list of tokens."""
+  listTokens(type: TokenTypes): [Token]
+
+  """List trades for a given market"""
+  listTrades(
+    before: PaginationCursor
+
+    """Specify the max number of elements to return"""
+    limit: Int = 50
+    marketName: MarketName
+  ): TradeHistory
+
+  """List transactions and transfers"""
+  listTransactionsAndTransfers(payload: ListAccountTransactionsParams!): ListTransactionsAndTransfersResponse
+
+  """
+    Get the country code and state code from geoip
+  
+  """
+  location: LocationResponse
+
+  """
+    Uses country code and state to return restrictions associated with a location.
+    If location is not passed, it will use geo ip as location.
+    Us requires a state code parameter
+    Returns a list of two lists, for tier 0 and tier 1 and above restrictions
+  
+  """
+  locationRestrictions(countryCode: String, stateCode: String): [[RestrictionEnum]]
+
+  """Get the nash fiat ramps' limits"""
+  nashFiatRampLimits: FiatRampLimits!
+  restrictedJurisdiction: RestrictedJurisdictionResponse
+
+  """Get a list of Contacts for an account"""
+  searchContacts(filters: ContactSearchFilters!, paginationOptions: PaginationOptions): PaginatedContacts
+
+  """
+    Returns if the server trust the IP
+  
+  """
+  trustedIp: Boolean
+
+  """validate address"""
+  validateAddress(freeFormAddress: String!): ValidateAddressResponse
+
+  """validate referral code."""
+  validReferralCode(referralCode: String!): Boolean
+}
+
+type RootSubscriptionType {
+  """subscribe to status updated for the KYC status."""
+  kycStatusUpdate: KycStatusResponse
+
+  """Get new trades as they are executed"""
+  newAccountTrades(market: String, payload: NewAccountTradesParams!, signature: Signature): [Trade]
+
+  """Get new trades as they are executed"""
+  newTrades(marketName: MarketName!): [Trade]
+  updatedAccountOrders(market: String, payload: UpdatedAccountOrdersParams!, signature: Signature): [Order]
+
+  """Get new and updated candles for a market by interval"""
+  updatedCandles(interval: CandleInterval!, marketName: MarketName!): [Candle]
+
+  """Get new and updated exchange market metrics for a market by period"""
+  updatedExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric]
+
+  """Get new and updated exchange market metrics for a market by period"""
+  updatedExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric]
+
+  """Get updated order book data"""
+  updatedOrderBook(marketName: MarketName!): OrderBook
+
+  """Get new updates to a specific market ticker"""
+  updatedTicker(marketName: MarketName!): Ticker
+
+  """Get new updates to all market tickers"""
+  updatedTickers: [Ticker]
+}
+
+input SendBlockchainRawTransactionParams {
+  blockchain: Blockchain!
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  transactionPayload: Base16!
+}
+
+type ServerSignedState {
+  blockchain: Blockchain
+  message: Base16
+}
+
+"""
+Signature data for authenticated requests.
+
+"""
+input Signature {
+  """The public key used to generate the signature"""
+  publicKey: Base16!
+
+  """The signature of the hashed canonical request"""
+  signedDigest: Base16!
+}
+
+type SignInResponse {
+  account: AccountResponse
+  deviceVerificationRequired: Boolean
+  serverEncryptionKey: String
+  twoFaRequired: Boolean!
+}
+
+input SignStatesParams {
+  clientSignedStates: [ClientSignedMessage]
+  signedRecycledOrders: [ClientSignedMessage]
+
+  """
+  Whether to force get_states to return a balance sync for all user assets
+  """
+  syncAll: Boolean
+
+  """When the request was generated - integer timestamp in seconds"""
+  timestamp: Int!
+}
+
+type SignStatesResponse {
+  recycledOrders: [RecycledOrder]
+  serverSignedStates: [ServerSignedState]
+  states: [State]
+}
+
+input SignupAnalytics {
+  signupReferrer: String
+  signupUrl: String
+}
+
+"""Parameters to update single identity"""
+input SignUpIdentity {
+  """ISO 3166 alpha 2 code"""
+  countryCode: String!
+  fullName: String!
+  stateCode: String
+}
+
+"""Sign up input"""
+input SignUpInput {
+  email: String!
+  identity: SignUpIdentity!
+  password: String!
+}
+
+input SortingOptions {
+  key: String
+  order: SortOrder
+}
+
+enum SortOrder {
+  ASCEND
+  DESCEND
+}
+
+enum StakeStatus {
+  ACTIVE
+  EXPIRED
+  LOST
+  REDEEMED
+}
+
+type State {
+  address: String
+  balance: CurrencyAmount
+  blockchain: Blockchain
+  message: Base16
+  nonce: Int
+}
+
+type SuccessMessage {
+  message: String
+  slug: String
+}
+
+input SyncStatesParams {
+  overrideMovements: Boolean
+  serverSignedStates: [InputServerSignedState]
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+}
+
+type SyncStatesResponse {
+  result: String
+}
+
+type Ticker {
+  bestAskPrice: CurrencyPrice
+  bestAskSize: CurrencyAmount
+  bestBidPrice: CurrencyPrice
+  bestBidSize: CurrencyAmount
+  highPrice24h: CurrencyPrice
+  id: ID
+  lastPrice: CurrencyPrice
+  lowPrice24h: CurrencyPrice
+  market: Market
+  marketName: MarketName
+  priceChange24h: CurrencyPrice
+  priceChange24hPct: Float
+  usdLastPrice: CurrencyPrice
+  usdLastPriceB: CurrencyPrice
+  usdVolume24h: CurrencyAmount
+  volume24h: CurrencyAmount
+}
+
+type TicketsCount {
+  activated: Int!
+  pending: Int!
+}
+
+type Token {
+  expireAt: String!
+  id: String!
+  insertedAt: DateTime!
+  lastUsedAt: Date
+  options: OptionsType
+  type: TokenTypes!
+  whitelistedAddresses: [WhitelistedAddress]
+}
+
+enum TokenDuration {
+  LONG
+  MEDIUM
+  SHORT
+}
+
+enum TokenTypes {
+  ACCESS
+  API_TRADE
+  KYC
+  TWO_FACTOR_LOGIN
+}
+
+type Trade {
+  accountSide: AccountTradeSide
+  amount: CurrencyAmount
+  cursor: String
+  direction: Direction
+  executedAt: DateTime
+  id: ID
+  limitPrice: CurrencyPrice
+  makerFee: CurrencyAmount
+  makerGave: CurrencyAmount
+  makerOrderId: ID
+  makerReceived: CurrencyAmount
+  market: Market
+  takerFee: CurrencyAmount
+  takerGave: CurrencyAmount
+  takerOrderId: ID
+  takerReceived: CurrencyAmount
+  usdARate: CurrencyPrice
+  usdBRate: CurrencyPrice
+}
+
+type TradeHistory {
+  next: PaginationCursor
+  trades: [Trade]
+}
+
+type TransactionElement {
+  blockchain: Blockchain!
+  digest: Base16!
+}
+
+"""A result that includes transactions and transfers"""
+union TransactionsAndTransfers = AccountTransaction | AccountTransfer
+
+enum TransferType {
+  RECEIVED
+  SENT
+}
+
+input UpdatedAccountOrdersParams {
+  buyOrSell: OrderBuyOrSell
+  marketName: MarketName
+  rangeStart: DateTime
+  rangeStop: DateTime
+  status: [OrderStatus]
+  timestamp: Int
+  type: [OrderType]
+}
+
+input UpdateMovementParams {
+  fee: String
+  movementId: String!
+  status: MovementStatus
+
+  """When the request was generated - integer timestamp in milliseconds"""
+  timestamp: Int!
+  transactionHash: Base16
+  transactionPayload: Base16
+}
+
+type UserLimit {
+  yearlyLimitAvailable: CurrencyAmount!
+  yearlyLimitTotal: CurrencyAmount!
+}
+
+"""
+The `UUID4` scalar type represents UUID4 compliant string data, represented as UTF-8
+character sequences. The UUID4 type is most often used to represent unique
+human-readable ID strings.
+"""
+scalar UUID4
+
+type ValidateAddressResponse {
+  results: [AddressResponse]
+}
+
+enum VerificationLevelEnum {
+  """Banned from trading"""
+  BANNED
+
+  """Approved no limit"""
+  NO_LIMIT
+
+  """First step, user have to submit their name and address."""
+  TIER_0
+
+  """Approved tier one"""
+  TIER_1
+
+  """Approved tier two"""
+  TIER_2
+
+  """Approved tier three"""
+  TIER_3
+}
+
+input VerificationOptions {
+  encryptedSecretKey: String
+  encryptedSecretKeyNonce: String
+  encryptedSecretKeyTag: String
+  newPassword: String!
+  signaturePublicKey: Base16
+  twoFa: String
+}
+
+type Vin {
+  n: Int
+  txid: String
+  value: CurrencyAmount
+}
+
+type Wallet {
+  address: String!
+  blockchain: BlockchainName!
+  chainIndex: Int!
+  publicKey: Base16!
+}
+
+input WalletInput {
+  address: String!
+  blockchain: BlockchainName!
+  chainIndex: Int!
+  publicKey: Base16!
+}
+
+type WhitelistedAddress {
+  address: String!
+  blockchain: Blockchain!
+  id: ID!
+  tokenId: String!
+}
+
+input WhitelistedAddressInput {
+  address: String!
+  blockchain: Blockchain!
+  tokenId: String!
+}

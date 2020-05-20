@@ -3,7 +3,7 @@ import gql from 'graphql-tag'
 import { SignStatesFields } from './fragments'
 
 export const SYNC_STATES_MUTATION = gql`
-  mutation syncStates($payload: SyncStatesParams!, $signature: String!) {
+  mutation syncStates($payload: SyncStatesParams!, $signature: Signature!) {
     syncStates(payload: $payload, signature: $signature) {
       result
     }

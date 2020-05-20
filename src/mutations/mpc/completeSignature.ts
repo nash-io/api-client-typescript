@@ -8,7 +8,7 @@ export enum CompletePayloadSignatureType {
 
 export const COMPLETE_PAYLOAD_SIGNATURE = gql`
   mutation completePayloadSignature(
-    $blockchain: BlockchainName!
+    $blockchain: Blockchain!
     $payload: Base16!
     $type: CompletePayloadSignatureType!
     $public_key: Base16!

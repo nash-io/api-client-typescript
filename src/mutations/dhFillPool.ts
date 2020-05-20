@@ -2,7 +2,7 @@ import gql from 'graphql-tag'
 import { Blockchain } from '@neon-exchange/nash-protocol'
 
 export const DH_FIIL_POOL = gql`
-  mutation dhFillRPool($blockchain: Blockchain!, $dhPublics: [String]!) {
+  mutation dhFillRPool($blockchain: Blockchain!, $dhPublics: [Base16]!) {
     dhFillPool(dhPublics: $dhPublics, blockchain: $blockchain)
   }
 `
