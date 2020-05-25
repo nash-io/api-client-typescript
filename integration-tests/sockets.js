@@ -3,7 +3,12 @@ const { wait, login } = require('./utils')
 
 async function testDisconnect() {
   const client = new Nash.Client(
-    Nash.EnvironmentConfiguration[process.env.NASH_ENV]
+    Nash.EnvironmentConfiguration[process.env.NASH_ENV],
+    {
+      headers: {
+        "User-Agent": "test?"
+      }
+    }
   )
   await login(client)
 

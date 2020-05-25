@@ -264,6 +264,8 @@ import {
   ClientOptions,
   EnvironmentConfiguration
 } from './environments'
+const WebSocket = require('websocket').w3cwebsocket
+
 const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.ETH]: BIP44.ETH,
   [Blockchain.BTC]: BIP44.BTC,
@@ -284,8 +286,15 @@ export class Client {
   private opts: EnvironmentConfig
   private clientOpts: ClientOptions
   private apiUri: string
-  private headers: Record<string, string> = {
+  private _headers: Record<string, string> = {
     'Content-Type': 'application/json'
+  }
+
+  private get headers(): Record<string, string> {
+    return {
+      ...this.clientOpts.headers,
+      ...this._headers
+    }
   }
 
   private initParams: InitParams
@@ -329,6 +338,7 @@ export class Client {
     }
     this.clientOpts = {
       runRequestsOverWebsockets: false,
+      headers: {},
       ...clientOpts
     }
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
@@ -484,10 +494,25 @@ export class Client {
     )
   }
 
-
   private _socket = null
   private _createSocket() {
+    const socketHeaders = {}
+    const clientHeaders = this.headers
+    if (clientHeaders['User-Agent']) {
+      socketHeaders['User-Agent'] = clientHeaders['User-Agent']
+    }
+
+    const Transport =
+      Object.keys(socketHeaders).length === 0
+        ? WebSocket
+        : // tslint:disable-next-line
+          class extends WebSocket {
+            constructor(endpoint) {
+              super(endpoint, undefined, undefined, socketHeaders)
+            }
+          }
     const socket = new PhoenixSocket(this.wsUri, {
+      transport: Transport,
       decode: (rawPayload, callback) => {
         const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
 
@@ -743,7 +768,7 @@ export class Client {
       this.connection = this.createSocketConnection()
     }
     this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
-    this.headers = {
+    this._headers = {
       'Content-Type': 'application/json',
       Authorization: this.authorization
     }
@@ -809,7 +834,7 @@ export class Client {
 
     const cookie = cookies.find(c => c.name === 'nash-cookie')
     this.casCookie = cookie.name + '=' + cookie.value
-    this.headers = {
+    this._headers = {
       'Content-Type': 'application/json',
       Cookie: this.casCookie
     }
