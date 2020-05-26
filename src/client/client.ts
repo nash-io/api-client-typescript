@@ -504,7 +504,6 @@ export class Client {
         : // tslint:disable-next-line
           class extends WebSocket {
             constructor(endpoint) {
-              console.log('creating sockets')
               super(endpoint, undefined, undefined, clientHeaders)
             }
           }
