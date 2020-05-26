@@ -1,10 +1,17 @@
 const Nash = require('../build/main')
 const { login } = require('./utils')
+const fetch = require('node-fetch')
 
-const client = new Nash.Client(
-  Nash.EnvironmentConfiguration[process.env.NASH_ENV]
-)
 async function run() {
+  const client = new Nash.Client(
+    Nash.EnvironmentConfiguration[process.env.NASH_ENV],
+    {
+      headers: {
+        'User-Agent': 'Foo'
+      }
+    }
+  )
+
   await login(client)
 
   async function test(name, args) {
@@ -18,6 +25,11 @@ async function run() {
       console.log(e)
     }
   }
+
+  const con = client.createSocketConnection()
+
+  con.onAccountTrade({ marketName: "neo_eth" }, { onStart: () => undefined })
+
 
   await test('getAccountBalance', [Nash.CryptoCurrency.NEO])
   await test('getAccountBalance', [Nash.CryptoCurrency.ETH])
@@ -37,6 +49,8 @@ async function run() {
     }
   ])
   await test('listAccountTrades', [])
+
+  con.disconnect()
 
   const orderBook = await client.getOrderBook('eth_neo')
   if (orderBook.lastUpdateId == null) {

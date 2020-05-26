@@ -5,8 +5,9 @@ async function testDisconnect() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV],
     {
+      runRequestsOverWebsockets: false,
       headers: {
-        "User-Agent": "test?"
+        "User-Agent": `Keyrock/1.0 DTE`
       }
     }
   )

@@ -496,7 +496,7 @@ export class Client {
 
   private _socket = null
   private _createSocket() {
-    const clientHeaders = this.clientOpts.headers
+    const clientHeaders = { ...this.clientOpts.headers }
 
     const Transport =
       Object.keys(clientHeaders).length === 0
@@ -504,6 +504,7 @@ export class Client {
         : // tslint:disable-next-line
           class extends WebSocket {
             constructor(endpoint) {
+              console.log('creating sockets')
               super(endpoint, undefined, undefined, clientHeaders)
             }
           }
