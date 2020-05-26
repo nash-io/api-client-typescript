@@ -496,19 +496,15 @@ export class Client {
 
   private _socket = null
   private _createSocket() {
-    const socketHeaders = {}
-    const clientHeaders = this.headers
-    if (clientHeaders['User-Agent']) {
-      socketHeaders['User-Agent'] = clientHeaders['User-Agent']
-    }
+    const clientHeaders = this.clientOpts.headers
 
     const Transport =
-      Object.keys(socketHeaders).length === 0
+      Object.keys(clientHeaders).length === 0
         ? WebSocket
         : // tslint:disable-next-line
           class extends WebSocket {
             constructor(endpoint) {
-              super(endpoint, undefined, undefined, socketHeaders)
+              super(endpoint, undefined, undefined, clientHeaders)
             }
           }
     const socket = new PhoenixSocket(this.wsUri, {
