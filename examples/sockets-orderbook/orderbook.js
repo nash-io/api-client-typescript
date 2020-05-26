@@ -121,6 +121,9 @@ async function run() {
   update()
   try {
     const sub = client.createSocketConnection()
+    sub.socket.onClose(() => {
+      console.log("socket disconnected")
+    })
     sub.onUpdatedOrderbook({ marketName: 'neo_eth' }, {
       onResult: order => {
         order.data.updatedOrderBook.asks.forEach(ask => {
