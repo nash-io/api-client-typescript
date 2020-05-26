@@ -1,6 +1,6 @@
 {
   "name": "@neon-exchange/api-client-typescript",
-  "version": "5.0.11",
+  "version": "5.0.17",
   "description": "Official TypeScript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
@@ -67,7 +67,6 @@
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
     "array-buffer-to-hex": "1.0.0",
-    "websocket": "1.0.31",
     "bitcoinjs-lib": "5.1.7",
     "coinselect": "3.1.11",
     "graphql": "14.2.0",
@@ -80,7 +79,8 @@
     "semver": "7.3.2",
     "set-cookie-parser": "2.4.5",
     "sha.js": "2.4.11",
-    "web3": "1.2.6"
+    "web3": "1.2.6",
+    "websocket": "1.0.31"
   },
   "devDependencies": {
     "@types/jest": "24.0.11",
