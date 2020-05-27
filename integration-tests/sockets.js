@@ -7,7 +7,7 @@ async function testDisconnect() {
     {
       runRequestsOverWebsockets: false,
       headers: {
-        "User-Agent": `Keyrock/1.0 DTE`
+        "User-Agent": `Foo/1.0 DTE`
       }
     }
   )
