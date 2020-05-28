@@ -1589,15 +1589,25 @@ export class Client {
   /**
    * Gets Balance States, Signs Balance States, then Syncs Balance states to the server
    *
+   * @param sync Whether to sync the state updates to the blockchain. Defaults to false
+   *
    * @returns
    *
    * Example
    * ```
-   * const getSignSyncStates = await nash.getSignAndSyncStates()
-   * console.log(getSignSyncStates)
+   * // sign states
+   * const signStates = await nash.getSignAndSyncStates()
+   * console.log(signStates)
+   *
+   * // sign and sync states to blockchain
+   * const signAndSyncStates = await nash.getSignAndSyncStates(true)
+   * console.log(signAndSyncStates)
+   *
    * ```
    */
-  public async getSignAndSyncStates(): Promise<SyncStatesData> {
+  public async getSignAndSyncStates(
+    sync = false
+  ): Promise<SyncStatesData | SignStatesData> {
     const emptyStates: GetStatesData = {
       states: [],
       recycledOrders: [],
@@ -1606,8 +1616,11 @@ export class Client {
     const signStatesRecursive: SignStatesData = await this.signStates(
       emptyStates
     )
-    const syncResult = await this.syncStates(signStatesRecursive)
-    return syncResult
+    if (sync) {
+      const syncResult = await this.syncStates(signStatesRecursive)
+      return syncResult
+    }
+    return signStatesRecursive
   }
 
   private state_map_from_states(states): any {
@@ -2977,7 +2990,7 @@ export class Client {
           case BlockchainError.MISSING_SIGNATURES:
           case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
             // console.log('sync states and retry in 15 seconds')
-            await this.getSignAndSyncStates()
+            await this.getSignAndSyncStates(true)
             await sleep(15000)
             break
           case BlockchainError.WAITING_FOR_BALANCE_SYNC:
@@ -3061,7 +3074,7 @@ export class Client {
           case BlockchainError.MISSING_SIGNATURES:
           case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
             // console.log('sync states and retry in 15 seconds')
-            await this.getSignAndSyncStates()
+            await this.getSignAndSyncStates(true)
             await prepareAMovement()
             await sleep(15000)
             break
