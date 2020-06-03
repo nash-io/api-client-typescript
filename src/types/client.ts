@@ -47,10 +47,10 @@ export interface GQL {
 }
 
 interface SubscriptionHandlers<T> {
-  onResult: (p: T) => void
-  onError: (p: Error) => void
-  onAbort: (p: Error) => void
-  onStart: (p: object) => void
+  onResult?: (p: T) => void
+  onError?: (p: Error) => void
+  onAbort?: (p: Error) => void
+  onStart?: (p: object) => void
 }
 
 export interface PayloadSignature {
