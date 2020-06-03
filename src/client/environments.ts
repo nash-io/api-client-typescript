@@ -94,6 +94,14 @@ export const EnvironmentConfiguration = {
     btcNetworkSettings: BTC_NETWORK[Networks.LocalNet],
     isLocal: true
   } as EnvironmentConfig,
+  localDocker: {
+    host: 'host.docker.internal:4000',
+    neoScan: 'http://host.docker.internal:7000/api/test_net',
+    ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
+    neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
+    btcNetworkSettings: BTC_NETWORK[Networks.LocalNet],
+    isLocal: true
+  } as EnvironmentConfig,
   internal: {
     host: 'cas',
     neoScan: 'http://chain-local-neo/api/main_net',
