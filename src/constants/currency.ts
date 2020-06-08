@@ -1,5 +1,6 @@
 export enum CryptoCurrency {
   ACAT = 'acat',
+  ANT = 'ant',
   AE = 'ae',
   AGI = 'agi',
   AION = 'aion',
