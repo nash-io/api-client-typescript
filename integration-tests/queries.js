@@ -49,6 +49,8 @@ async function run() {
     }
   ])
   await test('listAccountTrades', [])
+  await test('listMarkets', [])
+  await test('listTrades', [{ marketName: 'BTC_USDC' }])
 
   con.disconnect()
 

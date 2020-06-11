@@ -6,7 +6,7 @@ export const ADD_KEYS_WITH_WALLETS_MUTATION = gql`
     $encryptedSecretKeyNonce: String!
     $encryptedSecretKeyTag: String!
     $signaturePublicKey: Base16!
-    $wallets: [WalletInput]
+    $wallets: [WalletInput!]!
   ) {
     addKeysWithWallets(
       encryptedSecretKey: $encryptedSecretKey

@@ -63,70 +63,70 @@ type AccountPortfolioTotal {
 }
 
 type AccountResponse {
-  creatingAccount: Boolean
+  creatingAccount: Boolean!
   email: String!
   encryptedSecretKey: String
   encryptedSecretKeyNonce: String
   encryptedSecretKeyTag: String
-  id: ID
+  id: ID!
   identity: IdentityResponse
   insertedAt: NaiveDateTime!
-  isDuplicate: Boolean
-  loginErrorCount: Int
+  isDuplicate: Boolean!
+  loginErrorCount: Int!
   options: Options
   settings: Json
   signaturePublicKey: Base16
-  twoFactor: Boolean
-  twoFactorErrorCount: String
-  verified: Boolean
-  wallets: [Wallet]
+  twoFactor: Boolean!
+  twoFactorErrorCount: String!
+  verified: Boolean!
+  wallets: [Wallet!]
 }
 
 type AccountStake {
   estimatedNextPayment: DateTime
-  id: ID
-  returnRate: Float
-  stakedTokens: CurrencyAmount
+  id: ID!
+  returnRate: Float!
+  stakedTokens: CurrencyAmount!
   stakeId: String
-  start: Date
-  status: StakeStatus
-  stop: Date
-  totalDividends: CurrencyAmount
+  start: Date!
+  status: StakeStatus!
+  stop: Date!
+  totalDividends: CurrencyAmount!
 }
 
 type AccountStakes {
-  stakes: [AccountStake]
+  stakes: [AccountStake!]!
 
   """Total dividends received all time"""
-  totalDividends: CurrencyAmount
+  totalDividends: CurrencyAmount!
 
   """Total active staked tokens"""
-  totalStakedTokens: CurrencyAmount
+  totalStakedTokens: CurrencyAmount!
 }
 
 type AccountStakingDividend {
-  asset: Asset
-  assetName: String
-  dividend: CurrencyAmount
-  id: ID
-  paidAt: DateTime
-  usdDividend: CurrencyAmount
+  asset: Asset!
+  assetName: String!
+  dividend: CurrencyAmount!
+  id: ID!
+  paidAt: DateTime!
+  usdDividend: CurrencyAmount!
 }
 
 type AccountStakingDividends {
-  dividends: [AccountStakingDividend]
-  paidDaysThisMonth: Int
-  stakesCompleted: Int
-  stakesInProgress: Int
-  totalDividends: CurrencyAmount
+  dividends: [AccountStakingDividend!]!
+  paidDaysThisMonth: Int!
+  stakesCompleted: Int!
+  stakesInProgress: Int!
+  totalDividends: CurrencyAmount!
 }
 
 type AccountStakingStatement {
-  activeStakes: Int
-  id: ID
-  month: Int
-  totalDividends: CurrencyAmount
-  year: Int
+  activeStakes: Int!
+  id: ID!
+  month: Int!
+  totalDividends: CurrencyAmount!
+  year: Int!
 }
 
 enum AccountTradeSide {
@@ -236,19 +236,19 @@ type ApiLimit {
 }
 
 type Asset {
-  blockchain: String
-  blockchainPrecision: Int
-  depositPrecision: Int
+  blockchain: String!
+  blockchainPrecision: Int!
+  depositPrecision: Int!
   fiatPrice(fiatSymbol: String): Float
-  hash: Base16
-  name: String
-  symbol: CurrencySymbol
-  withdrawalPrecision: Int
+  hash: Base16!
+  name: String!
+  symbol: CurrencySymbol!
+  withdrawalPrecision: Int!
 }
 
 type AssetNonces {
   asset: CurrencySymbol!
-  nonces: [Int]
+  nonces: [Int!]!
 }
 
 type BankDepositInstructions {
@@ -261,7 +261,7 @@ type BankDepositInstructions {
 type BankDepositReceived {
   amount: CurrencyAmount!
   receivedAt: Date!
-  senderIban: String!
+  senderIban: String
 }
 
 """
@@ -347,7 +347,7 @@ enum CandleInterval {
 }
 
 type CandleRange {
-  candles: [Candle]
+  candles: [Candle!]!
   market: Market
 }
 
@@ -377,10 +377,10 @@ type Contact {
   countryCode: String
   email: String
   firstName: String
-  id: String!
+  id: ID!
   lastName: String
   phone: String
-  wallets: [ContactWallet]
+  wallets: [ContactWallet!]!
 }
 
 """Contact input"""
@@ -406,7 +406,7 @@ input ContactSearchFilters {
 type ContactWallet {
   address: String!
   blockchain: BlockchainName!
-  id: String!
+  id: ID!
   label: String
 }
 
@@ -414,7 +414,7 @@ type ContactWallet {
 input ContactWalletInput {
   address: String
   blockchain: BlockchainName
-  contactId: String
+  contactId: ID
   label: String
 }
 
@@ -447,8 +447,8 @@ A graphql representation of an amount of crypto or fiat currency.
 
 """
 type CurrencyAmount {
-  amount: CurrencyNumber
-  currency: CurrencySymbol
+  amount: CurrencyNumber!
+  currency: CurrencySymbol!
 }
 
 """
@@ -470,9 +470,9 @@ A graphql representation of a price rate for crypto or fiat currency.
 
 """
 type CurrencyPrice {
-  amount: CurrencyNumber
-  currencyA: CurrencySymbol
-  currencyB: CurrencySymbol
+  amount: CurrencyNumber!
+  currencyA: CurrencySymbol!
+  currencyB: CurrencySymbol!
 }
 
 """
@@ -503,9 +503,9 @@ be converted to UTC if there is an offset.
 scalar DateTime
 
 type Device {
-  activity: Activity
-  id: ID
-  verified: Boolean
+  activity: Activity!
+  id: ID!
+  verified: Boolean!
 }
 
 enum Direction {
@@ -527,14 +527,14 @@ type DiscourseLoginResponse {
 """Aggregated exchange metrics over a period"""
 type ExchangeAssetMetric {
   asset: Asset
-  assetSymbol: CurrencySymbol
+  assetSymbol: CurrencySymbol!
   circulatingSupply: CurrencyAmount
   closePriceUsd: CurrencyPrice
-  id: ID
-  period: MetricPeriod
+  id: ID!
+  period: MetricPeriod!
   priceChangePercent: Float
   priceChangeUsd: CurrencyPrice
-  priceHistory: [PricePoint]
+  priceHistory: [PricePoint!]!
   volume: CurrencyAmount
   volumeUsd: CurrencyAmount
 }
@@ -545,19 +545,19 @@ type ExchangeMarketMetric {
   closePriceUsd: CurrencyPrice
   highPrice: CurrencyPrice
   highPriceUsd: CurrencyPrice
-  id: ID
+  id: ID!
   lowPrice: CurrencyPrice
   lowPriceUsd: CurrencyPrice
-  market: Market
-  marketName: MarketName
+  market: Market!
+  marketName: MarketName!
   openPrice: CurrencyPrice
   openPriceUsd: CurrencyPrice
-  period: MetricPeriod
+  period: MetricPeriod!
   priceChange: CurrencyPrice
   priceChangePercent: Float
   priceChangeUsd: CurrencyPrice
   priceChangeUsdPercent: Float
-  priceHistory: [PricePoint]
+  priceHistory: [PricePoint!]!
   volume: CurrencyAmount
   volumeUsd: CurrencyAmount
 }
@@ -570,7 +570,12 @@ type ExchangePublicKey {
 type ExchangeStatus {
   apiLimits: [ApiLimit]
   serverTimestamp: Int
-  status: String
+  status: ExchangeStatusStatusEnum
+}
+
+enum ExchangeStatusStatusEnum {
+  PAUSED
+  RUNNING
 }
 
 """Parameters to send feedback back to us"""
@@ -581,7 +586,7 @@ input FeedbackDetails {
 }
 
 type FiatGatewayCredential {
-  id: String!
+  id: ID!
   partnerAccountId: String!
   partnerAccountKey: String!
   partnerId: String!
@@ -595,8 +600,8 @@ input FiatGatewayCredentialInput {
 }
 
 type FiatPriceDetails {
-  price: CurrencyPrice
-  priceChange24hPct: Float
+  price: CurrencyPrice!
+  priceChange24hPct: Float!
 }
 
 type FiatRampAsset {
@@ -612,7 +617,7 @@ type FiatRampAsset {
 }
 
 type FiatRampLimits {
-  yearlyLimits: [FiatRampTierLimit!]!
+  yearlyLimits: FiatRampTierLimit!
 }
 
 type FiatRampQuote {
@@ -623,6 +628,7 @@ type FiatRampQuote {
   confirmUntil: DateTime!
   id: ID!
   insertedAt: DateTime!
+  paymentMethod: PaymentMethod
   rate: CurrencyPrice!
   reconfirmationReviewedAt: DateTime
   reconfirmationReviewUntil: DateTime
@@ -639,7 +645,7 @@ type FiatRampQuote {
 input FiatRampQuoteFilters {
   currency: String
   searchString: String
-  status: [FiatRampQuoteStatus]
+  status: [FiatRampQuoteStatus!]
 }
 
 enum FiatRampQuoteStatus {
@@ -685,16 +691,18 @@ enum FiatRampQuoteStatus {
 }
 
 enum FiatRampQuoteType {
-  """A buying quote"""
+  """A quote for buying crypto with fiat."""
   BUY
 
-  """A selling quote"""
+  """A quote for selling crypto for fiat."""
   SELL
 }
 
 type FiatRampTierLimit {
-  key: NfrSupportedKycTier!
-  value: CurrencyAmount!
+  noLimit: CurrencyAmount!
+  tier1: CurrencyAmount!
+  tier2: CurrencyAmount!
+  tier3: CurrencyAmount!
 }
 
 input GetAccountAddressParams {
@@ -786,7 +794,7 @@ type IdentityResponse {
   countryMatch: Boolean
   countryStatus: CountryStatusEnum
   fullName: String
-  id: ID
+  id: ID!
   occupation: String
   sourceOfFunds: String
   stateCode: String
@@ -994,33 +1002,33 @@ input ListMovementsParams {
 
 type ListTransactionsAndTransfersResponse {
   nextCursor: PaginationCursor
-  transactionsAndTransfers: [TransactionsAndTransfers]
+  transactionsAndTransfers: [TransactionsAndTransfers!]!
 }
 
 type LocationResponse {
-  countryCode: String
+  countryCode: String!
   regionCode: String
 }
 
 """A market defined by a trading pair - eg Neo/Eth"""
 type Market {
-  aAsset: Asset
-  aUnit: CurrencySymbol
-  aUnitPrecision: Int
-  bAsset: Asset
-  bUnit: CurrencySymbol
-  bUnitPrecision: Int
-  id: ID
-  minTickSize: String
-  minTradeIncrement: String
-  minTradeIncrementB: String
-  minTradeSize: String
-  minTradeSizeB: String
-  name: MarketName
-  priceGranularity: Int
-  primary: Boolean
-  status: MarketStatus
-  tradeBlocked: Boolean
+  aAsset: Asset!
+  aUnit: CurrencySymbol!
+  aUnitPrecision: Int!
+  bAsset: Asset!
+  bUnit: CurrencySymbol!
+  bUnitPrecision: Int!
+  id: ID!
+  minTickSize: String!
+  minTradeIncrement: String!
+  minTradeIncrementB: String!
+  minTradeSize: String!
+  minTradeSizeB: String!
+  name: MarketName!
+  priceGranularity: Int!
+  primary: Boolean!
+  status: MarketStatus!
+  tradeBlocked: Boolean!
 }
 
 """
@@ -1055,7 +1063,7 @@ type Movement {
   confirmations: Int
   currency: CurrencySymbol
   fee: String
-  id: String
+  id: String!
   nonce: Int
   publicKey: Base16
   quantity: CurrencyAmount
@@ -1093,20 +1101,6 @@ input NewAccountTradesParams {
   timestamp: Int
 }
 
-enum NfrSupportedKycTier {
-  """Approved no limit"""
-  NO_LIMIT
-
-  """Approved tier one"""
-  TIER_1
-
-  """Approved tier two"""
-  TIER_2
-
-  """Approved tier three"""
-  TIER_3
-}
-
 type Options {
   allowTwelveWordsReset: Boolean
   webKycEnabled: Boolean
@@ -1118,46 +1112,46 @@ type OptionsType {
 
 type Order {
   """The amount the order was placed for"""
-  amount: CurrencyAmount
+  amount: CurrencyAmount!
 
   """The amount executed on the order book"""
-  amountExecuted: CurrencyAmount
+  amountExecuted: CurrencyAmount!
 
   """The amount remaining to buy/sell"""
-  amountRemaining: CurrencyAmount
+  amountRemaining: CurrencyAmount!
 
   """The average execution price for the order"""
   avgExecutedPrice: CurrencyPrice
-  buyOrSell: OrderBuyOrSell
+  buyOrSell: OrderBuyOrSell!
   cancelAt: DateTime
   cancellationPolicy: OrderCancellationPolicy
   cancellationReason: OrderCancellationReason
-  id: ID
+  id: ID!
   limitPrice: CurrencyPrice
-  market: Market
+  market: Market!
 
   """The opposite amount executed on the order book, based on average price"""
-  oppositeAmountExecuted: CurrencyAmount
-  placedAt: DateTime
-  status: OrderStatus
+  oppositeAmountExecuted: CurrencyAmount!
+  placedAt: DateTime!
+  status: OrderStatus!
   stopPrice: CurrencyPrice
   trades: [Trade]
-  type: OrderType
+  type: OrderType!
 }
 
 type OrderBook {
-  asks: [OrderBookRecord]
-  bids: [OrderBookRecord]
-  lastUpdateId: Int
-  market: Market
-  updateId: Int
+  asks: [OrderBookRecord!]!
+  bids: [OrderBookRecord!]!
+  lastUpdateId: Int!
+  market: Market!
+  updateId: Int!
 }
 
 type OrderBookRecord {
-  amount: CurrencyAmount
+  amount: CurrencyAmount!
   myAmount: CurrencyAmount
-  price: CurrencyPrice
-  status: OrderBookRecordStatus
+  price: CurrencyPrice!
+  status: OrderBookRecordStatus!
 }
 
 enum OrderBookRecordStatus {
@@ -1209,13 +1203,13 @@ enum OrderCancellationReason {
 
 type OrderHistory {
   next: PaginationCursor
-  orders: [Order]
+  orders: [Order!]!
 }
 
 type OrderPlaced {
-  id: ID
-  ordersTillSignState: Int
-  status: OrderStatus
+  id: ID!
+  ordersTillSignState: Int!
+  status: OrderStatus!
 }
 
 enum OrderStatus {
@@ -1233,22 +1227,27 @@ enum OrderType {
 }
 
 type PaginatedActivity {
-  entries: [Activity]
+  entries: [Activity!]!
   metadata: PaginationMetadata!
 }
 
 type PaginatedContacts {
-  entries: [Contact]
+  entries: [Contact!]!
   metadata: PaginationMetadata!
 }
 
 type PaginatedDevices {
-  entries: [Device]
+  entries: [Device!]
   metadata: PaginationMetadata!
 }
 
 type PaginatedFiatRampQuotes {
   entries: [FiatRampQuote!]!
+  metadata: PaginationMetadata!
+}
+
+type PaginatedPaymentMethods {
+  entries: [PaymentMethod!]!
   metadata: PaginationMetadata!
 }
 
@@ -1276,6 +1275,21 @@ type PaillierPk {
 type PaillierProof {
   correctKeyProof: CorrectKeyProof!
   paillierPk: PaillierPk!
+}
+
+type PaymentMethod {
+  bic: String!
+  currency: CurrencySymbol!
+  description: String!
+  iban: String!
+  id: ID!
+  insertedAt: DateTime!
+}
+
+input PaymentMethodCreateParams {
+  currency: CurrencySymbol!
+  description: String!
+  iban: String!
 }
 
 input PlaceLimitOrderParams {
@@ -1416,9 +1430,9 @@ type PricePoint {
 }
 
 type PushableDevice {
-  accountId: String
+  accountId: ID!
   disabledAt: String
-  fcmToken: String
+  fcmToken: String!
   platform: String
 }
 
@@ -1444,8 +1458,8 @@ type ReferralRecipientsTicket {
 }
 
 type RestrictedJurisdictionResponse {
-  banned: [String]!
-  restricted: [String]!
+  banned: [String!]!
+  restricted: [String!]!
 }
 
 enum RestrictionEnum {
@@ -1456,7 +1470,7 @@ enum RestrictionEnum {
 
 type RootMutationType {
   """add fiat gateway credentials"""
-  addFiatGatewayCredentials(credentials: FiatGatewayCredentialInput!): FiatGatewayCredential
+  addFiatGatewayCredentials(credentials: FiatGatewayCredentialInput!): FiatGatewayCredential!
 
   """
   Wallets must be a list of 2-3 objects (one for Ethereum, one for Neo, and
@@ -1469,92 +1483,110 @@ type RootMutationType {
 
     """Add keys with wallets."""
     signaturePublicKey: Base16!
-    wallets: [WalletInput]
-  ): AccountResponse
+    wallets: [WalletInput!]
+  ): AccountResponse!
 
   """Add movement"""
-  addMovement(payload: AddMovementParams!, signature: Signature!): Movement
-  addWhitelistedAddress(whitelistedAddress: WhitelistedAddressInput!): WhitelistedAddress
+  addMovement(payload: AddMovementParams!, signature: Signature!): Movement!
+  addWhitelistedAddress(whitelistedAddress: WhitelistedAddressInput!): WhitelistedAddress!
+
+  """Assign a payment method to a quote"""
+  assignPaymentMethodToQuote(paymentMethodId: ID!, quoteId: ID!): FiatRampQuote!
 
   """Cancel all orders"""
-  cancelAllOrders(payload: CancelAllOrdersParams!, signature: Signature!): CanceledOrders
+  cancelAllOrders(payload: CancelAllOrdersParams!, signature: Signature!): CanceledOrders!
 
   """Cancel an order"""
-  cancelOrder(payload: CancelOrderParams!, signature: Signature!): CanceledOrder
+  cancelOrder(payload: CancelOrderParams!, signature: Signature!): CanceledOrder!
 
   """
   Completes the account creation process; indicating to the frontend exchange
   client to push the user to the dashboard upon logging in
   """
-  completeAccount: AccountResponse
-  completeBtcPayloadSignature(inputPresigs: [InputPresig]!, payload: Base16!, publicKey: Base16!): [Base16]
-  completePayloadSignature(blockchain: Blockchain!, payload: Base16!, publicKey: Base16!, r: Base16!, signature: Base16!, type: CompletePayloadSignatureType!): CompletePayloadSignatureResponse
-  createApiKey(name: String!): CreateTokenResponse
+  completeAccount: AccountResponse!
+  completeBtcPayloadSignature(inputPresigs: [InputPresig!]!, payload: Base16!, publicKey: Base16!): [Base16]!
+  completePayloadSignature(blockchain: Blockchain!, payload: Base16!, publicKey: Base16!, r: Base16!, signature: Base16!, type: CompletePayloadSignatureType!): CompletePayloadSignatureResponse!
+
+  """Defines IBAN to where we should send funds."""
+  confirmIban(iban: String!, id: ID!): FiatRampQuote!
+  createApiKey(name: String!): CreateTokenResponse!
 
   """Create a contact"""
-  createContact(params: ContactInput!): Contact
+  createContact(params: ContactInput!): Contact!
 
   """Create a contact wallet"""
-  createContactWallet(params: ContactWalletInput!): ContactWallet
+  createContactWallet(params: ContactWalletInput!): ContactWallet!
+
+  """Create a payment method"""
+  createPaymentMethod(params: PaymentMethodCreateParams!): PaymentMethod!
 
   """
   Creates a new two factor code for the user who will still need to verify they set this up correctly.
   """
-  createTwoFactor: CreateTwoFactorResponse
+  createTwoFactor: CreateTwoFactorResponse!
 
   """Delete a contact"""
-  deleteContact(id: String!): SuccessMessage
+  deleteContact(id: ID!): SuccessMessage!
 
   """Delete a contact wallet"""
-  deleteContactWallet(id: String!): SuccessMessage
+  deleteContactWallet(id: ID!): SuccessMessage!
+
+  """Delete a payment method"""
+  deletePaymentMethod(id: ID!): PaymentMethod!
 
   """delete tokens."""
-  deleteToken(id: String!): Token
-  deleteWhitelistedAddress(id: ID!): SuccessMessage
-  dhFillPool(blockchain: Blockchain!, dhPublics: [Base16]!): [Base16]
+  deleteToken(id: ID!): Token!
+  deleteWhitelistedAddress(id: ID!): SuccessMessage!
+  dhFillPool(blockchain: Blockchain!, dhPublics: [Base16]!): [Base16!]!
 
   """Disable a pushable_device"""
-  disablePushableDevice(fcmToken: String!): PushableDevice
-  disableTwoFactor(password: String!, twoFa: String!): AccountResponse
+  disablePushableDevice(fcmToken: String!): PushableDevice!
+  disableTwoFactor(password: String!, twoFa: String!): AccountResponse!
 
   """Login with discourse sso"""
-  discourseLogin(sig: String!, sso: String!, username: String): DiscourseLoginResponse
+  discourseLogin(sig: String!, sso: String!, username: String): DiscourseLoginResponse!
 
   """Migrate discourse account"""
-  discourseMigration(sig: String!, sso: String!): DiscourseLoginResponse
+  discourseMigration(sig: String!, sso: String!): DiscourseLoginResponse!
 
   """Enable a new two factor code the user has already created."""
-  enableTwoFactor(twoFa: String!): AccountResponse
+  enableTwoFactor(password: String, twoFa: String!): AccountResponse!
 
   """Cancel a quote."""
-  fiatRampCancelQuote(id: ID!): FiatRampQuote
+  fiatRampCancelQuote(id: ID!): FiatRampQuote!
 
   """Accept an initial fiat ramp quote price."""
-  fiatRampConfirmQuote(id: ID!): FiatRampQuote
+  fiatRampConfirmQuote(id: ID!): FiatRampQuote!
 
-  """Create a quote based on the base currency amount (eg. EUR)"""
-  fiatRampCreateBaseBuyQuote(base: CurrencyAmountParams!, targetAsset: CurrencySymbol!): FiatRampQuote
+  """Create a buy quote based on the base currency amount (eg. EUR)"""
+  fiatRampCreateBaseBuyQuote(base: CurrencyAmountParams!, targetAsset: CurrencySymbol!): FiatRampQuote!
 
-  """Create a quote based on the target currency amount (eg. in BTC)"""
-  fiatRampCreateTargetBuyQuote(baseAsset: CurrencySymbol!, target: CurrencyAmountParams!): FiatRampQuote
+  """Create a sell quote based on the base currency amount (eg. BTC)"""
+  fiatRampCreateBaseSellQuote(base: CurrencyAmountParams!, paymentMethodId: ID!, targetAsset: CurrencySymbol!): FiatRampQuote!
+
+  """Create a buy quote based on the target currency amount (eg. in BTC)"""
+  fiatRampCreateTargetBuyQuote(baseAsset: CurrencySymbol!, target: CurrencyAmountParams!): FiatRampQuote!
+
+  """Create a sell quote based on the target currency amount (eg. EUR)"""
+  fiatRampCreateTargetSellQuote(baseAsset: CurrencySymbol!, paymentMethodId: ID!, target: CurrencyAmountParams!): FiatRampQuote!
 
   """Accept a recalculated price for a fiat ramp quote."""
-  fiatRampReconfirmQuote(id: ID!): FiatRampQuote
+  fiatRampReconfirmQuote(id: ID!): FiatRampQuote!
 
   """Initiate quote review"""
-  fiatRampStartQuoteRecalculation(id: ID!): FiatRampQuote
+  fiatRampStartQuoteRecalculation(id: ID!): FiatRampQuote!
 
   """Get states"""
   getStates(payload: GetStatesParams!, signature: Signature!): GetStatesResponse @deprecated(reason: "use sign_states instead")
 
   """create token for KYC mobile usage."""
-  kycCreateToken: CreateTokenResponse
+  kycCreateToken: CreateTokenResponse!
 
   """redirect url is used in an the iframe/new tab"""
-  kycGetRedirectUrl: KycGetRedirectUrlResponse
+  kycGetRedirectUrl: KycGetRedirectUrlResponse!
 
   """submit jumio scan reference"""
-  kycSubmitScanReference(scanReference: String!): KycSubmitScanReferenceResponse
+  kycSubmitScanReference(scanReference: String!): KycSubmitScanReferenceResponse!
 
   """update identity informations."""
   kycUpdateIdentity(
@@ -1563,48 +1595,48 @@ type RootMutationType {
     """ISO8601"""
     birthdate: Date!
     fullName: String!
-  ): KycIdentityResponse
+  ): KycIdentityResponse!
 
   """
   Allows a user to reset their password if they have access to their email
   """
-  lostPassword(email: String!): SuccessMessage
+  lostPassword(email: String!): SuccessMessage!
 
   """Place a new limit order"""
-  placeLimitOrder(payload: PlaceLimitOrderParams!, signature: Signature!): OrderPlaced
+  placeLimitOrder(payload: PlaceLimitOrderParams!, signature: Signature!): OrderPlaced!
 
   """Place a new market order"""
-  placeMarketOrder(payload: PlaceMarketOrderParams!, signature: Signature!): OrderPlaced
+  placeMarketOrder(payload: PlaceMarketOrderParams!, signature: Signature!): OrderPlaced!
 
   """Place a new stop limit order"""
-  placeStopLimitOrder(payload: PlaceStopLimitOrderParams!, signature: Signature!): OrderPlaced
+  placeStopLimitOrder(payload: PlaceStopLimitOrderParams!, signature: Signature!): OrderPlaced!
 
   """Place a new stop market order"""
-  placeStopMarketOrder(payload: PlaceStopMarketOrderParams!, signature: Signature!): OrderPlaced
+  placeStopMarketOrder(payload: PlaceStopMarketOrderParams!, signature: Signature!): OrderPlaced!
 
   """Prepare movement"""
-  prepareMovement(payload: PrepareMovementParams!, signature: Signature!): PrepareMovementResponse
+  prepareMovement(payload: PrepareMovementParams!, signature: Signature!): PrepareMovementResponse!
 
   """
   Will refresh for another 15 minutes, any call is refreshing the token and this
   is only needed if the account is not using the api.
   """
-  refreshToken: SuccessMessage @deprecated(reason: "Any request is refreshing the token this is not needed")
+  refreshToken: SuccessMessage! @deprecated(reason: "Any request is refreshing the token this is not needed")
 
   """Register a pushable_device"""
-  registerPushableDevice(params: PushableDeviceInput!): PushableDevice
+  registerPushableDevice(params: PushableDeviceInput!): PushableDevice!
 
   """Resends a user their registration email if they lose their original"""
-  resendVerificationEmail(email: String!, recaptcha: String): SuccessMessage
+  resendVerificationEmail(deviceToken: String, email: String!, recaptcha: String): SuccessMessage!
 
   """device device_mutations"""
-  revokeDevice(id: ID): SuccessMessage
+  revokeDevice(id: ID): SuccessMessage!
 
   """Send a raw transaction"""
-  sendBlockchainRawTransaction(payload: SendBlockchainRawTransactionParams!, signature: Signature!): Base16
+  sendBlockchainRawTransaction(payload: SendBlockchainRawTransactionParams!, signature: Signature!): Base16!
 
   """Send user feedback to tracking service."""
-  sendFeedback(feedbackDetails: FeedbackDetails!): Boolean
+  sendFeedback(feedbackDetails: FeedbackDetails!): Boolean!
 
   """
     Returns the user account details along with encrypted key data and a server
@@ -1614,31 +1646,34 @@ type RootMutationType {
   after successfully verifying email and password.
   
   """
-  signIn(duration: TokenDuration = SHORT, email: String, password: String, twoFa: String): SignInResponse
+  signIn(duration: TokenDuration = SHORT, email: String, password: String, twoFa: String): SignInResponse!
 
   """Removes an account session immediately"""
-  signOut: Boolean
+  signOut: Boolean!
 
   """Sign states"""
-  signStates(payload: SignStatesParams!, signature: Signature!): SignStatesResponse
+  signStates(payload: SignStatesParams!, signature: Signature!): SignStatesResponse!
 
   """sign up account"""
-  signUp(account: SignUpInput, analytics: SignupAnalytics, recaptcha: String, referralCode: String): SuccessMessage
+  signUp(account: SignUpInput!, analytics: SignupAnalytics, deviceToken: String, recaptcha: String, referralCode: String): SuccessMessage!
 
   """Sync states"""
-  syncStates(payload: SyncStatesParams!, signature: Signature!): SyncStatesResponse
+  syncStates(payload: SyncStatesParams!, signature: Signature!): SyncStatesResponse!
+
+  """Track events happening in the user space"""
+  track(event: TrackedEvent!, properties: TrackedProperties!): Boolean!
 
   """
   Allows a user to input their two factor code if they have a valid two_factor_login token in the cookie.
   """
-  twoFactorLogin(twoFa: String!): SignInResponse @deprecated(reason: "Use SignIn")
-  updateAccountSettings(settings: Json!): AccountResponse
+  twoFactorLogin(twoFa: String!): SignInResponse! @deprecated(reason: "Use SignIn")
+  updateAccountSettings(settings: Json!): AccountResponse!
 
   """Update a contact"""
-  updateContact(id: String, params: ContactInput!): Contact
+  updateContact(id: ID, params: ContactInput!): Contact!
 
   """Update a contact wallet"""
-  updateContactWallet(id: String, params: ContactWalletInput!): ContactWallet
+  updateContactWallet(id: ID, params: ContactWalletInput!): ContactWallet!
 
   """
     Changes a user email for the CAS. Requires confirmation from the original email and then the new email after that.
@@ -1646,15 +1681,15 @@ type RootMutationType {
   maybe_two_factor_code if the user doesn't have 2FA enabled.
   
   """
-  updateEmail(email: String!, twoFa: String): SuccessMessage
+  updateEmail(email: String!, twoFa: String): SuccessMessage!
   updateIdentityAddCountryAndState(
     """ISO 3166 alpha 2 code"""
     countryCode: String!
     stateCode: String
-  ): IdentityResponse
+  ): IdentityResponse!
 
   """Update a movement"""
-  updateMovement(payload: UpdateMovementParams!, signature: Signature!): Movement
+  updateMovement(payload: UpdateMovementParams!, signature: Signature!): Movement!
 
   """
   Changes a user password for the CAS. If a user has wallets, they must also
@@ -1671,15 +1706,15 @@ type RootMutationType {
 
     """Update account password."""
     twoFa: String
-  ): AccountResponse
-  updateSourceOfFundsOrOccupation(occupation: String, sourceOfFunds: String): IdentityResponse
+  ): AccountResponse!
+  updateSourceOfFundsOrOccupation(occupation: String, sourceOfFunds: String): IdentityResponse!
 
   """
     Can be used to replace a wallet blockchain or create a new wallet for a blockchain not created on an account.
   
   """
-  updateWallet(wallet: WalletInput!): Wallet
-  verificationSkip(email: String): String
+  updateWallet(wallet: WalletInput!): Wallet!
+  verificationSkip(email: String!): String
 
   """
   A generic abstraction for Nash email verification serving multiple purposes.
@@ -1690,136 +1725,139 @@ type RootMutationType {
   resetting the account with the same seed.
   
   """
-  verifyHash(email: String!, options: VerificationOptions, verificationHash: UUID4!): SuccessMessage
+  verifyHash(email: String!, options: VerificationOptions, verificationHash: UUID4!): SuccessMessage!
 }
 
 type RootQueryType {
-  canResetTwelveWords(email: String!, verificationHash: UUID4!): Boolean
+  canResetTwelveWords(email: String!, verificationHash: UUID4!): Boolean!
   discourseAccountStatus: DiscourseAccountStatusResponse
 
   """A fiat ramp quote"""
-  fiatRampQuote(id: String!): FiatRampQuote
+  fiatRampQuote(id: ID!): FiatRampQuote!
 
   """A list of paginated fiat ramp quotes"""
-  fiatRampQuotes(filters: FiatRampQuoteFilters, paginationOptions: PaginationOptions!, sortingOptions: SortingOptions): PaginatedFiatRampQuotes
+  fiatRampQuotes(filters: FiatRampQuoteFilters, paginationOptions: PaginationOptions!, sortingOptions: SortingOptions): PaginatedFiatRampQuotes!
 
   """Get all fiat ramp available assets with prices and changes"""
-  fiatRampRatesAndAssets(fiatSymbol: String): [FiatRampAsset]
+  fiatRampRatesAndAssets(fiatSymbol: String): [FiatRampAsset!]
 
   """Get the users' limits for the fiat ramp"""
   fiatRampUserLimit: UserLimit!
 
   """get account."""
-  getAccount: AccountResponse
+  getAccount: AccountResponse!
 
   """Get account address for a given currency"""
-  getAccountAddress(payload: GetAccountAddressParams!, signature: Signature): AccountAddress
+  getAccountAddress(payload: GetAccountAddressParams!, signature: Signature): AccountAddress!
 
   """Get account balance for a given currency"""
-  getAccountBalance(payload: GetAccountBalanceParams!, signature: Signature): AccountBalance
+  getAccountBalance(payload: GetAccountBalanceParams!, signature: Signature): AccountBalance!
 
   """Get a specific order"""
-  getAccountOrder(payload: GetAccountOrderParams!, signature: Signature): Order
+  getAccountOrder(payload: GetAccountOrderParams!, signature: Signature): Order!
 
   """Get account portfolio"""
-  getAccountPortfolio(payload: GetAccountPortfolioParams!, signature: Signature): AccountPortfolio
+  getAccountPortfolio(payload: GetAccountPortfolioParams!, signature: Signature): AccountPortfolio!
 
   """Get account volumes in USD"""
-  getAccountVolumes(payload: GetAccountVolumesParams!, signature: Signature): AccountVolume
+  getAccountVolumes(payload: GetAccountVolumesParams!, signature: Signature): AccountVolume!
 
   """Return a specific asset by asset symbol or name"""
-  getAsset(assetIdentifier: String!): Asset
+  getAsset(assetIdentifier: String!): Asset!
 
   """Get asset nonces"""
-  getAssetsNonces(payload: GetAssetsNoncesParams!, signature: Signature!): [AssetNonces]
+  getAssetsNonces(payload: GetAssetsNoncesParams!, signature: Signature!): [AssetNonces!]!
 
   """Get deposit address for a given currency"""
   getDepositAddress(payload: GetDepositAddressParams!, signature: Signature): AccountDepositAddress @deprecated(reason: "use get_account_address instead")
 
   """Get device_queries"""
-  getDevices(paginationOptions: PaginationOptions): PaginatedDevices
+  getDevices(paginationOptions: PaginationOptions): PaginatedDevices!
 
   """Get metrics for an asset, can specify a period or get all periods"""
-  getExchangeAssetMetrics(assetSymbol: String!, period: MetricPeriod): [ExchangeAssetMetric]
+  getExchangeAssetMetrics(assetSymbol: String!, period: MetricPeriod): [ExchangeAssetMetric!]!
 
   """Get metrics for a market, can specify a period or get all periods"""
-  getExchangeMarketMetrics(marketName: String!, period: MetricPeriod): [ExchangeMarketMetric]
+  getExchangeMarketMetrics(marketName: String!, period: MetricPeriod): [ExchangeMarketMetric!]!
 
   """Get a matching engine public key"""
-  getExchangePublicKey: ExchangePublicKey
+  getExchangePublicKey: ExchangePublicKey!
 
   """Return the exchange status, including server time and API rate limits"""
-  getExchangeStatus: ExchangeStatus
+  getExchangeStatus: ExchangeStatus!
 
   """get a list of fiat gateway credentials."""
-  getFiatGatewayCredentials: [FiatGatewayCredential]
-  getIdentity: IdentityResponse
+  getFiatGatewayCredentials: [FiatGatewayCredential!]
+  getIdentity: IdentityResponse!
 
   """Get details of one market"""
-  getMarket(marketName: MarketName!): Market
+  getMarket(marketName: MarketName!): Market!
 
   """Get a currency movement"""
-  getMovement(payload: GetMovementParams!, signature: Signature!): Movement
+  getMovement(payload: GetMovementParams!, signature: Signature!): Movement!
 
   """Get order book for a given market"""
-  getOrderBook(marketName: MarketName!): OrderBook
+  getOrderBook(marketName: MarketName!): OrderBook!
   getOrdersForMovement(payload: GetOrdersForMovementParams!, signature: Signature!): GetOrdersForMovementResponse @deprecated(reason: "use prepare_movement instead")
-  getPaillierProof: PaillierProof
+  getPaillierProof: PaillierProof!
 
   """
   Get the referrals codes for a user, most of the time it will be one but it can be multiple
   """
-  getReferralCodes: [ReferralCode]
+  getReferralCodes: [ReferralCode!]!
 
   """
   Get the list of referral_recipients and the tickets count. It contains the
   tickets directly owned and the one from gran parent relationship.
   """
-  getReferralRecipientsTickets: [ReferralRecipientsTicket]
+  getReferralRecipientsTickets: [ReferralRecipientsTicket!]!
 
   """Get key for encrypting and decrypting secret key client-side"""
-  getServerEncryptionKey(password: String!, twoFa: String): String
+  getServerEncryptionKey(password: String!, twoFa: String): String!
 
   """Return ticker details for a market"""
-  getTicker(marketName: MarketName!): Ticker
+  getTicker(marketName: MarketName!): Ticker!
 
   """Get activated and pending tickets count."""
-  getTicketsCount: TicketsCount
-  getToken(id: String!): Token
+  getTicketsCount: TicketsCount!
+  getToken(id: ID!): Token!
+
+  """A list of IBANs previously used by the user"""
+  ibanSuggestions: [String!]!
 
   """
     Get the kyc status of the current account.
   
   
   """
-  kycStatus: KycStatusResponse
+  kycStatus: KycStatusResponse!
 
   """Get all account balances"""
-  listAccountBalances(payload: ListAccountBalancesParams!, signature: Signature): [AccountBalance]
+  listAccountBalances(payload: ListAccountBalancesParams!, signature: Signature): [AccountBalance!]!
 
   """List all your orders, optionally filtered by market and/or status"""
-  listAccountOrders(payload: ListAccountOrdersParams!, signature: Signature): OrderHistory
+  listAccountOrders(payload: ListAccountOrdersParams!, signature: Signature): OrderHistory!
 
   """Get account stakes"""
-  listAccountStakes(payload: ListAccountStakesParams!, signature: Signature): AccountStakes
+  listAccountStakes(payload: ListAccountStakesParams!, signature: Signature): AccountStakes!
 
   """Get account staking dividends for a given year/month"""
-  listAccountStakingDividends(payload: ListAccountStakingDividendsParams!, signature: Signature): AccountStakingDividends
+  listAccountStakingDividends(payload: ListAccountStakingDividendsParams!, signature: Signature): AccountStakingDividends!
 
   """Get account staking statements"""
-  listAccountStakingStatements(payload: ListAccountStakingStatementsParams!, signature: Signature): [AccountStakingStatement]
+  listAccountStakingStatements(payload: ListAccountStakingStatementsParams!, signature: Signature): [AccountStakingStatement!]!
 
   """List all your trades optionally filtered by market"""
-  listAccountTrades(payload: ListAccountTradesParams!, signature: Signature): TradeHistory
+  listAccountTrades(payload: ListAccountTradesParams!, signature: Signature): TradeHistory!
 
   """List transactions"""
-  listAccountTransactions(payload: ListAccountTransactionsParams!, signature: Signature): ListAccountTransactionsResponse
+  listAccountTransactions(payload: ListAccountTransactionsParams!, signature: Signature): ListAccountTransactionsResponse!
 
   """list activity"""
-  listActivity(paginationOptions: PaginationOptions): PaginatedActivity
+  listActivity(paginationOptions: PaginationOptions): PaginatedActivity!
 
   """Return a list of assets"""
-  listAssets: [Asset]
+  listAssets: [Asset!]!
 
   """List candle records for a market by given interval aggregation."""
   listCandles(
@@ -1830,19 +1868,19 @@ type RootQueryType {
     """Specify the max number of elements to return"""
     limit: Int = 25
     marketName: MarketName!
-  ): CandleRange
+  ): CandleRange!
 
   """List aggregated metrics for each asset for given period"""
-  listExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric]
+  listExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric!]!
 
   """List aggregated metrics for each market for given period"""
-  listExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric]
+  listExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric!]!
 
   """List all markets (currency pair)"""
-  listMarkets: [Market]
+  listMarkets: [Market!]!
 
   """List all movement for a given a type/status/currency"""
-  listMovements(payload: ListMovementsParams!, signature: Signature!): [Movement]
+  listMovements(payload: ListMovementsParams!, signature: Signature!): [Movement!]!
 
   """List orders - public"""
   listOrders(
@@ -1856,13 +1894,13 @@ type RootQueryType {
     rangeStop: DateTime
     status: [OrderStatus]
     type: [OrderType]
-  ): OrderHistory
+  ): OrderHistory!
 
   """Return ticker details for all markets"""
-  listTickers: [Ticker]
+  listTickers: [Ticker!]!
 
   """list of tokens."""
-  listTokens(type: TokenTypes): [Token]
+  listTokens(type: TokenTypes): [Token!]!
 
   """List trades for a given market"""
   listTrades(
@@ -1871,16 +1909,16 @@ type RootQueryType {
     """Specify the max number of elements to return"""
     limit: Int = 50
     marketName: MarketName
-  ): TradeHistory
+  ): TradeHistory!
 
   """List transactions and transfers"""
-  listTransactionsAndTransfers(payload: ListAccountTransactionsParams!): ListTransactionsAndTransfersResponse
+  listTransactionsAndTransfers(payload: ListAccountTransactionsParams!): ListTransactionsAndTransfersResponse!
 
   """
     Get the country code and state code from geoip
   
   """
-  location: LocationResponse
+  location: LocationResponse!
 
   """
     Uses country code and state to return restrictions associated with a location.
@@ -1889,14 +1927,20 @@ type RootQueryType {
     Returns a list of two lists, for tier 0 and tier 1 and above restrictions
   
   """
-  locationRestrictions(countryCode: String, stateCode: String): [[RestrictionEnum]]
+  locationRestrictions(countryCode: String, stateCode: String): [[RestrictionEnum!]]!
 
   """Get the nash fiat ramps' limits"""
   nashFiatRampLimits: FiatRampLimits!
-  restrictedJurisdiction: RestrictedJurisdictionResponse
+
+  """A payment method"""
+  paymentMethod(id: ID!): PaymentMethod!
+
+  """A list of paginated payment method"""
+  paymentMethods(paginationOptions: PaginationOptions!, sortingOptions: SortingOptions): PaginatedPaymentMethods!
+  restrictedJurisdiction: RestrictedJurisdictionResponse!
 
   """Get a list of Contacts for an account"""
-  searchContacts(filters: ContactSearchFilters!, paginationOptions: PaginationOptions): PaginatedContacts
+  searchContacts(filters: ContactSearchFilters!, paginationOptions: PaginationOptions): PaginatedContacts!
 
   """
     Returns if the server trust the IP
@@ -1905,40 +1949,41 @@ type RootQueryType {
   trustedIp: Boolean
 
   """validate address"""
-  validateAddress(freeFormAddress: String!): ValidateAddressResponse
+  validateAddress(freeFormAddress: String!): ValidateAddressResponse!
 
   """validate referral code."""
-  validReferralCode(referralCode: String!): Boolean
+  validReferralCode(referralCode: String!): Boolean!
 }
 
 type RootSubscriptionType {
   """subscribe to status updated for the KYC status."""
-  kycStatusUpdate: KycStatusResponse
+  kycStatusUpdate: KycStatusResponse!
 
   """Get new trades as they are executed"""
-  newAccountTrades(market: String, payload: NewAccountTradesParams!, signature: Signature): [Trade]
+  newAccountTrades(market: String, payload: NewAccountTradesParams!, signature: Signature): [Trade!]!
 
   """Get new trades as they are executed"""
-  newTrades(marketName: MarketName!): [Trade]
-  updatedAccountOrders(market: String, payload: UpdatedAccountOrdersParams!, signature: Signature): [Order]
+  newTrades(marketName: MarketName!): [Trade!]!
+  updatedAccountOrders(market: String, payload: UpdatedAccountOrdersParams!, signature: Signature): [Order!]!
 
   """Get new and updated candles for a market by interval"""
-  updatedCandles(interval: CandleInterval!, marketName: MarketName!): [Candle]
+  updatedCandles(interval: CandleInterval!, marketName: MarketName!): [Candle!]!
 
   """Get new and updated exchange market metrics for a market by period"""
-  updatedExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric]
+  updatedExchangeAssetMetrics(period: MetricPeriod!): [ExchangeAssetMetric!]!
 
   """Get new and updated exchange market metrics for a market by period"""
-  updatedExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric]
+  updatedExchangeMarketMetrics(period: MetricPeriod!): [ExchangeMarketMetric!]!
+  updatedExchangeStatus: ExchangeStatus
 
   """Get updated order book data"""
-  updatedOrderBook(marketName: MarketName!): OrderBook
+  updatedOrderBook(marketName: MarketName!): OrderBook!
 
   """Get new updates to a specific market ticker"""
-  updatedTicker(marketName: MarketName!): Ticker
+  updatedTicker(marketName: MarketName!): Ticker!
 
   """Get new updates to all market tickers"""
-  updatedTickers: [Ticker]
+  updatedTickers: [Ticker!]!
 }
 
 input SendBlockchainRawTransactionParams {
@@ -1987,9 +2032,9 @@ input SignStatesParams {
 }
 
 type SignStatesResponse {
-  recycledOrders: [RecycledOrder]
-  serverSignedStates: [ServerSignedState]
-  states: [State]
+  recycledOrders: [RecycledOrder!]!
+  serverSignedStates: [ServerSignedState!]!
+  states: [State!]!
 }
 
 input SignupAnalytics {
@@ -2001,7 +2046,6 @@ input SignupAnalytics {
 input SignUpIdentity {
   """ISO 3166 alpha 2 code"""
   countryCode: String!
-  fullName: String!
   stateCode: String
 }
 
@@ -2060,17 +2104,17 @@ type Ticker {
   bestBidPrice: CurrencyPrice
   bestBidSize: CurrencyAmount
   highPrice24h: CurrencyPrice
-  id: ID
+  id: ID!
   lastPrice: CurrencyPrice
   lowPrice24h: CurrencyPrice
-  market: Market
-  marketName: MarketName
+  market: Market!
+  marketName: MarketName!
   priceChange24h: CurrencyPrice
   priceChange24hPct: Float
   usdLastPrice: CurrencyPrice
   usdLastPriceB: CurrencyPrice
-  usdVolume24h: CurrencyAmount
-  volume24h: CurrencyAmount
+  usdVolume24h: CurrencyAmount!
+  volume24h: CurrencyAmount!
 }
 
 type TicketsCount {
@@ -2085,7 +2129,7 @@ type Token {
   lastUsedAt: Date
   options: OptionsType
   type: TokenTypes!
-  whitelistedAddresses: [WhitelistedAddress]
+  whitelistedAddresses: [WhitelistedAddress!]
 }
 
 enum TokenDuration {
@@ -2101,30 +2145,78 @@ enum TokenTypes {
   TWO_FACTOR_LOGIN
 }
 
+enum TrackedEvent {
+  """
+  Event to be used when user clicks a button. Remember to identify the button.
+  """
+  BUTTON_CLICKED
+
+  """To be used when a check box is switched"""
+  CHECK_BOX_CLICKED
+
+  """
+  To be used when the user types on a field, after a delay or change of focus. Make sure to properly identify the field
+  """
+  FIELD_ENTERED
+
+  """
+  To be used when the user select a field or radio. Make sure to properly identify the field
+  """
+  FIELD_SELECTED
+
+  """To be used when a modal is closed"""
+  MODAL_CLOSED
+
+  """To be used when a modal window is opened"""
+  MODAL_OPENED
+}
+
+input TrackedProperties {
+  action: String
+  amount: CurrencyNumber
+  authenticated: String
+  category: String
+  count: String
+  currency: CurrencySymbol
+  description: String
+  duration: String
+  errorNumber: String
+  flow: String
+  identifier: String!
+  mode: String
+  route: String
+  source: String
+  status: String
+  step: String
+  trigger: String
+  type: String
+  value: String
+}
+
 type Trade {
-  accountSide: AccountTradeSide
-  amount: CurrencyAmount
+  accountSide: AccountTradeSide!
+  amount: CurrencyAmount!
   cursor: String
-  direction: Direction
-  executedAt: DateTime
-  id: ID
-  limitPrice: CurrencyPrice
-  makerFee: CurrencyAmount
-  makerGave: CurrencyAmount
-  makerOrderId: ID
-  makerReceived: CurrencyAmount
-  market: Market
-  takerFee: CurrencyAmount
-  takerGave: CurrencyAmount
-  takerOrderId: ID
-  takerReceived: CurrencyAmount
-  usdARate: CurrencyPrice
-  usdBRate: CurrencyPrice
+  direction: Direction!
+  executedAt: DateTime!
+  id: ID!
+  limitPrice: CurrencyPrice!
+  makerFee: CurrencyAmount!
+  makerGave: CurrencyAmount!
+  makerOrderId: ID!
+  makerReceived: CurrencyAmount!
+  market: Market!
+  takerFee: CurrencyAmount!
+  takerGave: CurrencyAmount!
+  takerOrderId: ID!
+  takerReceived: CurrencyAmount!
+  usdARate: CurrencyPrice!
+  usdBRate: CurrencyPrice!
 }
 
 type TradeHistory {
   next: PaginationCursor
-  trades: [Trade]
+  trades: [Trade!]!
 }
 
 type TransactionElement {
@@ -2174,7 +2266,7 @@ human-readable ID strings.
 scalar UUID4
 
 type ValidateAddressResponse {
-  results: [AddressResponse]
+  results: [AddressResponse!]
 }
 
 enum VerificationLevelEnum {

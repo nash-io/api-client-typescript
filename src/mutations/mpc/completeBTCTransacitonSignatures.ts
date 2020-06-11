@@ -4,7 +4,7 @@ export const COMPLETE_BTC_TRANSACTION_SIGNATURES = gql`
   mutation completeBtcPayloadSignature(
     $payload: Base16!
     $publicKey: Base16!
-    $inputPresigs: [InputPresig]!
+    $inputPresigs: [InputPresig!]!
   ) {
     completeBtcPayloadSignature(
       payload: $payload
