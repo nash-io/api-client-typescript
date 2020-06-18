@@ -272,8 +272,10 @@ const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.NEO]: BIP44.NEO
 }
 
+const ORDERS_REMAINING_TO_AUTOSYNC_AT = 20
 const NEP5_OLD_ASSETS = ['nos', 'phx', 'guard', 'lx', 'ava']
 export const MISSING_NONCES = 'missing_asset_nonces'
+export const MAX_ORDERS_REACHED = 'Maximal number of orders have been reached'
 export const MAX_SIGN_STATE_RECURSION = 5
 
 export class Client {
@@ -317,7 +319,7 @@ export class Client {
   private tradedAssets: string[] = []
   private assetNonces: { [key: string]: number[] }
   private currentOrderNonce: number
-
+  private signStateInProgress: boolean
   /**
    * Create a new instance of [[Client]]
    *
@@ -337,6 +339,7 @@ export class Client {
       ...opts
     }
     this.clientOpts = {
+      autoSignState: true,
       runRequestsOverWebsockets: false,
       headers: {},
       ...clientOpts
@@ -1608,6 +1611,8 @@ export class Client {
   public async getSignAndSyncStates(
     sync = false
   ): Promise<SyncStatesData | SignStatesData> {
+    this.signStateInProgress = true
+
     const emptyStates: GetStatesData = {
       states: [],
       recycledOrders: [],
@@ -1616,6 +1621,8 @@ export class Client {
     const signStatesRecursive: SignStatesData = await this.signStates(
       emptyStates
     )
+    this.signStateInProgress = false
+
     if (sync) {
       const syncResult = await this.syncStates(signStatesRecursive)
       return syncResult
@@ -1936,10 +1943,22 @@ export class Client {
       })
       measurementPlaceOrder.end()
       measurementPlaceLimitOrder.end()
+
+      await this.handleOrderPlaced(result.data.placeLimitOrder)
+
       return result.data.placeLimitOrder
     } catch (e) {
+      let replaceOrder = false
       if (e.message.includes(MISSING_NONCES)) {
+        replaceOrder = true
         await this.updateTradedAssetNonces()
+      } else if (e.message.includes(MAX_ORDERS_REACHED)) {
+        if (this.clientOpts.autoSignState && !this.signStateInProgress) {
+          replaceOrder = true
+          await this.getSignAndSyncStates()
+        }
+      }
+      if (replaceOrder) {
         return await this.placeLimitOrder(
           allowTaker,
           amount,
@@ -2026,12 +2045,23 @@ export class Client {
       })
       measurementPlaceOrder.end()
       measurementPlaceMarketOrder.end()
+      await this.handleOrderPlaced(result.data.placeMarketOrder)
       return result.data.placeMarketOrder
     } catch (e) {
+      let replaceOrder = false
       if (e.message.includes(MISSING_NONCES)) {
+        replaceOrder = true
         await this.updateTradedAssetNonces()
+      } else if (e.message.includes(MAX_ORDERS_REACHED)) {
+        if (this.clientOpts.autoSignState && !this.signStateInProgress) {
+          replaceOrder = true
+          await this.getSignAndSyncStates()
+        }
+      }
+      if (replaceOrder) {
         return await this.placeMarketOrder(amount, buyOrSell, marketName)
       }
+
       return this.handleOrderError(e, signedPayload)
     }
   }
@@ -2136,11 +2166,20 @@ export class Client {
       })
       measurementPlaceOrder.end()
       measurementPlaceMarketOrder.end()
-
+      await this.handleOrderPlaced(result.data.placeStopLimitOrder)
       return result.data.placeStopLimitOrder
     } catch (e) {
+      let replaceOrder = false
       if (e.message.includes(MISSING_NONCES)) {
+        replaceOrder = true
         await this.updateTradedAssetNonces()
+      } else if (e.message.includes(MAX_ORDERS_REACHED)) {
+        if (this.clientOpts.autoSignState && !this.signStateInProgress) {
+          replaceOrder = true
+          await this.getSignAndSyncStates()
+        }
+      }
+      if (replaceOrder) {
         return await this.placeStopLimitOrder(
           allowTaker,
           amount,
@@ -2238,10 +2277,20 @@ export class Client {
       })
       measurementPlaceOrder.end()
       measurementPlaceMarketOrder.end()
+      await this.handleOrderPlaced(result.data.placeStopMarketOrder)
       return result.data.placeStopMarketOrder
     } catch (e) {
+      let replaceOrder = false
       if (e.message.includes(MISSING_NONCES)) {
+        replaceOrder = true
         await this.updateTradedAssetNonces()
+      } else if (e.message.includes(MAX_ORDERS_REACHED)) {
+        if (this.clientOpts.autoSignState && !this.signStateInProgress) {
+          replaceOrder = true
+          await this.getSignAndSyncStates()
+        }
+      }
+      if (replaceOrder) {
         return await this.placeStopMarketOrder(
           amount,
           buyOrSell,
@@ -2251,6 +2300,17 @@ export class Client {
       }
 
       return this.handleOrderError(e, signedPayload)
+    }
+  }
+
+  private handleOrderPlaced = async (order: OrderPlaced): Promise<void> => {
+    if (
+      this.clientOpts.autoSignState &&
+      order.ordersTillSignState < ORDERS_REMAINING_TO_AUTOSYNC_AT &&
+      !this.signStateInProgress
+    ) {
+      console.info('Will auto sign state: ', order.ordersTillSignState)
+      await this.getSignAndSyncStates()
     }
   }
 

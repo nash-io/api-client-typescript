@@ -55,4 +55,5 @@ export enum OrderType {
 export interface OrderPlaced {
   id: string
   status: OrderStatus
+  ordersTillSignState: number
 }
