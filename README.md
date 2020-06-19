@@ -2,9 +2,9 @@
 
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
-- [Gitlab repository](https://gitlab.com/nash-io-public/api-client-typescript)
-- [Documentation](https://nash-io-public.gitlab.io/api-client-typescript) 
-  - [`nash.Client` API reference](https://nash-io-public.gitlab.io/api-client-typescript/classes/_client_client_.client.html)
+- [Github repository](https://github.com/nash-io/api-client-typescript)
+- [Documentation](https://nash-io.github.io/api-client-typescript/docs/) 
+
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
