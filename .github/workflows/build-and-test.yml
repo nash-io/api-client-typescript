@@ -1,10 +1,10 @@
 # https://github.com/actions/setup-node
-name: Node.js CI
+name: Build and test
 
 on: [push]
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
 
     steps:
