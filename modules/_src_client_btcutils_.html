@@ -1,0 +1,793 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>&quot;src/client/btcUtils&quot; | @neon-exchange/api-client-typescript - v5.0.27</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.js" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">@neon-exchange/api-client-typescript - v5.0.27</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="_src_client_btcutils_.html">&quot;src/client/btcUtils&quot;</a>
+				</li>
+			</ul>
+			<h1>Module &quot;src/client/btcUtils&quot;</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Interfaces</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_src_client_btcutils_.output.html" class="tsd-kind-icon">Output</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-kind-icon">Psbt<wbr>Cache</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_src_client_btcutils_.utxos.html" class="tsd-kind-icon">Utxos</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_client_btcutils_.html#btc_digits" class="tsd-kind-icon">BTC_<wbr>DIGITS</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_client_btcutils_.html#btc_satoshi_multiplier" class="tsd-kind-icon">BTC_<wbr>SATOSHI_<wbr>MULTIPLIER</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_client_btcutils_.html#fake_destination" class="tsd-kind-icon">FAKE_<wbr>DESTINATION</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="_src_client_btcutils_.html#normal_to_satoshi_multiplier" class="tsd-kind-icon">NORMAL_<wbr>TO_<wbr>SATOSHI_<wbr>MULTIPLIER</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#checkredeemscript" class="tsd-kind-icon">check<wbr>Redeem<wbr>Script</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#checkwitnessscript" class="tsd-kind-icon">check<wbr>Witness<wbr>Script</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#isp2wpkh" class="tsd-kind-icon">is<wbr>P2WPKH</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#isp2wshscript" class="tsd-kind-icon">is<wbr>P2WSHScript</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#p2shp2wpkhscript" class="tsd-kind-icon">P2sh<wbr>P2wpkh<wbr>Script</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#addnonwitnesstxcache" class="tsd-kind-icon">add<wbr>Non<wbr>Witness<wbr>TxCache</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#calculatebtcfees" class="tsd-kind-icon">calculate<wbr>Btc<wbr>Fees</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#calculatefeerate" class="tsd-kind-icon">calculate<wbr>Fee<wbr>Rate</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#checkscriptforpubkey" class="tsd-kind-icon">check<wbr>Script<wbr>For<wbr>Pubkey</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#gethashandsighashtype" class="tsd-kind-icon">get<wbr>Hash<wbr>And<wbr>Sighash<wbr>Type</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#gethashforsig" class="tsd-kind-icon">get<wbr>Hash<wbr>For<wbr>Sig</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#ispaymentfactory" class="tsd-kind-icon">is<wbr>Payment<wbr>Factory</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_src_client_btcutils_.html#networkfromname" class="tsd-kind-icon">network<wbr>From<wbr>Name</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#nonwitnessutxotxfromcache" class="tsd-kind-icon">non<wbr>Witness<wbr>Utxo<wbr>TxFrom<wbr>Cache</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#scriptcheckerfactory" class="tsd-kind-icon">script<wbr>Checker<wbr>Factory</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_src_client_btcutils_.html#sighashtypetostring" class="tsd-kind-icon">sighash<wbr>Type<wbr>ToString</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="btc_digits" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> BTC_<wbr>DIGITS</h3>
+					<div class="tsd-signature tsd-kind-icon">BTC_<wbr>DIGITS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">8</span><span class="tsd-signature-symbol"> = 8</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L32">src/client/btcUtils.ts:32</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="btc_satoshi_multiplier" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> BTC_<wbr>SATOSHI_<wbr>MULTIPLIER</h3>
+					<div class="tsd-signature tsd-kind-icon">BTC_<wbr>SATOSHI_<wbr>MULTIPLIER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = Math.pow(10, BTC_DIGITS)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L33">src/client/btcUtils.ts:33</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="fake_destination" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> FAKE_<wbr>DESTINATION</h3>
+					<div class="tsd-signature tsd-kind-icon">FAKE_<wbr>DESTINATION<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"16JrGhLx5bcBSA34kew9V6Mufa4aXhFe9X"</span><span class="tsd-signature-symbol"> = &quot;16JrGhLx5bcBSA34kew9V6Mufa4aXhFe9X&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L34">src/client/btcUtils.ts:34</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="normal_to_satoshi_multiplier" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> NORMAL_<wbr>TO_<wbr>SATOSHI_<wbr>MULTIPLIER</h3>
+					<div class="tsd-signature tsd-kind-icon">NORMAL_<wbr>TO_<wbr>SATOSHI_<wbr>MULTIPLIER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">BigNumber</span><span class="tsd-signature-symbol"> = new BigNumber(10).pow(8)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L35">src/client/btcUtils.ts:35</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="checkredeemscript" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> check<wbr>Redeem<wbr>Script</h3>
+					<div class="tsd-signature tsd-kind-icon">check<wbr>Redeem<wbr>Script<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol"> = scriptCheckerFactory(payments.p2sh, &#x27;Redeem script&#x27;)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L223">src/client/btcUtils.ts:223</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-variable tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>idx: <span class="tsd-signature-type">number</span></h5>
+											</li>
+											<li>
+												<h5>spk: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+											<li>
+												<h5>rs: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="checkwitnessscript" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> check<wbr>Witness<wbr>Script</h3>
+					<div class="tsd-signature tsd-kind-icon">check<wbr>Witness<wbr>Script<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol"> = scriptCheckerFactory(payments.p2wsh,&#x27;Witness script&#x27;)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L224">src/client/btcUtils.ts:224</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-variable tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>idx: <span class="tsd-signature-type">number</span></h5>
+											</li>
+											<li>
+												<h5>spk: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+											<li>
+												<h5>rs: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="isp2wpkh" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> is<wbr>P2WPKH</h3>
+					<div class="tsd-signature tsd-kind-icon">is<wbr>P2WPKH<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = isPaymentFactory(payments.p2wpkh)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L239">src/client/btcUtils.ts:239</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-variable tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>script: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="isp2wshscript" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> is<wbr>P2WSHScript</h3>
+					<div class="tsd-signature tsd-kind-icon">is<wbr>P2WSHScript<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = isPaymentFactory(payments.p2wsh)</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L240">src/client/btcUtils.ts:240</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-variable tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>script: <span class="tsd-signature-type">Buffer</span></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="p2shp2wpkhscript" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> P2sh<wbr>P2wpkh<wbr>Script</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">P2sh<wbr>P2wpkh<wbr>Script<span class="tsd-signature-symbol">(</span>pubkeyBuffer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L20">src/client/btcUtils.ts:20</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pubkeyBuffer: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Buffer</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="addnonwitnesstxcache" class="tsd-anchor"></a>
+					<h3>add<wbr>Non<wbr>Witness<wbr>TxCache</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Non<wbr>Witness<wbr>TxCache<span class="tsd-signature-symbol">(</span>cache<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a>, input<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PsbtInput</span>, inputIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L159">src/client/btcUtils.ts:159</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>cache: <a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a></h5>
+								</li>
+								<li>
+									<h5>input: <span class="tsd-signature-type">PsbtInput</span></h5>
+								</li>
+								<li>
+									<h5>inputIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="calculatebtcfees" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> calculate<wbr>Btc<wbr>Fees</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">calculate<wbr>Btc<wbr>Fees<span class="tsd-signature-symbol">(</span>amount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, gasPrice<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, utxos<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_client_btcutils_.utxos.html" class="tsd-signature-type">Utxos</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BigNumber</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L37">src/client/btcUtils.ts:37</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>amount: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>gasPrice: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>utxos: <a href="../interfaces/_src_client_btcutils_.utxos.html" class="tsd-signature-type">Utxos</a><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">BigNumber</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="calculatefeerate" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> calculate<wbr>Fee<wbr>Rate</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">calculate<wbr>Fee<wbr>Rate<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L59">src/client/btcUtils.ts:59</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="checkscriptforpubkey" class="tsd-anchor"></a>
+					<h3>check<wbr>Script<wbr>For<wbr>Pubkey</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">check<wbr>Script<wbr>For<wbr>Pubkey<span class="tsd-signature-symbol">(</span>pubkey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, action<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L78">src/client/btcUtils.ts:78</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pubkey: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li>
+									<h5>script: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li>
+									<h5>action: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="gethashandsighashtype" class="tsd-anchor"></a>
+					<h3>get<wbr>Hash<wbr>And<wbr>Sighash<wbr>Type</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Hash<wbr>And<wbr>Sighash<wbr>Type<span class="tsd-signature-symbol">(</span>inputs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PsbtInput</span><span class="tsd-signature-symbol">[]</span>, inputIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, pubkey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, cache<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a>, sighashTypes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>sighashType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L104">src/client/btcUtils.ts:104</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>inputs: <span class="tsd-signature-type">PsbtInput</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>inputIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>pubkey: <span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li>
+									<h5>cache: <a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a></h5>
+								</li>
+								<li>
+									<h5>sighashTypes: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>sighashType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></h4>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter">
+									<h5>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li class="tsd-parameter">
+									<h5>sighash<wbr>Type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="gethashforsig" class="tsd-anchor"></a>
+					<h3>get<wbr>Hash<wbr>For<wbr>Sig</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Hash<wbr>For<wbr>Sig<span class="tsd-signature-symbol">(</span>inputIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, input<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PsbtInput</span>, cache<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a>, sighashTypes<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>sighashType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L242">src/client/btcUtils.ts:242</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>inputIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>input: <span class="tsd-signature-type">PsbtInput</span></h5>
+								</li>
+								<li>
+									<h5>cache: <a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> sighashTypes: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">; </span>sighashType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> }</span></h4>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter">
+									<h5>hash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li class="tsd-parameter">
+									<h5>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span></h5>
+								</li>
+								<li class="tsd-parameter">
+									<h5>sighash<wbr>Type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="ispaymentfactory" class="tsd-anchor"></a>
+					<h3>is<wbr>Payment<wbr>Factory</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Payment<wbr>Factory<span class="tsd-signature-symbol">(</span>payment<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L229">src/client/btcUtils.ts:229</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>payment: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">boolean</span></h4>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter-signature">
+									<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+										<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>script<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+									</ul>
+									<ul class="tsd-descriptions">
+										<li class="tsd-description">
+											<h4 class="tsd-parameters-title">Parameters</h4>
+											<ul class="tsd-parameters">
+												<li>
+													<h5>script: <span class="tsd-signature-type">Buffer</span></h5>
+												</li>
+											</ul>
+											<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="networkfromname" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> network<wbr>From<wbr>Name</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">network<wbr>From<wbr>Name<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Network</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L67">src/client/btcUtils.ts:67</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>name: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Network</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="nonwitnessutxotxfromcache" class="tsd-anchor"></a>
+					<h3>non<wbr>Witness<wbr>Utxo<wbr>TxFrom<wbr>Cache</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">non<wbr>Witness<wbr>Utxo<wbr>TxFrom<wbr>Cache<span class="tsd-signature-symbol">(</span>cache<span class="tsd-signature-symbol">: </span><a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a>, input<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PsbtInput</span>, inputIndex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Transaction</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L191">src/client/btcUtils.ts:191</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>cache: <a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-signature-type">PsbtCache</a></h5>
+								</li>
+								<li>
+									<h5>input: <span class="tsd-signature-type">PsbtInput</span></h5>
+								</li>
+								<li>
+									<h5>inputIndex: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Transaction</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="scriptcheckerfactory" class="tsd-anchor"></a>
+					<h3>script<wbr>Checker<wbr>Factory</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">script<wbr>Checker<wbr>Factory<span class="tsd-signature-symbol">(</span>payment<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, paymentScriptName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L203">src/client/btcUtils.ts:203</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>payment: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>paymentScriptName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></h4>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter-signature">
+									<ul class="tsd-signatures tsd-kind-type-literal tsd-is-not-exported">
+										<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>idx<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, spk<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span>, rs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+									</ul>
+									<ul class="tsd-descriptions">
+										<li class="tsd-description">
+											<h4 class="tsd-parameters-title">Parameters</h4>
+											<ul class="tsd-parameters">
+												<li>
+													<h5>idx: <span class="tsd-signature-type">number</span></h5>
+												</li>
+												<li>
+													<h5>spk: <span class="tsd-signature-type">Buffer</span></h5>
+												</li>
+												<li>
+													<h5>rs: <span class="tsd-signature-type">Buffer</span></h5>
+												</li>
+											</ul>
+											<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+										</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="sighashtypetostring" class="tsd-anchor"></a>
+					<h3>sighash<wbr>Type<wbr>ToString</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">sighash<wbr>Type<wbr>ToString<span class="tsd-signature-symbol">(</span>sighashType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/0b84e59/src/client/btcUtils.ts#L138">src/client/btcUtils.ts:138</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>sighashType: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="_src_client_btcutils_.html">&quot;src/client/btc<wbr>Utils&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_src_client_btcutils_.output.html" class="tsd-kind-icon">Output</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_src_client_btcutils_.psbtcache.html" class="tsd-kind-icon">Psbt<wbr>Cache</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_src_client_btcutils_.utxos.html" class="tsd-kind-icon">Utxos</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#btc_digits" class="tsd-kind-icon">BTC_<wbr>DIGITS</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#btc_satoshi_multiplier" class="tsd-kind-icon">BTC_<wbr>SATOSHI_<wbr>MULTIPLIER</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#fake_destination" class="tsd-kind-icon">FAKE_<wbr>DESTINATION</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#normal_to_satoshi_multiplier" class="tsd-kind-icon">NORMAL_<wbr>TO_<wbr>SATOSHI_<wbr>MULTIPLIER</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#checkredeemscript" class="tsd-kind-icon">check<wbr>Redeem<wbr>Script</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#checkwitnessscript" class="tsd-kind-icon">check<wbr>Witness<wbr>Script</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#isp2wpkh" class="tsd-kind-icon">is<wbr>P2WPKH</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#isp2wshscript" class="tsd-kind-icon">is<wbr>P2WSHScript</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#p2shp2wpkhscript" class="tsd-kind-icon">P2sh<wbr>P2wpkh<wbr>Script</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#addnonwitnesstxcache" class="tsd-kind-icon">add<wbr>Non<wbr>Witness<wbr>TxCache</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#calculatebtcfees" class="tsd-kind-icon">calculate<wbr>Btc<wbr>Fees</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#calculatefeerate" class="tsd-kind-icon">calculate<wbr>Fee<wbr>Rate</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#checkscriptforpubkey" class="tsd-kind-icon">check<wbr>Script<wbr>For<wbr>Pubkey</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#gethashandsighashtype" class="tsd-kind-icon">get<wbr>Hash<wbr>And<wbr>Sighash<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#gethashforsig" class="tsd-kind-icon">get<wbr>Hash<wbr>For<wbr>Sig</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#ispaymentfactory" class="tsd-kind-icon">is<wbr>Payment<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_src_client_btcutils_.html#networkfromname" class="tsd-kind-icon">network<wbr>From<wbr>Name</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#nonwitnessutxotxfromcache" class="tsd-kind-icon">non<wbr>Witness<wbr>Utxo<wbr>TxFrom<wbr>Cache</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#scriptcheckerfactory" class="tsd-kind-icon">script<wbr>Checker<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_src_client_btcutils_.html#sighashtypetostring" class="tsd-kind-icon">sighash<wbr>Type<wbr>ToString</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
