@@ -1,0 +1,20 @@
+# https://github.com/actions/setup-node
+name: Node.js CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2-beta
+      with:
+        node-version: '10'
+    - run: yarn install --frozen-lockfile
+    - run: yarn test:lint
+    - run: yarn test:unit
+    - run: yarn test:unit:cov
+    - run: yarn build
+    - run: yarn doc
