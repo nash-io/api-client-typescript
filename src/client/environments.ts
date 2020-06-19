@@ -20,6 +20,7 @@ export interface ClientOptions {
   // The socketsocket conneciton supports 1 header. "User-Agent"
   // while the others support all, but you cannot override content-type nor the authorization token
   headers?: Record<string, string>
+  autoSignState?: boolean
 }
 export const EnvironmentConfiguration = {
   production: {
