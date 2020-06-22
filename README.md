@@ -3,7 +3,7 @@
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
 - [Github repository](https://github.com/nash-io/api-client-typescript)
-- [Documentation](https://nash-io.github.io/api-client-typescript/docs/) 
+- [Documentation](https://nash-io.github.io/api-client-typescript) 
 
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
@@ -109,7 +109,7 @@ connection.onUpdatedAccountOrders(
 )
 ```
 
-See also the [websockets example](https://gitlab.com/nash-io-public/api-client-typescript/-/tree/master/examples/sockets-orderbook).
+See also the [websockets example](https://github.com/nash-io/api-client-typescript/tree/master/examples/sockets-orderbook).
 
 ## Managing API key policies
 

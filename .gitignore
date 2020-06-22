@@ -11,3 +11,4 @@ coverage
 .vscode
 
 package-lock.json
+docs/
