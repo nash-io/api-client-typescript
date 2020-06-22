@@ -5,7 +5,7 @@
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
-  "repository": "https://gitlab.com/nash-io-public/api-client-typescript",
+  "repository": "https://github.com/nash-io/api-client-typescript",
   "license": "MIT",
   "keywords": [],
   "scripts": {

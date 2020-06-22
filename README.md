@@ -18,8 +18,7 @@ yarn add @neon-exchange/api-client-typescript
 
 ## Getting started
 
-To get started you need to create an API key. You can find instructions on how to do so on our [wiki page](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Setting-up-API-keys).
-
+To get started you need to create an API key. You can find instructions on how to do so further down in this Readme.
 Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
 
 ## Usage
@@ -111,10 +110,21 @@ connection.onUpdatedAccountOrders(
 
 See also the [websockets example](https://github.com/nash-io/api-client-typescript/tree/master/examples/sockets-orderbook).
 
-## Managing API key policies
+---
 
-For more information on how to set up policies for API keys, consult the [API key policies wiki page](https://gitlab.com/nash-io-public/api-client-typescript/-/wikis/Apikey-policies).
+## Setting up API keys
 
+Setting up an API key is very easy. Start by navigating to your profile page, from the profile page, click on the API Keys tab, and click on the 'Generate new key' to open a create API Key wizard.
+After going through the wizard. Remember to save your API key, and store it somewhere accessible to your project.
+
+[This video](https://youtu.be/5DQ0PCbCwkI) shows how to set up a new API Key.
+
+## API key policies & transferring funds to external wallets
+
+Using API keys allows users to apply policies to operations performed by the SDK. One such operation is to transfer funds to external accounts. This is done by using the transferToExternal method on the Client.
+Before being allowed to send funds, addresses have to be explicitly whitelisted. Otherwise the all calls to the method will result in a permission violation.
+
+Whitelisted addresses can be set up both before and after creating the API key. [This video](https://youtu.be/5hAa3FqknFA) shows how to whitelist two addresses for an API key.
 
 ## State signing
 
