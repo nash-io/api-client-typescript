@@ -221,6 +221,7 @@ import {
   createSignStatesParams,
   createSyncStatesParams,
   createTimestamp,
+  createTimestamp32,
   encryptSecretKey,
   getHKDFKeysFromPassword,
   getSecretKey,
@@ -775,7 +776,7 @@ export class Client {
     this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
 
-    this.currentOrderNonce = this.createTimestamp32()
+    this.currentOrderNonce = createTimestamp32()
     await this.updateTradedAssetNonces()
   }
 
@@ -854,7 +855,7 @@ export class Client {
     this.marketData = await this.fetchMarketData()
     this.assetData = await this.fetchAssetData()
     this.assetNonces = {}
-    this.currentOrderNonce = this.createTimestamp32()
+    this.currentOrderNonce = createTimestamp32()
     if (resp.data.signIn.twoFaRequired) {
       if (twoFaCode !== undefined) {
         this.account = await this.doTwoFactorLogin(twoFaCode)
@@ -2644,7 +2645,7 @@ export class Client {
             )
         } else {
           const sendAmount = parseFloat(amount) * 1e8
-          const timestamp = new BigNumber(this.createTimestamp32()).toString(16)
+          const timestamp = new BigNumber(createTimestamp32()).toString(16)
           transaction = new tx.InvocationTransaction({
             script: NeonJS.default.create.script({
               scriptHash: assetData.hash,
@@ -3358,7 +3359,7 @@ export class Client {
           txId: prefixWith0xIfNeeded(hash)
         }
       case 'neo':
-        const timestamp = new BigNumber(this.createTimestamp32()).toString(16)
+        const timestamp = new BigNumber(createTimestamp32()).toString(16)
         const balance = await NeonJS.api.neoscan.getBalance(
           this.opts.neoScan,
           childKey.address
@@ -3617,10 +3618,6 @@ export class Client {
       assetNonces[item.asset] = item.nonces
     })
     this.assetNonces = assetNonces
-  }
-
-  private createTimestamp32(): number {
-    return Math.trunc(new Date().getTime() / 10) - 155000000000
   }
 
   private getNoncesForTrade(
