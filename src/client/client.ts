@@ -97,7 +97,7 @@ import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
 import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
-import { UPDATED_ORDER_BOOK } from '../subscriptions/updatedOrderBook'
+// import { UPDATED_ORDER_BOOK } from '../subscriptions/updatedOrderBook'
 import { NEW_TRADES } from '../subscriptions/newTrades'
 import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
@@ -641,6 +641,45 @@ export class Client {
    * ```
    */
   createSocketConnection(): NashSocketEvents {
+    let _publicSocket: any = null
+    const getSocket = () => {
+      if (!_publicSocket) {
+        _publicSocket = new PhoenixSocket(this.wsUri)
+        _publicSocket.connect()
+        _publicSocket.disconnect = (c, code, reason) => {
+          if (!_publicSocket.conn) {
+            if (c) {
+              c()
+            }
+            return
+          }
+
+          // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
+          _publicSocket.conn.onclose = event => {
+            _publicSocket.log('transport', 'close', event)
+            // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
+            _publicSocket.channels.forEach(channel =>
+              channel.trigger('phx_close')
+            )
+            clearInterval(_publicSocket.heartbeatTimer)
+            _publicSocket.stateChangeCallbacks.close.forEach(callback =>
+              callback(event)
+            )
+          }
+
+          if (code) {
+            _publicSocket.conn.close(code, reason || '')
+          } else {
+            _publicSocket.conn.close()
+          }
+          _publicSocket.conn = null
+          if (c) {
+            c()
+          }
+        }
+      }
+      return _publicSocket
+    }
     if (this.wsUri == null) {
       throw new Error('wsUri config parameter missing')
     }
@@ -664,6 +703,9 @@ export class Client {
           return
         }
         disconnected = true
+        if (_publicSocket) {
+          _publicSocket.disconnect()
+        }
         socket.disconnect()
       },
       onUpdatedAccountOrders: async (payload, handlers) => {
@@ -709,14 +751,33 @@ export class Client {
         )
       },
       onUpdatedOrderbook: (variables, handlers) => {
-        AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
-            operation: gqlToString(UPDATED_ORDER_BOOK),
-            variables
-          }),
-          handlers
+        const publicSocket = getSocket()
+        const channel = publicSocket.channel(
+          'public_order_book:' + variables.marketName,
+          {}
         )
+
+        channel
+          .join()
+          .receive('ok', initial => {
+            handlers.onStart(initial)
+            if (handlers.onResult) {
+              handlers.onResult(initial)
+            }
+            channel.on('update', update => {
+              if (handlers.onResult) {
+                handlers.onResult(update)
+              }
+            })
+          })
+          .receive('error', resp => {
+            if (handlers.onAbort) {
+              handlers.onAbort(resp)
+            }
+            if (handlers.onError) {
+              handlers.onError(resp)
+            }
+          })
       },
       onAccountTrade: async (payload, handlers) => {
         authCheck('onAccountTrade')
