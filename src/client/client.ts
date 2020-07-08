@@ -38,6 +38,7 @@ import {
   GetAccountAddressResult
 } from '../queries/account/getAccountAddress'
 import { LIST_ACCOUNT_BALANCES } from '../queries/account/listAccountBalances'
+import { GET_ACCOUNT_VOLUMES } from '../queries/account/getAccountVolumes'
 import {
   LIST_MOVEMENTS,
   ListMovementsParams
@@ -169,6 +170,7 @@ import {
   AccountTransaction,
   OrderPlaced,
   Market,
+  AccountVolume,
   Order,
   DateTime,
   AccountOrder,
@@ -1176,6 +1178,28 @@ export class Client {
       query: LIST_ASSETS_QUERY
     })
     return result.data.listAssets
+  }
+
+  /**
+   * Fetches the current account volumes for the current periods
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * const volumes = await nash.getAccountVolumes()
+   * console.log(volumes.makerFeeRate)
+   * console.log(volumes.takerFeeRate)
+   * ```
+   */
+  public async getAccountVolumes(): Promise<AccountVolume> {
+    const result = await this.gql.query<{ getAccountVolumes: AccountVolume }>({
+      query: GET_ACCOUNT_VOLUMES,
+      variables: {
+        payload: {}
+      }
+    })
+    return result.data.getAccountVolumes
   }
 
   /**

@@ -1,5 +1,5 @@
-import { Asset, CurrencyAccountVolume } from '../types'
-
+import { Asset } from '../types'
+import { CurrencyAmount } from '../types'
 export interface AccountWallet {
   address: string
   blockchain: string
@@ -47,8 +47,11 @@ export interface AccountPortfolio {
 }
 
 export interface AccountVolume {
-  thirtyDayTotalVolumePercent: number
-  volumes: CurrencyAccountVolume[]
+  daily: CurrencyAmount
+  makerFeeRate: number
+  monthly: CurrencyAmount
+  takerFeeRate: number
+  yearly: CurrencyAmount
 }
 
 export interface AccountPortfolioTotal {
