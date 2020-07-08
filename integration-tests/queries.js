@@ -41,6 +41,7 @@ async function run() {
   await test('getAccountAddress', [Nash.CryptoCurrency.NEO])
   await test('getAccountAddress', [Nash.CryptoCurrency.ETH])
   await test('getAccountAddress', [Nash.CryptoCurrency.BTC])
+  await test('getAccountVolumes', [])
   await test('listAccountOrders', [])
   await test('getOrderBook', ['eth_neo'])
   await test('listAccountOrders', [
