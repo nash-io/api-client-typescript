@@ -5,7 +5,7 @@ import {
 } from '@neon-exchange/nash-protocol'
 
 import { ClientSignedState } from '../stateSyncing/fragments'
-import { CurrencyAmount, Signature } from '../../types'
+import { CurrencyAmount, Signature, Blockchain } from '../../types'
 
 export const PREPARE_MOVEMENT_MUTATION = gql`
   mutation prepareMovement(
@@ -19,6 +19,7 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
       }
       nonce
       transactionElements {
+        blockchain
         digest
       }
       fees {
@@ -30,6 +31,7 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
 `
 
 export interface TransactionElement {
+  blockchain: Blockchain
   digest: string
 }
 

@@ -43,7 +43,6 @@ import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
 import { DH_FIIL_POOL } from '../mutations/dhFillPool'
 import { GET_ASSETS_NONCES_QUERY } from '../queries/nonces/getAssetsNonces'
-import { GET_ORDERS_FOR_MOVEMENT_QUERY } from '../queries/movement/getOrdersForMovementQuery'
 import { SYNC_STATES_MUTATION } from '../mutations/stateSyncing/syncStatesMutation'
 import { SIGN_STATES_MUTATION } from '../mutations/stateSyncing/signStatesMutation'
 import { COMPLETE_PAYLOAD_SIGNATURE } from '../mutations/mpc/completeSignature'
@@ -85,7 +84,6 @@ const queries = {
   UPDATED_CANDLES,
   DH_FIIL_POOL,
   GET_ASSETS_NONCES_QUERY,
-  GET_ORDERS_FOR_MOVEMENT_QUERY,
   SYNC_STATES_MUTATION,
   SIGN_STATES_MUTATION,
   COMPLETE_PAYLOAD_SIGNATURE,
