@@ -113,10 +113,6 @@ import {
   GET_ASSETS_NONCES_QUERY,
   AssetsNoncesData
 } from '../queries/nonces'
-import {
-  GET_ORDERS_FOR_MOVEMENT_QUERY,
-  OrdersForMovementData
-} from '../queries/movement/getOrdersForMovementQuery'
 
 import {
   checkMandatoryParams,
@@ -212,7 +208,6 @@ import {
   createCancelOrderParams,
   createGetAssetsNoncesParams,
   createGetMovementParams,
-  createGetOrdersForMovementParams,
   createListMovementsParams,
   createPlaceLimitOrderParams,
   createPlaceMarketOrderParams,
@@ -1615,36 +1610,6 @@ export class Client {
       }
     })
     return result.data.listMovements
-  }
-
-  /**
-   * List all orders for a given movement
-   *
-   * @returns
-   *
-   * Example
-   * ```
-   * const getOrdersForMovementData = await nash.getOrdersForMovement(unit)
-   * console.log(getOrdersForMovementData)
-   * ```
-   */
-  public async getOrdersForMovement(
-    asset: string
-  ): Promise<OrdersForMovementData> {
-    checkMandatoryParams({ asset, Type: 'string' })
-    const getOrdersForMovementParams = createGetOrdersForMovementParams(asset)
-    const signedPayload = await this.signPayload(getOrdersForMovementParams)
-    const result = await this.gql.query<{
-      getOrdersForMovement: OrdersForMovementData
-    }>({
-      query: GET_ORDERS_FOR_MOVEMENT_QUERY,
-      variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
-      }
-    })
-
-    return result.data.getOrdersForMovement
   }
 
   /**
@@ -3121,37 +3086,7 @@ export class Client {
       }
     }
 
-    while (true) {
-      try {
-        await prepareAMovement()
-        break
-      } catch (e) {
-        if (!e.message.startsWith('GraphQL error: ')) {
-          throw e
-        }
-        const blockchainError = e.message.slice(
-          'GraphQL error: '.length
-        ) as BlockchainError
-        switch (blockchainError) {
-          case BlockchainError.MISSING_SIGNATURES:
-          case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
-            // console.log('sync states and retry in 15 seconds')
-            await this.getSignAndSyncStates(true)
-            await sleep(15000)
-            break
-          case BlockchainError.WAITING_FOR_BALANCE_SYNC:
-            // console.log('waiting for balance sync, retrying in 15 seconds')
-            await sleep(15000)
-            break
-          case BlockchainError.MOVEMENT_ALREADY_IN_PROGRESS:
-            // console.log('movement in progress, retrying in 15 seconds')
-            await sleep(15000)
-            break
-          default:
-            throw e
-        }
-      }
-    }
+    await prepareAMovement()
 
     let signedAddMovementPayload: PayloadSignature
     let addMovementResult: GQLResp<{
@@ -3175,7 +3110,10 @@ export class Client {
             })
           ),
           digests: preparedMovement.transactionElements.map(
-            ({ digest: digest }) => ({ digest })
+            ({ blockchain: txBlockchain, digest: digest }) => ({
+              blockchain: txBlockchain,
+              digest
+            })
           ),
           timestamp: new Date().getTime()
         },
@@ -3211,18 +3149,6 @@ export class Client {
             // console.log('preparing movement again')
             await sleep(15000)
             await prepareAMovement()
-            break
-          case BlockchainError.MOVEMENT_ALREADY_IN_PROGRESS:
-          case BlockchainError.WAITING_FOR_BALANCE_SYNC:
-            // console.log('waiting for balance sync, retrying in 15 seconds')
-            await sleep(15000)
-            break
-          case BlockchainError.MISSING_SIGNATURES:
-          case BlockchainError.BLOCKCHAIN_BALANCE_OUT_OF_SYNC:
-            // console.log('sync states and retry in 15 seconds')
-            await this.getSignAndSyncStates(true)
-            await prepareAMovement()
-            await sleep(15000)
             break
           default:
             throw e
