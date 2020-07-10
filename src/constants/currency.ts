@@ -51,6 +51,7 @@ export enum CryptoCurrency {
   ENG = 'eng',
   ENJ = 'enj',
   EPN = 'epn',
+  ERD = 'erd',
   ETH = 'eth',
   EURS = 'eurs',
   EXT = 'ext',
