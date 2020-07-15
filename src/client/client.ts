@@ -264,24 +264,28 @@ import {
 } from './environments'
 const WebSocket = require('websocket').w3cwebsocket
 
+/** @internal */
 const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.ETH]: BIP44.ETH,
   [Blockchain.BTC]: BIP44.BTC,
   [Blockchain.NEO]: BIP44.NEO
 }
 
+/** @internal */
 const ORDERS_REMAINING_TO_AUTOSYNC_AT = 20
+/** @internal */
 const NEP5_OLD_ASSETS = ['nos', 'phx', 'guard', 'lx', 'ava']
+
+/** @internal */
 export const MISSING_NONCES = 'missing_asset_nonces'
+/** @internal */
 export const MAX_ORDERS_REACHED = 'Maximal number of orders have been reached'
+/** @internal */
 export const MAX_SIGN_STATE_RECURSION = 5
 
 export class Client {
-  public perfClient: PerfClient
   private connection: NashSocketEvents
   private mode: ClientMode = ClientMode.NONE
-  public ethVaultContract: Contract
-  public apiKey: APIKey
   private maxEthCostPrTransaction: BigNumber
   private opts: EnvironmentConfig
   private clientOpts: ClientOptions
@@ -309,15 +313,26 @@ export class Client {
   private gql: GQL
   private web3: Web3
   private authorization: string
-  public marketData: { [key: string]: Market }
-  public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
   private walletIndices: { [key: string]: number }
-  public assetData: { [key: string]: AssetData }
 
   private tradedAssets: string[] = []
   private assetNonces: { [key: string]: number[] }
   private currentOrderNonce: number
   private signStateInProgress: boolean
+
+  /** @internal */
+  public perfClient: PerfClient
+  /** @internal */
+  public apiKey: APIKey
+  /** @internal */
+  public ethVaultContract: Contract
+  /** @internal */
+  public marketData: { [key: string]: Market }
+  /** @internal */
+  public nashProtocolMarketData: ReturnType<typeof mapMarketsForNashProtocol>
+  /** @internal */
+  public assetData: { [key: string]: AssetData }
+
   /**
    * Create a new instance of [[Client]]
    *
