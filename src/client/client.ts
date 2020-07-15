@@ -445,7 +445,8 @@ export class Client {
         if (resp.status !== 200) {
           let msg = `API error. Status code: ${resp.status}`
           if (resp.body) {
-            msg += ` / body: ${resp.body.toString()}`
+            const responseContent = await resp.text()
+            msg += ` / body: ${responseContent}`
           }
           throw new Error(msg)
         }
