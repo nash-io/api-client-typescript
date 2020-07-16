@@ -157,6 +157,7 @@ export enum CryptoCurrency {
   TNC = 'tnc',
   TOLL = 'toll',
   TOMO = 'tomo',
+  TRAC = 'trac',
   TUSD = 'tusd',
   USDC = 'usdc',
   UTD = 'utd',
