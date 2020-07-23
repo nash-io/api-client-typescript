@@ -36,7 +36,7 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn",
     "clean": "rm -rf build test",
-    "doc": "typedoc --ignoreCompilerErrors --includeVersion --excludeExternals --excludeNotExported --excludePrivate --excludeProtected --inputFiles src/client/client.ts --mode file --out docs",
+    "doc": "typedoc --ignoreCompilerErrors --includeVersion --excludeExternals --excludeNotExported --excludePrivate --excludeProtected --inputFiles src/client/client.ts --inputFiles src/client/environments.ts --mode file --out docs",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
     "preinstall": "node preinstall.js",
