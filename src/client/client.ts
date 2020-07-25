@@ -448,6 +448,8 @@ export class Client {
           )
         )
       } else {
+        console.log(gqlToString(params.query))
+        console.log(params.variables)
         const resp = await fetch(this.apiUri, {
           method: 'POST',
           headers: this.headers,
@@ -773,13 +775,27 @@ export class Client {
         channel
           .join()
           .receive('ok', initial => {
-            handlers.onStart(initial)
+            if (handlers.onStart) {
+              handlers.onStart({
+                data: {
+                  updatedOrderBook: initial
+                }
+              })
+            }
             if (handlers.onResult) {
-              handlers.onResult(initial)
+              handlers.onResult({
+                data: {
+                  updatedOrderBook: initial
+                }
+              })
             }
             channel.on('update', update => {
               if (handlers.onResult) {
-                handlers.onResult(update)
+                handlers.onResult({
+                  data: {
+                    updatedOrderBook: update
+                  }
+                })
               }
             })
           })
