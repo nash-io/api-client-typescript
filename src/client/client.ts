@@ -448,8 +448,6 @@ export class Client {
           )
         )
       } else {
-        console.log(gqlToString(params.query))
-        console.log(params.variables)
         const resp = await fetch(this.apiUri, {
           method: 'POST',
           headers: this.headers,
