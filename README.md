@@ -3,14 +3,25 @@
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
 - [Github repository](https://github.com/nash-io/api-client-typescript)
-- [Documentation](https://nash-io.github.io/api-client-typescript) 
-
+- [Documentation](https://nash-io.github.io/api-client-typescript)
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
 NOTE: In sandbox, testnet funds are automatically sent to new accounts. The sandbox environment is reset every couple of days.
 
 ## Installation
+
+Make sure you have the following dependencies installed:
+
+```
+  cmake
+  make
+  gcc
+  gmp-devel
+  openssl-devel
+  clang
+  npm
+```
 
 ```sh
 yarn add @neon-exchange/api-client-typescript
@@ -128,21 +139,20 @@ Whitelisted addresses can be set up both before and after creating the API key. 
 
 ## State signing
 
-In order to assure your blockchain balances remain in sync with your trading balances, the client must 'sign' their state every so often before placing more orders.  By default, the client will take care of this in the background for you and you will not need to worry about this.
+In order to assure your blockchain balances remain in sync with your trading balances, the client must 'sign' their state every so often before placing more orders. By default, the client will take care of this in the background for you and you will not need to worry about this.
 
-In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach.  To turn of auto state syncing, initialize the client like so: 
+In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach. To turn of auto state syncing, initialize the client like so:
 
 ```
 const nash = new Client(EnvironmentConfiguration.sandbox, {autoSignState: false})
 ```
 
-You will then be responsible for signing states when necessary.  The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.
+You will then be responsible for signing states when necessary. The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.
 
-This is done using the following call: 
+This is done using the following call:
 
 ```
 const states = await client.getSignAndSyncStates()
 ```
 
 If you are running a high volume of orders from different clients on the same account and having difficulty managing this process, please reach out to support and we will be glad to help with an optimal solution.
-
