@@ -67,6 +67,33 @@ const run = async () => {
 run()
 ```
 
+## Nodejs usage
+
+Using the client in node can be done like below.  See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).
+
+```javascript
+
+const Nash = require('@neon-exchange/api-client-typescript');
+
+const client = new Nash.Client(Nash.EnvironmentConfiguration.production)
+
+const apiKeys = {
+  "secret": "your secret",
+  "apiKey": "your key"
+}
+
+const run = async () => {
+  try {
+    await client.login(apiKeys)
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+run()
+
+```
+
 ## Websockets
 
 You can use websockets subscriptions like this:

@@ -9,7 +9,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@neon-exchange/api-client-typescript": "5.0.11",
+    "@neon-exchange/api-client-typescript": "5.1.11",
     "blessed": "0.1.81"
   }
 }
