@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@neon-exchange/api-client-typescript": "5.1.11"
+  },
+  "name": "nash-client-sample",
+  "version": "1.0.0",
+  "description": "Sample Project for use of Nash client",
+  "main": "client.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node client.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
