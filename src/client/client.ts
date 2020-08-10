@@ -1,5 +1,4 @@
 import * as AbsintheSocket from '@absinthe/socket'
-import { Socket as PhoenixSocket } from 'phoenix-channels'
 import { PerfClient } from '@neon-exchange/nash-perf'
 import setCookie from 'set-cookie-parser'
 import fetch from 'node-fetch'
@@ -262,6 +261,8 @@ import {
   ClientOptions,
   EnvironmentConfiguration
 } from './environments'
+import { Socket as PhoenixSocket } from '../client/phoenix'
+
 const WebSocket = require('websocket').w3cwebsocket
 
 /** @internal */
@@ -284,7 +285,7 @@ export const MAX_ORDERS_REACHED = 'Maximal number of orders have been reached'
 export const MAX_SIGN_STATE_RECURSION = 5
 
 export class Client {
-  private connection: NashSocketEvents
+  private _socket = null
   private mode: ClientMode = ClientMode.NONE
   private maxEthCostPrTransaction: BigNumber
   private opts: EnvironmentConfig
@@ -426,17 +427,17 @@ export class Client {
       this.opts.ethNetworkSettings.contracts.vault.contract
     )
 
-    if (this.clientOpts.runRequestsOverWebsockets) {
-      this.connection = this.createSocketConnection()
-    }
     const query: GQL['query'] = async params => {
       let obj: GQLResp<any>
 
-      if (this.clientOpts.runRequestsOverWebsockets) {
-        obj = await new Promise((resolve, reject) =>
+      if (
+        this.mode !== ClientMode.NONE &&
+        this.clientOpts.runRequestsOverWebsockets
+      ) {
+        const promise: any = new Promise((resolve, reject) =>
           AbsintheSocket.observe(
-            this.connection.absintheSocket,
-            AbsintheSocket.send(this.connection.absintheSocket, {
+            this.getAbsintheSocket(),
+            AbsintheSocket.send(this.getAbsintheSocket(), {
               operation: gqlToString(params.query),
               variables: params.variables
             }),
@@ -447,6 +448,8 @@ export class Client {
             }
           )
         )
+        const result = await promise
+        return result
       } else {
         const resp = await fetch(this.apiUri, {
           method: 'POST',
@@ -486,12 +489,13 @@ export class Client {
         })
     }
   }
+
   public disconnect() {
-    if (this.clientOpts.runRequestsOverWebsockets) {
-      this.connection.socket.disconnect()
-    } else {
-      console.warn('Client is not in websocket mode, .disconnect() is a no-op')
+    if (this._socket == null) {
+      return
     }
+    this._socket.disconnect()
+    this._socket = null
   }
 
   private requireMode(mode: ClientMode, msg: string): void {
@@ -511,8 +515,6 @@ export class Client {
       'This feature requires logging in using username / password'
     )
   }
-
-  private _socket = null
   private _createSocket() {
     const clientHeaders = { ...this.clientOpts.headers }
 
@@ -525,10 +527,12 @@ export class Client {
               super(endpoint, undefined, undefined, clientHeaders)
             }
           }
+
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
+      automaticReconnect: !this.clientOpts.disableSocketReconnect,
       decode: (rawPayload, callback) => {
-        const { join_ref, ref, topic, event, payload } = JSON.parse(rawPayload)
+        const [join_ref, ref, topic, event, payload] = JSON.parse(rawPayload)
 
         if (payload.status === 'error') {
           if (typeof payload.response !== 'string') {
@@ -551,61 +555,22 @@ export class Client {
             }
           : {}
     })
-    socket._users = 0
-
-    // The disconnect event is implemented incorrectly
-    // as it does not trigger the correct events.
-    //
-    // This implementation triggers the correct events
-    socket.disconnect = (c, code, reason) => {
-      socket._users -= 1
-      if (!socket.conn) {
-        if (socket === this._socket) {
-          this._socket = null
-        }
-        if (c) {
-          c()
-        }
-        return
-      }
-
-      if (socket._users > 0) {
-        return
-      }
-      // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
-      socket.conn.onclose = event => {
-        socket.log('transport', 'close', event)
-        // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
-        socket.channels.forEach(channel => channel.trigger('phx_close'))
-        clearInterval(socket.heartbeatTimer)
-        socket.stateChangeCallbacks.close.forEach(callback => callback(event))
-      }
-
-      if (code) {
-        socket.conn.close(code, reason || '')
-      } else {
-        socket.conn.close()
-      }
-      socket.conn = null
-      if (c) {
-        c()
-      }
-    }
-
     return socket
   }
 
-  private getSocket() {
+  _absintheSocket = null
+  private getAbsintheSocket() {
+    if (this._absintheSocket != null) {
+      return this._absintheSocket
+    }
+    this._absintheSocket = AbsintheSocket.create(this.getSocket())
+    return this._absintheSocket
+  }
+  public getSocket() {
     if (this._socket != null) {
-      this._socket._users += 1
       return this._socket
     }
     this._socket = this._createSocket()
-    this._socket._users = 1
-
-    this._socket.onClose(() => {
-      this._socket = null
-    })
     return this._socket
   }
 
@@ -655,45 +620,6 @@ export class Client {
    * ```
    */
   createSocketConnection(): NashSocketEvents {
-    let _publicSocket: any = null
-    const getSocket = () => {
-      if (!_publicSocket) {
-        _publicSocket = new PhoenixSocket(this.wsUri)
-        _publicSocket.connect()
-        _publicSocket.disconnect = (c, code, reason) => {
-          if (!_publicSocket.conn) {
-            if (c) {
-              c()
-            }
-            return
-          }
-
-          // https://github.com/mcampa/phoenix-channels/blob/master/src/socket.js#L137
-          _publicSocket.conn.onclose = event => {
-            _publicSocket.log('transport', 'close', event)
-            // https://github.com/mcampa/phoenix-channels/blob/master/src/constants.js#L14
-            _publicSocket.channels.forEach(channel =>
-              channel.trigger('phx_close')
-            )
-            clearInterval(_publicSocket.heartbeatTimer)
-            _publicSocket.stateChangeCallbacks.close.forEach(callback =>
-              callback(event)
-            )
-          }
-
-          if (code) {
-            _publicSocket.conn.close(code, reason || '')
-          } else {
-            _publicSocket.conn.close()
-          }
-          _publicSocket.conn = null
-          if (c) {
-            c()
-          }
-        }
-      }
-      return _publicSocket
-    }
     if (this.wsUri == null) {
       throw new Error('wsUri config parameter missing')
     }
@@ -707,21 +633,11 @@ export class Client {
       }
     }
     const socket = this.getSocket()
-    const absintheSocket = AbsintheSocket.create(socket)
-    let disconnected = false
+    const absintheSocket = this.getAbsintheSocket()
     return {
+      disconnect: () => this.disconnect(),
       socket,
       absintheSocket,
-      disconnect: () => {
-        if (disconnected) {
-          return
-        }
-        disconnected = true
-        if (_publicSocket) {
-          _publicSocket.disconnect()
-        }
-        socket.disconnect()
-      },
       onUpdatedAccountOrders: async (payload, handlers) => {
         authCheck('onUpdatedAccountOrders')
         AbsintheSocket.observe(
@@ -765,8 +681,7 @@ export class Client {
         )
       },
       onUpdatedOrderbook: (variables, handlers) => {
-        const publicSocket = getSocket()
-        const channel = publicSocket.channel(
+        const channel = this.getSocket().channel(
           'public_order_book:' + variables.marketName,
           {}
         )
@@ -851,16 +766,12 @@ export class Client {
     this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
-    this._socket = null
-    if (this.clientOpts.runRequestsOverWebsockets) {
-      this.connection.socket.disconnect()
-      this.connection = this.createSocketConnection()
-    }
     this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
     this._headers = {
       'Content-Type': 'application/json',
       Authorization: this.authorization
     }
+    this.disconnect()
     this.marketData = await this.fetchMarketData()
     this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
@@ -928,14 +839,11 @@ export class Client {
       Cookie: this.casCookie
     }
     const m = /nash-cookie=([0-9a-z-]+)/.exec(this.casCookie)
-    if (m != null) {
-      this.wsToken = m[1]
-      this._socket = null
-      if (this.clientOpts.runRequestsOverWebsockets) {
-        this.connection.socket.disconnect()
-        this.connection = this.createSocketConnection()
-      }
+    if (m == null) {
+      throw new Error('Failed to login, invalid casCookie: ' + this.casCookie)
     }
+    this.wsToken = m[1]
+    this.disconnect()
     if (resp.errors) {
       throw new Error(resp.errors[0].message)
     }

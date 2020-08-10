@@ -12,6 +12,7 @@ export interface EnvironmentConfig {
 }
 
 export interface ClientOptions {
+  disableSocketReconnect?: boolean
   runRequestsOverWebsockets?: boolean
   enablePerformanceTelemetry?: boolean
   performanceTelemetryTag?: string

@@ -37,6 +37,5 @@
     "types": ["node", "jest", "isomorphic-fetch"],
     "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "exclude": ["node_modules/**", "build"],
   "compileOnSave": false
 }
