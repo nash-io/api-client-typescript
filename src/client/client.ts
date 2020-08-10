@@ -455,7 +455,8 @@ export class Client {
           body: JSON.stringify({
             query: gqlToString(params.query),
             variables: params.variables
-          })
+          }),
+          timeout: 30000
         })
         if (resp.status !== 200) {
           let msg = `API error. Status code: ${resp.status}`
