@@ -496,6 +496,7 @@ export class Client {
     }
     this._socket.disconnect()
     this._socket = null
+    this._absintheSocket = null
   }
 
   private requireMode(mode: ClientMode, msg: string): void {
