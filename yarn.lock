@@ -784,10 +784,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@3.3.7":
-  version "3.3.7"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-3.3.7.tgz#c03f9c534189321847123bdd76fbb143399e0685"
-  integrity sha512-La2iuKtHmJ4yfVrg4s27c4iB5kgZFeiCxOhN+ofCFBqgubp62SGhceZnqRjidKd6bovwik19mRWT5kA+lp/hLQ==
+"@neon-exchange/nash-protocol@3.3.11":
+  version "3.3.11"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-3.3.11.tgz#9ca9ac1b49f3a6d4cfd48bda7d8219fe507d6d85"
+  integrity sha512-Hj09bFpRuVKfW8aS3R0leKH3WycCw+Y6o9nW41pG5HMRmNnpMRuYmAQzGUt11MRU7AlwHyBQSxXdeutcpQEmxw==
   dependencies:
     bignumber.js "8.1.1"
     bip32 "2.0.3"
@@ -6900,10 +6900,21 @@ path-type@^3.0.0:
   dependencies:
     pify "^3.0.0"
 
-pbkdf2@^3.0.3, pbkdf2@^3.0.9:
+pbkdf2@^3.0.3:
   version "3.0.17"
   resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.0.17.tgz#976c206530617b14ebb32114239f7b09336e93a6"
   integrity sha512-U/il5MsrZp7mGg3mSQfn742na2T+1/vHDCG5/iTI3X9MKUuYUZVLQhyRsg06mCgDBTd57TxzgZt7P+fYfjRLtA==
+  dependencies:
+    create-hash "^1.1.2"
+    create-hmac "^1.1.4"
+    ripemd160 "^2.0.1"
+    safe-buffer "^5.0.1"
+    sha.js "^2.4.8"
+
+pbkdf2@^3.0.9:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/pbkdf2/-/pbkdf2-3.1.1.tgz#cb8724b0fada984596856d1a6ebafd3584654b94"
+  integrity sha512-4Ejy1OPxi9f2tt1rRV7Go7zmfDQ+ZectEQz3VGUQhgq62HtIRPDyG/JtnwIxs6x3uNMwo2V7q1fMvKjb+Tnpqg==
   dependencies:
     create-hash "^1.1.2"
     create-hmac "^1.1.4"
@@ -6920,18 +6931,6 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
-
-phoenix-channels@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/phoenix-channels/-/phoenix-channels-1.0.0.tgz#4de3a7a3427483deffc4908d8fecac725db06d6a"
-  integrity sha1-TeOno0J0g97/xJCNj+yscl2wbWo=
-  dependencies:
-    websocket "^1.0.24"
-
-phoenix@1.4.14:
-  version "1.4.14"
-  resolved "https://registry.yarnpkg.com/phoenix/-/phoenix-1.4.14.tgz#96d6e90bc25c57bc46ca4b3894835935e3aae402"
-  integrity sha512-GnX6/KcXYKdvHs9/Rwo6b0qLj5zvWXLXAOhtFZ6xpY042XfS+is64X6eYwpIxPt93+QttRKdWZyzLIHZFK1ENw==
 
 pidtree@^0.3.0:
   version "0.3.1"
@@ -7613,7 +7612,14 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
-rlp@^2.0.0, rlp@^2.2.3:
+rlp@^2.0.0:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/rlp/-/rlp-2.2.6.tgz#c80ba6266ac7a483ef1e69e8e2f056656de2fb2c"
+  integrity sha512-HAfAmL6SDYNWPUOJNrM500x4Thn4PZsEy5pijPh40U9WfNk0z15hUYzO9xVIMAdIHdFtD8CBDHd75Td1g36Mjg==
+  dependencies:
+    bn.js "^4.11.1"
+
+rlp@^2.2.3:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/rlp/-/rlp-2.2.4.tgz#d6b0e1659e9285fc509a5d169a9bd06f704951c1"
   integrity sha512-fdq2yYCWpAQBhwkZv+Z8o/Z4sPmYm1CUq6P7n6lVTOdb949CnqA0sndXal5C1NleSVSZm6q5F3iEbauyVln/iw==
@@ -8477,9 +8483,9 @@ tiny-secp256k1@1.1.3, tiny-secp256k1@^1.1.1, tiny-secp256k1@^1.1.3:
     nan "^2.13.2"
 
 tiny-secp256k1@^1.1.0:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/tiny-secp256k1/-/tiny-secp256k1-1.1.4.tgz#772a7711baaa9e2bffa92708cafadc9d372907a3"
-  integrity sha512-O7NfGzBdBy/jamehZ1ptutZsh2c+9pq2Pu+KPv75+yzk5/Q/6lppQGMUJucHdRGdkeBcAUeLAOdJInEAZgZ53A==
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/tiny-secp256k1/-/tiny-secp256k1-1.1.5.tgz#3dc37b9bf0fa5b4390b9fa29e953228810cebc18"
+  integrity sha512-duE2hSLSQIpHGzmK48OgRrGTi+4OTkXLC6aa86uOYQ6LLCYZSarVKIAvEtY7MoXjoL6bOXMSerEGMzrvW4SkDw==
   dependencies:
     bindings "^1.3.0"
     bn.js "^4.11.8"
@@ -9292,7 +9298,7 @@ webidl-conversions@^4.0.2:
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-4.0.2.tgz#a855980b1f0b6b359ba1d5d9fb39ae941faa63ad"
   integrity sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==
 
-websocket@1.0.31, websocket@^1.0.24:
+websocket@1.0.31:
   version "1.0.31"
   resolved "https://registry.yarnpkg.com/websocket/-/websocket-1.0.31.tgz#e5d0f16c3340ed87670e489ecae6144c79358730"
   integrity sha512-VAouplvGKPiKFDTeCCO65vYHsyay8DqoBSlzIO3fayrfOgU94lQN5a1uWVnFrMLceTJw/+fQXR5PGbUVRaHshQ==

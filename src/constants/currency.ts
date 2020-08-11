@@ -65,6 +65,7 @@ export enum CryptoCurrency {
   GTA = 'gta',
   GTO = 'gto',
   GUARD = 'guard',
+  GUNTHY = 'gunthy',
   GUSD = 'gusd',
   GVT = 'gvt',
   HOT = 'hot',
