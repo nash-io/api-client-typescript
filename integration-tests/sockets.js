@@ -15,8 +15,8 @@ async function testDisconnect() {
 
   const connection = client.createSocketConnection()
   let state = null
-  connection.socket.onOpen(() => (state = true))
-  connection.socket.onClose(() => (state = false))
+  client.getSocket().onOpen(() => (state = true))
+  client.getSocket().onClose(() => (state = false))
 
   connection.onUpdatedTickers({
     onError() {},
@@ -25,7 +25,7 @@ async function testDisconnect() {
     onResult() {}
   })
   await wait(100)
-  connection.disconnect()
+  client.disconnect()
   await wait(100)
   if (state !== false) {
     throw Error('Fail: Disconnect logic does not work')
@@ -36,6 +36,7 @@ async function testSubscriptions() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV]
   )
+  await login(client)
   function runTest(connection, test, args) {
     const tstName = test + '(' + JSON.stringify(args) + ')'
     // console.log('Running ' + tstName)
@@ -73,10 +74,6 @@ async function testSubscriptions() {
   await runTest(connection, 'onUpdatedOrderbook', {
     marketName: 'bat_neo'
   })
-  connection.disconnect()
-
-  await login(client)
-  connection = client.createSocketConnection()
   for (const interval of Object.values(Nash.CandleInterval)) {
     await runTest(connection, 'onUpdatedCandles', {
       marketName: 'eth_neo',
@@ -94,42 +91,22 @@ async function testSubscriptions() {
     marketName: 'eth_neo'
   })
 
-  connection.disconnect()
-}
-
-async function testManyConnections() {
-  const client = new Nash.Client(
-    Nash.EnvironmentConfiguration[process.env.NASH_ENV]
-  )
-  const cons = []
-  for(let i = 0 ; i < 1000 ; i ++) {
-    const con = client.createSocketConnection()
-    con.onNewTrades({
-      marketName: 'bat_neo'
-    }, {})
-    cons.push(con)
-
-  }
-  cons.forEach(con => {
-    if (client._socket == null) {
-      console.log("Failed: socket reuse")
-      throw new Error("Failed to correctly reuse sockets")
-    }
-    con.disconnect()
-  })
-  await await(100)
-  if (client._socket == null) {
-    console.log("OK: socket reuse")
-  } else {
-    console.log("Failed: socket reuse")
-  }
-
+  client.disconnect()
 }
 
 async function test() {
-  await testDisconnect()
-  await testSubscriptions()
-  testManyConnections()
+  try {
+    await testDisconnect()
+  } catch(e) {
+    console.log("disconnect failed ")
+    console.log(e)
+  }
+  try {
+    await testSubscriptions()
+  } catch(e) {
+    console.log("subs failed ")
+    console.log(e)
+  }
 }
 
 test()

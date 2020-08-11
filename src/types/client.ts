@@ -1,5 +1,5 @@
 import * as AbsintheSocket from '@absinthe/socket'
-import { Socket as PhoenixSocket } from 'phoenix-channels'
+import { Socket as PhoenixSocket } from '../client/phoenix'
 
 import {
   OrderBook,
@@ -77,7 +77,7 @@ export interface NashSocketEvents {
   /**
    * See https://www.npmjs.com/package/phoenix-channels
    */
-  socket: InstanceType<PhoenixSocket>
+  socket: PhoenixSocket
   absintheSocket: InstanceType<AbsintheSocket>
   disconnect: () => void
   onUpdatedAccountOrders(

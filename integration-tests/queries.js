@@ -6,6 +6,7 @@ async function run() {
   const client = new Nash.Client(
     Nash.EnvironmentConfiguration[process.env.NASH_ENV],
     {
+      runRequestsOverWebsockets: false,
       headers: {
         'User-Agent': 'Foo'
       }
@@ -13,7 +14,6 @@ async function run() {
   )
 
   await login(client)
-
   async function test(name, args) {
     try {
       await client[name](...args)
@@ -25,10 +25,6 @@ async function run() {
       console.log(e)
     }
   }
-
-  const con = client.createSocketConnection()
-
-  con.onAccountTrade({ marketName: "neo_eth" }, { onStart: () => undefined })
 
 
   await test('getAccountBalance', [Nash.CryptoCurrency.NEO])
@@ -53,7 +49,6 @@ async function run() {
   await test('listMarkets', [])
   await test('listTrades', [{ marketName: 'BTC_USDC' }])
 
-  con.disconnect()
 
   const orderBook = await client.getOrderBook('eth_neo')
   if (orderBook.lastUpdateId == null) {
@@ -62,6 +57,7 @@ async function run() {
   if (orderBook.lastUpdateId == null) {
     throw new Error('Missing updateId')
   }
+  client.disconnect()
 }
 
 run()
