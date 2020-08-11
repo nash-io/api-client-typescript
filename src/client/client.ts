@@ -230,6 +230,7 @@ import {
   preSignPayload,
   SigningPayloadID,
   signPayload,
+  fillRPoolIfNeeded,
   SyncState
 } from '@neon-exchange/nash-protocol'
 
@@ -319,7 +320,7 @@ export class Client {
   private assetNonces: { [key: string]: number[] }
   private currentOrderNonce: number
   private signStateInProgress: boolean
-
+  private pallierPkStr: string
   /** @internal */
   public perfClient: PerfClient
   /** @internal */
@@ -485,6 +486,38 @@ export class Client {
         })
     }
   }
+
+  public async prefillRPoolIfNeeded(blockchain: Blockchain): Promise<void> {
+    const fillRPool = this.perfClient.start(
+      'prefillRPoolIfNeeded_' + blockchain
+    )
+    await fillRPoolIfNeeded({
+      fillPoolFn: this.fillPoolFn,
+      blockchain,
+      paillierPkStr: this.pallierPkStr
+    })
+    // Ignore it delta is like 1ms or 0. Because that means no work was done
+    if (fillRPool.delta() > 1) {
+      fillRPool.end()
+    }
+  }
+
+  public async prefillRPoolIfNeededForAssets(
+    asset1: CryptoCurrency,
+    asset2?: CryptoCurrency
+  ): Promise<void> {
+    const blockchain1 = this.assetData[asset1].blockchain.toUpperCase()
+    await this.prefillRPoolIfNeeded(blockchain1 as any)
+    if (asset2 == null) {
+      return
+    }
+    const blockchain2 = this.assetData[asset2].blockchain.toUpperCase()
+    if (blockchain2 === blockchain1) {
+      return
+    }
+    await this.prefillRPoolIfNeeded(blockchain2 as any)
+  }
+
   public disconnect() {
     if (this.clientOpts.runRequestsOverWebsockets) {
       this.connection.socket.disconnect()
@@ -863,7 +896,7 @@ export class Client {
     this.marketData = await this.fetchMarketData()
     this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
-
+    this.pallierPkStr = JSON.stringify(this.apiKey.paillier_pk)
     this.currentOrderNonce = createTimestamp32()
     await this.updateTradedAssetNonces()
   }
@@ -1860,6 +1893,11 @@ export class Client {
   ): Promise<CancelledOrder> {
     const m1 = this.perfClient.start('cancelOrder')
     const m2 = this.perfClient.start('cancelOrder_' + marketName)
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
+    )
     const cancelOrderParams = createCancelOrderParams(orderID, marketName)
     const signedPayload = await this.signPayload(cancelOrderParams)
 
@@ -1995,6 +2033,10 @@ export class Client {
       limitPrice,
       this.marketData[marketName]
     )
+    await this.prefillRPoolIfNeededForAssets(
+      limitPrice.currencyA,
+      limitPrice.currencyB
+    )
     const placeLimitOrderParams = createPlaceLimitOrderParams(
       allowTaker,
       normalizedAmount,
@@ -2099,6 +2141,11 @@ export class Client {
     const normalizedAmount = normalizeAmountForMarket(
       amount,
       this.marketData[marketName]
+    )
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
     )
     const placeMarketOrderParams = createPlaceMarketOrderParams(
       normalizedAmount,
@@ -2217,6 +2264,10 @@ export class Client {
       stopPrice,
       this.marketData[marketName]
     )
+    await this.prefillRPoolIfNeededForAssets(
+      limitPrice.currencyA,
+      limitPrice.currencyB
+    )
     const placeStopLimitOrderParams = createPlaceStopLimitOrderParams(
       allowTaker,
       normalizedAmount,
@@ -2331,7 +2382,11 @@ export class Client {
       stopPrice,
       this.marketData[marketName]
     )
-
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
+    )
     const placeStopMarketOrderParams = createPlaceStopMarketOrderParams(
       normalizedAmount,
       buyOrSell,
