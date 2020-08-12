@@ -303,6 +303,8 @@ export class Client {
     }
   }
 
+  private _subscriptionHandlers: NashSocketEvents
+  private _absintheSocket = null
   private initParams: InitParams
   private nashCoreConfig: Config
   private casCookie: string
@@ -529,6 +531,7 @@ export class Client {
     this._socket.disconnect()
     this._socket = null
     this._absintheSocket = null
+    this._subscriptionHandlers = null
   }
 
   private requireMode(mode: ClientMode, msg: string): void {
@@ -560,7 +563,6 @@ export class Client {
               super(endpoint, undefined, undefined, clientHeaders)
             }
           }
-
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
       automaticReconnect: !this.clientOpts.disableSocketReconnect,
@@ -588,10 +590,9 @@ export class Client {
             }
           : {}
     })
+    socket.connect()
     return socket
   }
-
-  _absintheSocket = null
   private getAbsintheSocket() {
     if (this._absintheSocket != null) {
       return this._absintheSocket
@@ -605,6 +606,65 @@ export class Client {
     }
     this._socket = this._createSocket()
     return this._socket
+  }
+  private wsAuthCheck(sub: string) {
+    if (this.wsToken == null) {
+      throw new Error(
+        'To use ' +
+          sub +
+          ', you must login() before creating the socket connection'
+      )
+    }
+  }
+  /**
+   * Returns the connect socket
+   *
+   * @returns
+   *
+   * Example
+   * ```
+   * import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
+   *
+   * const nash = new Client(EnvironmentConfiguration.sandbox)
+   * await nash.login(...)
+   *
+   * // Getting the orderbook for the neo_eth marked
+   * nash.subscriptions.onUpdatedOrderbook(
+   *  { marketName: 'neo_eth' },
+   *  {
+   *    onResult: ({
+   *      data: {
+   *        updatedOrderBook: { bids, asks }
+   *      }
+   *    }) => {
+   *      console.log(`updated bids ${bids.length}`)
+   *      console.log(`updated asks ${asks.length}`)
+   *    }
+   *  }
+   * )
+   *
+   * // Getting the user orderobok for all markets
+   * nash.subscriptions.onUpdatedAccountOrders(
+   *  {},
+   *  {
+   *    onResult: ({
+   *      data: {
+   *        updatedAccountOrders
+   *      }
+   *    }) => {
+   *      console.log(`Updated orders: {updatedAccountOrders.length}`)
+   *    }
+   *  }
+   * )
+   *
+   * ```
+   */
+  get subscriptions() {
+    if (this._subscriptionHandlers) {
+      return this._subscriptionHandlers
+    }
+    this._subscriptionHandlers = this._createSocketConnection()
+    return this._subscriptionHandlers
   }
 
   /**
@@ -650,32 +710,27 @@ export class Client {
    *  }
    * )
    *
+   *
+   * @deprecated please use subscriptions
    * ```
    */
   createSocketConnection(): NashSocketEvents {
+    return this.subscriptions
+  }
+
+  private _createSocketConnection(): NashSocketEvents {
     if (this.wsUri == null) {
       throw new Error('wsUri config parameter missing')
     }
-    const authCheck = (sub: string) => {
-      if (this.wsToken == null) {
-        throw new Error(
-          'To use ' +
-            sub +
-            ', you must login() before creating the socket connection'
-        )
-      }
-    }
-    const socket = this.getSocket()
-    const absintheSocket = this.getAbsintheSocket()
     return {
       disconnect: () => this.disconnect(),
-      socket,
-      absintheSocket,
+      socket: this.getSocket(),
+      absintheSocket: this.getAbsintheSocket(),
       onUpdatedAccountOrders: async (payload, handlers) => {
-        authCheck('onUpdatedAccountOrders')
+        this.wsAuthCheck('onUpdatedAccountOrders')
         AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(UPDATED_ACCOUNT_ORDERS),
             variables: {
               payload
@@ -686,8 +741,8 @@ export class Client {
       },
       onUpdatedCandles: (variables, handlers) =>
         AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(UPDATED_CANDLES),
             variables
           }),
@@ -695,8 +750,8 @@ export class Client {
         ),
       onUpdatedTickers: handlers => {
         AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(UPDATED_TICKERS),
             variables: {}
           }),
@@ -705,8 +760,8 @@ export class Client {
       },
       onNewTrades: (variables, handlers) => {
         AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(NEW_TRADES),
             variables
           }),
@@ -718,7 +773,6 @@ export class Client {
           'public_order_book:' + variables.marketName,
           {}
         )
-
         channel
           .join()
           .receive('ok', initial => {
@@ -756,10 +810,10 @@ export class Client {
           })
       },
       onAccountTrade: async (payload, handlers) => {
-        authCheck('onAccountTrade')
+        this.wsAuthCheck('onAccountTrade')
         AbsintheSocket.observe(
-          absintheSocket,
-          AbsintheSocket.send(absintheSocket, {
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(NEW_ACCOUNT_TRADES),
             variables: {
               payload
