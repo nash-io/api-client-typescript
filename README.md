@@ -99,18 +99,14 @@ run()
 You can use websockets subscriptions like this:
 
 ```typescript
-import {
-  Client,
-  EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript'
+
+import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
 
 const nash = new Client(EnvironmentConfiguration.sandbox)
-await nash.login(require('PATH_TO_KEY.json'))
-
-const connection = nash.createSocketConnection()
+await nash.login(...)
 
 // Getting the orderbook for the neo_eth marked
-connection.onUpdatedOrderbook(
+nash.subscriptions.onUpdatedOrderbook(
   { marketName: 'neo_eth' },
   {
     onResult: ({
@@ -125,17 +121,20 @@ connection.onUpdatedOrderbook(
 )
 
 // Getting the user orderobok for all markets
-connection.onUpdatedAccountOrders(
+nash.subscriptions.onUpdatedAccountOrders(
   {},
   {
-    onResult: ({ data: { updatedAccountOrders } }) => {
+    onResult: ({
+      data: {
+        updatedAccountOrders
+      }
+    }) => {
       console.log(`Updated orders: {updatedAccountOrders.length}`)
     }
   }
 )
+   
 ```
-
-See also the [websockets example](https://github.com/nash-io/api-client-typescript/tree/master/examples/sockets-orderbook).
 
 ---
 
