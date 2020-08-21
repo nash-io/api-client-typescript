@@ -291,6 +291,9 @@ export const BIG_NUMBER_FORMAT = {
   prefix: ''
 }
 
+export const UNLIMITED_APPROVAL =
+  '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe'
+
 export class Client {
   private _socket = null
   private mode: ClientMode = ClientMode.NONE
@@ -368,6 +371,7 @@ export class Client {
       ...clientOpts
     }
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
+
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
     if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {
@@ -2420,7 +2424,7 @@ export class Client {
       order.ordersTillSignState < ORDERS_REMAINING_TO_AUTOSYNC_AT &&
       !this.signStateInProgress
     ) {
-      console.info('Will auto sign state: ', order.ordersTillSignState)
+      // console.info('Will auto sign state: ', order.ordersTillSignState)
       await this.getSignAndSyncStates()
     }
   }
@@ -2539,7 +2543,7 @@ export class Client {
   private async approveERC20Transaction(
     asset: AssetData,
     childKey: ChildKey,
-    amount: BigNumber
+    _amount: BigNumber
   ): Promise<TransactionReceipt> {
     for (let i = 0; i < 5; i++) {
       try {
@@ -2548,17 +2552,10 @@ export class Client {
           Erc20ABI,
           '0x' + asset.hash
         )
-
         const approveAbi = erc20Contract.methods
           .approve(
             this.opts.ethNetworkSettings.contracts.vault.contract,
-            this.web3.utils.numberToHex(
-              transferExternalGetAmount(
-                new BigNumber(amount),
-                asset,
-                this.isMainNet
-              )
-            )
+            UNLIMITED_APPROVAL
           )
           .encodeABI()
 
@@ -2573,9 +2570,8 @@ export class Client {
           to: '0x' + asset.hash,
           data: approveAbi
         })
-        console.info('estimate: ', estimate)
+
         const gasPrice = await this.web3.eth.getGasPrice()
-        console.info('Gas price: ', gasPrice)
         this.validateTransactionCost(gasPrice, estimate)
         const approveTx = new EthTransaction({
           nonce, // + movement.data.assetNonce,
@@ -2586,7 +2582,6 @@ export class Client {
           data: approveAbi
         })
         approveTx.getChainId = () => chainId
-        console.info('approve tx: ', approveTx)
         const approveSignature = await this.signEthTransaction(approveTx)
         setEthSignature(approveTx, approveSignature)
         const p = await this.web3.eth.sendSignedTransaction(
@@ -2594,14 +2589,16 @@ export class Client {
         )
         return p
       } catch (e) {
+        console.info('Error approving tx: ', e.message)
         if (
           e.message === 'Returned error: replacement transaction underpriced'
         ) {
           // console.log('approve failed, retrying approve in 15 seconds')
           await sleep(15000)
           continue
+        } else if (e.message.inde) {
+          throw e
         }
-        throw e
       }
     }
     throw new Error('Failed to approve erc20 token')
@@ -2614,9 +2611,6 @@ export class Client {
   ): Promise<void> {
     const bnAmount = new BigNumber(amount)
     const currentAllowance = await this.queryAllowance(assetData)
-    console.info('approving amount: ', bnAmount.toNumber())
-    console.info('current allowance: ', currentAllowance.toNumber())
-    console.info('Asset data: ', assetData)
     if (currentAllowance.lt(bnAmount)) {
       console.info('Will approve allowance')
       await this.approveERC20Transaction(
@@ -2625,8 +2619,8 @@ export class Client {
         bnAmount.minus(currentAllowance)
       )
 
-      // We will wait for allowance for up to 5 minutes. After which I think we should time out.
-      for (let i = 0; i < 5 * 12 * 4; i++) {
+      // We will wait for allowance for up to 20 minutes. After which I think we should time out.
+      for (let i = 0; i < 20 * 12 * 4; i++) {
         const latestAllowance = await this.queryAllowance(assetData)
         if (latestAllowance.gte(bnAmount)) {
           return
@@ -2634,6 +2628,8 @@ export class Client {
         await sleep(5000)
       }
       throw new Error('Eth approval timed out')
+    } else {
+      console.info('Already has enough approved')
     }
   }
 
@@ -2690,20 +2686,18 @@ export class Client {
             Erc20ABI,
             `0x${assetData.hash}`
           )
+          const externalAmount = transferExternalGetAmount(
+            new BigNumber(amount),
+            assetData,
+            this.isMainNet
+          )
           data = erc20Contract.methods
             .transfer(
               prefixWith0xIfNeeded(address),
-              this.web3.utils.numberToHex(
-                transferExternalGetAmount(
-                  new BigNumber(amount),
-                  assetData,
-                  this.isMainNet
-                )
-              )
+              this.web3.utils.numberToHex(externalAmount)
             )
             .encodeABI()
         }
-
         const gasPrice = await this.web3.eth.getGasPrice()
         const estimate = await this.web3.eth.estimateGas({
           from: prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address),
@@ -2718,6 +2712,7 @@ export class Client {
         })
 
         this.validateTransactionCost(gasPrice, estimate)
+
         const ethTx = new EthTransaction({
           nonce: '0x' + ethAccountNonce.toString(16),
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
@@ -2964,12 +2959,13 @@ export class Client {
         }
         btcTx.finalizeAllInputs()
         const signedRawBtcTx = btcTx.extractTransaction().toHex()
-        await this.sendBlockchainRawTransaction({
+        const btcTxResult = await this.sendBlockchainRawTransaction({
           payload: signedRawBtcTx,
           blockchain: Blockchain.BTC
         })
+
         return {
-          txId: uutx.getId()
+          txId: btcTxResult
         }
       default:
         throw new Error('Unsupported blockchain ' + assetData.blockchain)
@@ -3059,7 +3055,6 @@ export class Client {
         signature: signature.signature
       }
     })
-    console.info('Prepare movement: ', signature.payload)
     return data.data.prepareMovement
   }
 
