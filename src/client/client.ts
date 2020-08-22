@@ -206,7 +206,6 @@ import {
   createAddMovementParams,
   createCancelOrderParams,
   createGetAssetsNoncesParams,
-  createGetMovementParams,
   createListMovementsParams,
   createPlaceLimitOrderParams,
   createPlaceMarketOrderParams,
@@ -284,6 +283,16 @@ export const MISSING_NONCES = 'missing_asset_nonces'
 export const MAX_ORDERS_REACHED = 'Maximal number of orders have been reached'
 /** @internal */
 export const MAX_SIGN_STATE_RECURSION = 5
+/** @internal */
+export const BIG_NUMBER_FORMAT = {
+  decimalSeparator: '.',
+  groupSeparator: '',
+  groupSize: 50,
+  prefix: ''
+}
+
+export const UNLIMITED_APPROVAL =
+  '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe'
 
 export class Client {
   private _socket = null
@@ -352,7 +361,7 @@ export class Client {
    */
   constructor(opts: EnvironmentConfig, clientOpts: ClientOptions = {}) {
     this.opts = {
-      maxEthCostPrTransaction: '0.01',
+      maxEthCostPrTransaction: '0.05',
       ...opts
     }
     this.clientOpts = {
@@ -362,6 +371,7 @@ export class Client {
       ...clientOpts
     }
     this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
+
     this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
     if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {
@@ -1534,8 +1544,14 @@ export class Client {
    * console.log(movement)
    * ```
    */
-  public async getMovement(movementID: number): Promise<Movement> {
-    const getMovemementParams = createGetMovementParams(movementID)
+  public async getMovement(movementID: string): Promise<Movement> {
+    const getMovemementParams = {
+      payload: {
+        movement_id: movementID,
+        timestamp: createTimestamp()
+      },
+      kind: SigningPayloadID.getMovementPayload
+    }
     const signedPayload = await this.signPayload(getMovemementParams)
 
     const result = await this.gql.query<{ getMovement: Movement }>({
@@ -2408,7 +2424,7 @@ export class Client {
       order.ordersTillSignState < ORDERS_REMAINING_TO_AUTOSYNC_AT &&
       !this.signStateInProgress
     ) {
-      console.info('Will auto sign state: ', order.ordersTillSignState)
+      // console.info('Will auto sign state: ', order.ordersTillSignState)
       await this.getSignAndSyncStates()
     }
   }
@@ -2514,9 +2530,7 @@ export class Client {
   }
 
   private validateTransactionCost(gasPrice: string, estimate: number) {
-    const maxCost = new BigNumber(gasPrice)
-      .multipliedBy(2)
-      .multipliedBy(estimate)
+    const maxCost = new BigNumber(gasPrice).multipliedBy(estimate)
     if (this.maxEthCostPrTransaction.lt(maxCost)) {
       throw new Error(
         'Transaction ETH cost larger than maxEthCostPrTransaction (' +
@@ -2529,7 +2543,7 @@ export class Client {
   private async approveERC20Transaction(
     asset: AssetData,
     childKey: ChildKey,
-    amount: BigNumber
+    _amount: BigNumber
   ): Promise<TransactionReceipt> {
     for (let i = 0; i < 5; i++) {
       try {
@@ -2538,17 +2552,10 @@ export class Client {
           Erc20ABI,
           '0x' + asset.hash
         )
-
         const approveAbi = erc20Contract.methods
           .approve(
             this.opts.ethNetworkSettings.contracts.vault.contract,
-            this.web3.utils.numberToHex(
-              transferExternalGetAmount(
-                new BigNumber(amount),
-                asset,
-                this.isMainNet
-              )
-            )
+            UNLIMITED_APPROVAL
           )
           .encodeABI()
 
@@ -2569,13 +2576,12 @@ export class Client {
         const approveTx = new EthTransaction({
           nonce, // + movement.data.assetNonce,
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + (estimate * 2).toString(16),
+          gasLimit: '0x' + estimate.toString(16),
           to: '0x' + asset.hash,
           value: 0,
           data: approveAbi
         })
         approveTx.getChainId = () => chainId
-
         const approveSignature = await this.signEthTransaction(approveTx)
         setEthSignature(approveTx, approveSignature)
         const p = await this.web3.eth.sendSignedTransaction(
@@ -2583,14 +2589,16 @@ export class Client {
         )
         return p
       } catch (e) {
+        console.info('Error approving tx: ', e.message)
         if (
           e.message === 'Returned error: replacement transaction underpriced'
         ) {
           // console.log('approve failed, retrying approve in 15 seconds')
           await sleep(15000)
           continue
+        } else if (e.message.inde) {
+          throw e
         }
-        throw e
       }
     }
     throw new Error('Failed to approve erc20 token')
@@ -2604,14 +2612,15 @@ export class Client {
     const bnAmount = new BigNumber(amount)
     const currentAllowance = await this.queryAllowance(assetData)
     if (currentAllowance.lt(bnAmount)) {
+      console.info('Will approve allowance')
       await this.approveERC20Transaction(
         assetData,
         childKey,
         bnAmount.minus(currentAllowance)
       )
 
-      // We will wait for allowance for up to 5 minutes. After which I think we should time out.
-      for (let i = 0; i < 5 * 12 * 4; i++) {
+      // We will wait for allowance for up to 20 minutes. After which I think we should time out.
+      for (let i = 0; i < 20 * 12 * 4; i++) {
         const latestAllowance = await this.queryAllowance(assetData)
         if (latestAllowance.gte(bnAmount)) {
           return
@@ -2619,6 +2628,8 @@ export class Client {
         await sleep(5000)
       }
       throw new Error('Eth approval timed out')
+    } else {
+      console.info('Already has enough approved')
     }
   }
 
@@ -2631,6 +2642,10 @@ export class Client {
       quantity: { currency, amount },
       address
     } = params
+    console.info(
+      `Will try sending to address ${address}: ${amount} of ${currency}`
+    )
+
     if (this.assetData == null) {
       throw new Error('Asset data null')
     }
@@ -2643,7 +2658,7 @@ export class Client {
       const addrBlockchain = detectBlockchain(address)
       if (addrBlockchain === null) {
         throw new Error(
-          `We can infer blockchain type from address ${address}. If you think this is an error please report it.`
+          `We can't infer blockchain type from address ${address}. If you think this is an error please report it.`
         )
       }
       if (addrBlockchain !== blockchain) {
@@ -2671,20 +2686,18 @@ export class Client {
             Erc20ABI,
             `0x${assetData.hash}`
           )
+          const externalAmount = transferExternalGetAmount(
+            new BigNumber(amount),
+            assetData,
+            this.isMainNet
+          )
           data = erc20Contract.methods
             .transfer(
               prefixWith0xIfNeeded(address),
-              this.web3.utils.numberToHex(
-                transferExternalGetAmount(
-                  new BigNumber(amount),
-                  assetData,
-                  this.isMainNet
-                )
-              )
+              this.web3.utils.numberToHex(externalAmount)
             )
             .encodeABI()
         }
-
         const gasPrice = await this.web3.eth.getGasPrice()
         const estimate = await this.web3.eth.estimateGas({
           from: prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address),
@@ -2699,10 +2712,11 @@ export class Client {
         })
 
         this.validateTransactionCost(gasPrice, estimate)
+
         const ethTx = new EthTransaction({
           nonce: '0x' + ethAccountNonce.toString(16),
           gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + (estimate * 2).toString(16),
+          gasLimit: '0x' + estimate.toString(16),
           to: prefixWith0xIfNeeded(
             currency !== CryptoCurrency.ETH ? assetData.hash : address
           ),
@@ -2793,6 +2807,7 @@ export class Client {
             height: 0
           }
         })
+
         const btcGasPrice = await calculateFeeRate()
         const fee = calculateBtcFees(externalTransferAmount, btcGasPrice, utxos)
         const net = networkFromName(this.opts.btcNetworkSettings.name)
@@ -2809,7 +2824,6 @@ export class Client {
         const transferAmount = Math.round(
           new BigNumber(amount).times(BTC_SATOSHI_MULTIPLIER).toNumber()
         )
-
         const p2wpkh = bitcoin.payments.p2wpkh({
           network: net,
           pubkey: pubKey
@@ -2945,12 +2959,13 @@ export class Client {
         }
         btcTx.finalizeAllInputs()
         const signedRawBtcTx = btcTx.extractTransaction().toHex()
-        await this.sendBlockchainRawTransaction({
+        const btcTxResult = await this.sendBlockchainRawTransaction({
           payload: signedRawBtcTx,
           blockchain: Blockchain.BTC
         })
+
         return {
-          txId: uutx.getId()
+          txId: btcTxResult
         }
       default:
         throw new Error('Unsupported blockchain ' + assetData.blockchain)
@@ -3040,7 +3055,6 @@ export class Client {
         signature: signature.signature
       }
     })
-
     return data.data.prepareMovement
   }
 
@@ -3085,10 +3099,8 @@ export class Client {
   }
 
   public async isMovementCompleted(movementId: string): Promise<boolean> {
-    return (
-      (await this.getMovement((movementId as never) as number)).status ===
-      MovementStatus.COMPLETED
-    )
+    const movement = await this.getMovement(movementId)
+    return movement.status === MovementStatus.COMPLETED
   }
 
   private async _transferToTradingContract(
@@ -3115,15 +3127,19 @@ export class Client {
     let preparedMovement: PrepareMovementData['prepareMovement']
     let movementAmount = bnAmount
     const prepareAMovement = async () => {
-      preparedMovement = await this.prepareMovement({
+      const params = {
         address,
         quantity: {
-          amount: bnAmount.toFormat(8),
+          amount: bnAmount.toFormat(
+            8,
+            BigNumber.ROUND_FLOOR,
+            BIG_NUMBER_FORMAT
+          ),
           currency: assetData.symbol
         },
         type: movementType
-      })
-
+      }
+      preparedMovement = await this.prepareMovement(params)
       movementAmount = bnAmount
       if (
         quantity.currency === CryptoCurrency.BTC &&
@@ -3135,7 +3151,6 @@ export class Client {
     }
 
     await prepareAMovement()
-
     let signedAddMovementPayload: PayloadSignature
     let addMovementResult: GQLResp<{
       addMovement: AddMovement
@@ -3146,7 +3161,11 @@ export class Client {
           address: childKey.address,
           nonce: preparedMovement.nonce,
           quantity: {
-            amount: movementAmount.toFormat(8),
+            amount: movementAmount.toFormat(
+              8,
+              BigNumber.ROUND_FLOOR,
+              BIG_NUMBER_FORMAT
+            ),
             currency: assetData.symbol
           },
           type: movementType,
@@ -3203,7 +3222,6 @@ export class Client {
         }
       }
     }
-
     if (quantity.currency === CryptoCurrency.BTC) {
       return {
         txId: addMovementResult.data.addMovement.id.toString(),
@@ -3326,7 +3344,7 @@ export class Client {
           movementType === MovementTypeDeposit &&
           quantity.currency !== CryptoCurrency.ETH
         ) {
-          // console.log('approving erc02')
+          console.log('approving erc20')
           await this.approveAndAwaitAllowance(
             assetData,
             childKey,
@@ -3757,6 +3775,7 @@ export class Client {
         params.payload
       )
     )
+
     const resp = await this.gql.mutate<
       SendBlockchainRawTransactionResult,
       SendBlockchainRawTransactionArgs
