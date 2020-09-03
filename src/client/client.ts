@@ -503,6 +503,17 @@ export class Client {
     }
   }
 
+  get affiliateDeveloperCode() {
+    const { affiliateCode, affiliateLabel } = this.clientOpts
+    if (affiliateCode == null) {
+      return undefined
+    }
+    if (affiliateLabel == null) {
+      return affiliateCode
+    }
+    return `${affiliateCode}:${affiliateLabel}`
+  }
+
   public async prefillRPoolIfNeeded(blockchain: Blockchain): Promise<void> {
     const fillRPool = this.perfClient.start(
       'prefillRPoolIfNeeded_' + blockchain
@@ -2039,6 +2050,7 @@ export class Client {
       }>({
         mutation: PLACE_LIMIT_ORDER_MUTATION,
         variables: {
+          affiliateDeveloperCode: this.affiliateDeveloperCode,
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
@@ -2146,6 +2158,7 @@ export class Client {
       }>({
         mutation: PLACE_MARKET_ORDER_MUTATION,
         variables: {
+          affiliateDeveloperCode: this.affiliateDeveloperCode,
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
@@ -2271,6 +2284,7 @@ export class Client {
       }>({
         mutation: PLACE_STOP_LIMIT_ORDER_MUTATION,
         variables: {
+          affiliateDeveloperCode: this.affiliateDeveloperCode,
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
@@ -2386,6 +2400,7 @@ export class Client {
       }>({
         mutation: PLACE_STOP_MARKET_ORDER_MUTATION,
         variables: {
+          affiliateDeveloperCode: this.affiliateDeveloperCode,
           payload: signedPayload.signedPayload,
           signature: signedPayload.signature
         }
