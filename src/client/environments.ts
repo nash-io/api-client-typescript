@@ -16,6 +16,8 @@ export interface ClientOptions {
   runRequestsOverWebsockets?: boolean
   enablePerformanceTelemetry?: boolean
   performanceTelemetryTag?: string
+  affiliateCode?: string
+  affiliateLabel?: string
 
   // Http headers to send with each request.
   // The socketsocket conneciton supports 1 header. "User-Agent"

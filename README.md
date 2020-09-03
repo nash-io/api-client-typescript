@@ -3,8 +3,7 @@
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
 - [Github repository](https://github.com/nash-io/api-client-typescript)
-- [Documentation](https://nash-io.github.io/api-client-typescript) 
-
+- [Documentation](https://nash-io.github.io/api-client-typescript)
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
@@ -69,36 +68,34 @@ run()
 
 ## Nodejs usage
 
-Using the client in node can be done like below.  See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).
+Using the client in node can be done like below. See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).
 
 ```javascript
-
-const Nash = require('@neon-exchange/api-client-typescript');
+const Nash = require('@neon-exchange/api-client-typescript')
 
 const client = new Nash.Client(Nash.EnvironmentConfiguration.production)
 
 const apiKeys = {
-  "secret": "your secret",
-  "apiKey": "your key"
+  secret: 'your secret',
+  apiKey: 'your key'
 }
 
 const run = async () => {
   try {
     await client.login(apiKeys)
   } catch (e) {
-    console.log(e);
+    console.log(e)
   }
 }
 
 run()
-
 ```
 
 ## Websockets
 
 You can use websockets subscriptions like this:
 
-```typescript
+```javascript
 
 import { Client, EnvironmentConfiguration } from '@neon-exchange/api-client-typescript'
 
@@ -133,8 +130,26 @@ nash.subscriptions.onUpdatedAccountOrders(
     }
   }
 )
-   
+
 ```
+
+## Using affiliate codes
+
+To configure the client to use an affiliate code, you just have to supply it as a client option.
+
+```javascript
+import { Client } from '@neon-exchange/api-client-typescript'
+
+const client = new Client(
+  ...,
+  {
+    affiliateCode: 'YOUR_CODE',
+    affiliateLabel: 'arbitragebot' // Optional label
+  }
+)
+```
+
+You may supply an optional affiliate label, which will be shown on the affiliate page. Label may only contain alpha numeric characters.
 
 ---
 
@@ -154,21 +169,20 @@ Whitelisted addresses can be set up both before and after creating the API key. 
 
 ## State signing
 
-In order to assure your blockchain balances remain in sync with your trading balances, the client must 'sign' their state every so often before placing more orders.  By default, the client will take care of this in the background for you and you will not need to worry about this.
+In order to assure your blockchain balances remain in sync with your trading balances, the client must 'sign' their state every so often before placing more orders. By default, the client will take care of this in the background for you and you will not need to worry about this.
 
-In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach.  To turn of auto state syncing, initialize the client like so: 
+In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach. To turn of auto state syncing, initialize the client like so:
 
 ```
 const nash = new Client(EnvironmentConfiguration.sandbox, {autoSignState: false})
 ```
 
-You will then be responsible for signing states when necessary.  The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.
+You will then be responsible for signing states when necessary. The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.
 
-This is done using the following call: 
+This is done using the following call:
 
 ```
 const states = await client.getSignAndSyncStates()
 ```
 
 If you are running a high volume of orders from different clients on the same account and having difficulty managing this process, please reach out to support and we will be glad to help with an optimal solution.
-

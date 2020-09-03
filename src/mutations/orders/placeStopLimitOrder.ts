@@ -4,10 +4,15 @@ import { ORDER_PLACED_FRAGMENT } from './fragments'
 
 export const PLACE_STOP_LIMIT_ORDER_MUTATION = gql`
   mutation placeStopLimitOrder(
+    $affiliateDeveloperCode: AffiliateDeveloperCode
     $payload: PlaceStopLimitOrderParams!
     $signature: Signature!
   ) {
-    placeStopLimitOrder(payload: $payload, signature: $signature) {
+    placeStopLimitOrder(
+      affiliateDeveloperCode: $affiliateDeveloperCode
+      payload: $payload
+      signature: $signature
+    ) {
       ...orderPlacedFields
     }
   }
