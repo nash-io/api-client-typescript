@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>@neon-exchange/api-client-typescript - v5.2.5</title>
+	<title>@neon-exchange/api-client-typescript - v5.2.7</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">@neon-exchange/api-client-typescript - v5.2.5</a>
+					<a href="index.html" class="title">@neon-exchange/api-client-typescript - v5.2.7</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -52,7 +52,7 @@
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1>@neon-exchange/api-client-typescript - v5.2.5</h1>
+			<h1>@neon-exchange/api-client-typescript - v5.2.7</h1>
 		</div>
 	</div>
 </header>
@@ -66,7 +66,7 @@
 				<p>Official TypeScript client for interacting with the <a href="https://nash.io/">Nash Exchange</a>.</p>
 				<ul>
 					<li><a href="https://github.com/nash-io/api-client-typescript">Github repository</a></li>
-					<li><a href="https://nash-io.github.io/api-client-typescript">Documentation</a> </li>
+					<li><a href="https://nash-io.github.io/api-client-typescript">Documentation</a></li>
 				</ul>
 				<p>To test your integrations, Nash provides a public sandbox environment at <a href="https://app.sandbox.nash.io">https://app.sandbox.nash.io</a>.</p>
 				<p>NOTE: In sandbox, testnet funds are automatically sent to new accounts. The sandbox environment is reset every couple of days.</p>
@@ -122,32 +122,30 @@ run()</code></pre>
 				<a href="#nodejs-usage" id="nodejs-usage" style="color: inherit; text-decoration: none;">
 					<h2>Nodejs usage</h2>
 				</a>
-				<p>Using the client in node can be done like below.  See also the <a href="https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs">nodejs example</a>.</p>
-				<pre><code class="language-javascript">
-<span class="hljs-keyword">const</span> Nash = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@neon-exchange/api-client-typescript'</span>);
+				<p>Using the client in node can be done like below. See also the <a href="https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs">nodejs example</a>.</p>
+				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> Nash = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@neon-exchange/api-client-typescript'</span>)
 
 <span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Nash.Client(Nash.EnvironmentConfiguration.production)
 
 <span class="hljs-keyword">const</span> apiKeys = {
-  <span class="hljs-string">"secret"</span>: <span class="hljs-string">"your secret"</span>,
-  <span class="hljs-string">"apiKey"</span>: <span class="hljs-string">"your key"</span>
+  <span class="hljs-attr">secret</span>: <span class="hljs-string">'your secret'</span>,
+  <span class="hljs-attr">apiKey</span>: <span class="hljs-string">'your key'</span>
 }
 
 <span class="hljs-keyword">const</span> run = <span class="hljs-keyword">async</span> () =&gt; {
   <span class="hljs-keyword">try</span> {
     <span class="hljs-keyword">await</span> client.login(apiKeys)
   } <span class="hljs-keyword">catch</span> (e) {
-    <span class="hljs-built_in">console</span>.log(e);
+    <span class="hljs-built_in">console</span>.log(e)
   }
 }
 
-run()
-</code></pre>
+run()</code></pre>
 				<a href="#websockets" id="websockets" style="color: inherit; text-decoration: none;">
 					<h2>Websockets</h2>
 				</a>
 				<p>You can use websockets subscriptions like this:</p>
-				<pre><code class="language-typescript">
+				<pre><code class="language-javascript">
 <span class="hljs-keyword">import</span> { Client, EnvironmentConfiguration } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-typescript'</span>
 
 <span class="hljs-keyword">const</span> nash = <span class="hljs-keyword">new</span> Client(EnvironmentConfiguration.sandbox)
@@ -155,11 +153,11 @@ run()
 
 <span class="hljs-comment">// Getting the orderbook for the neo_eth marked</span>
 nash.subscriptions.onUpdatedOrderbook(
-  { marketName: <span class="hljs-string">'neo_eth'</span> },
+  { <span class="hljs-attr">marketName</span>: <span class="hljs-string">'neo_eth'</span> },
   {
-    onResult: ({
-      data: {
-        updatedOrderBook: { bids, asks }
+    <span class="hljs-attr">onResult</span>: ({
+      <span class="hljs-attr">data</span>: {
+        <span class="hljs-attr">updatedOrderBook</span>: { bids, asks }
       }
     }) =&gt; {
       <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`updated bids <span class="hljs-subst">${bids.length}</span>`</span>)
@@ -172,8 +170,8 @@ nash.subscriptions.onUpdatedOrderbook(
 nash.subscriptions.onUpdatedAccountOrders(
   {},
   {
-    onResult: ({
-      data: {
+    <span class="hljs-attr">onResult</span>: ({
+      <span class="hljs-attr">data</span>: {
         updatedAccountOrders
       }
     }) =&gt; {
@@ -182,6 +180,20 @@ nash.subscriptions.onUpdatedAccountOrders(
   }
 )
 </code></pre>
+				<a href="#using-affiliate-codes" id="using-affiliate-codes" style="color: inherit; text-decoration: none;">
+					<h2>Using affiliate codes</h2>
+				</a>
+				<p>To configure the client to use an affiliate code, you just have to supply it as a client option.</p>
+				<pre><code class="language-javascript"><span class="hljs-keyword">import</span> { Client } <span class="hljs-keyword">from</span> <span class="hljs-string">'@neon-exchange/api-client-typescript'</span>
+
+<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> Client(
+  ...,
+  {
+    <span class="hljs-attr">affiliateCode</span>: <span class="hljs-string">'YOUR_CODE'</span>,
+    <span class="hljs-attr">affiliateLabel</span>: <span class="hljs-string">'arbitragebot'</span> <span class="hljs-comment">// Optional label</span>
+  }
+)</code></pre>
+				<p>You may supply an optional affiliate label, which will be shown on the affiliate page. Label may only contain alpha numeric characters.</p>
 				<hr>
 				<a href="#setting-up-api-keys" id="setting-up-api-keys" style="color: inherit; text-decoration: none;">
 					<h2>Setting up API keys</h2>
@@ -198,10 +210,10 @@ nash.subscriptions.onUpdatedAccountOrders(
 				<a href="#state-signing" id="state-signing" style="color: inherit; text-decoration: none;">
 					<h2>State signing</h2>
 				</a>
-				<p>In order to assure your blockchain balances remain in sync with your trading balances, the client must &#39;sign&#39; their state every so often before placing more orders.  By default, the client will take care of this in the background for you and you will not need to worry about this.</p>
-				<p>In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach.  To turn of auto state syncing, initialize the client like so: </p>
-				<pre><code>const nash = <span class="hljs-keyword">new</span> <span class="hljs-constructor">Client(EnvironmentConfiguration.<span class="hljs-params">sandbox</span>, {<span class="hljs-params">autoSignState</span>: <span class="hljs-params">false</span>})</span></code></pre><p>You will then be responsible for signing states when necessary.  The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.</p>
-				<p>This is done using the following call: </p>
+				<p>In order to assure your blockchain balances remain in sync with your trading balances, the client must &#39;sign&#39; their state every so often before placing more orders. By default, the client will take care of this in the background for you and you will not need to worry about this.</p>
+				<p>In special cases where a user has more than one client process running at once which is placing a high volume of orders, it is advisable to take a more custom approach. To turn of auto state syncing, initialize the client like so:</p>
+				<pre><code>const nash = <span class="hljs-keyword">new</span> <span class="hljs-constructor">Client(EnvironmentConfiguration.<span class="hljs-params">sandbox</span>, {<span class="hljs-params">autoSignState</span>: <span class="hljs-params">false</span>})</span></code></pre><p>You will then be responsible for signing states when necessary. The current restriction is that states must be signed every 100 open orders, so the client should keep track and make sure to sign state before this limit is reached, otherwise placing an order will raise an error.</p>
+				<p>This is done using the following call:</p>
 				<pre><code><span class="hljs-keyword">const</span> states = <span class="hljs-keyword">await</span> client.getSignAndSyncStates()</code></pre><p>If you are running a high volume of orders from different clients on the same account and having difficulty managing this process, please reach out to support and we will be glad to help with an optimal solution.</p>
 			</div>
 		</div>
