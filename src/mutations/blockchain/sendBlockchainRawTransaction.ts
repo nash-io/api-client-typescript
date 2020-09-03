@@ -1,5 +1,5 @@
 import gql from 'graphql-tag'
-import { Blockchain } from '@neon-exchange/nash-protocol'
+import { Blockchain } from '@neon-exchange/nash-protocol-legacy'
 export interface GQLSignature {
   /**
    * The public key used to generate the signature

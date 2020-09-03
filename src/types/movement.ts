@@ -4,7 +4,7 @@ import { CurrencyAmount, DateTime } from '../types'
 import {
   MovementTypeDeposit,
   MovementTypeWithdrawal
-} from '@neon-exchange/nash-protocol'
+} from '@neon-exchange/nash-protocol-legacy'
 
 export type MovementType =
   | typeof MovementTypeDeposit

@@ -230,7 +230,7 @@ import {
   signPayload,
   fillRPoolIfNeeded,
   SyncState
-} from '@neon-exchange/nash-protocol'
+} from '@neon-exchange/nash-protocol-legacy'
 
 import {
   States,

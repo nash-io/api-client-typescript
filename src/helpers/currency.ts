@@ -1,6 +1,6 @@
 import { CurrencyAmount, Market, CurrencyPrice } from '../types'
 import { CryptoCurrency } from '../constants/currency'
-import { Market as MarketAuth } from '@neon-exchange/nash-protocol'
+import { Market as MarketAuth } from '@neon-exchange/nash-protocol-legacy'
 
 /* tslint:disable:interface-over-type-literal */
 type MarketData = { [key: string]: MarketAuth }

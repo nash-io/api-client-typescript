@@ -1,5 +1,5 @@
 import gql from 'graphql-tag'
-import { Blockchain } from '@neon-exchange/nash-protocol'
+import { Blockchain } from '@neon-exchange/nash-protocol-legacy'
 
 export enum CompletePayloadSignatureType {
   Blockchain = 'BLOCKCHAIN',

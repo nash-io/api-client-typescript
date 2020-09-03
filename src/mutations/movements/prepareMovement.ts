@@ -2,7 +2,7 @@ import gql from 'graphql-tag'
 import {
   MovementTypeDeposit,
   MovementTypeWithdrawal
-} from '@neon-exchange/nash-protocol'
+} from '@neon-exchange/nash-protocol-legacy'
 
 import { ClientSignedState } from '../stateSyncing/fragments'
 import { CurrencyAmount, Signature, Blockchain } from '../../types'
