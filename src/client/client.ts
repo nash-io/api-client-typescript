@@ -3780,7 +3780,7 @@ export class Client {
     return resp.data.completeBtcPayloadSignature
   }
 
-  private async sendBlockchainRawTransaction(params: {
+  public async sendBlockchainRawTransaction(params: {
     blockchain: SendBlockchainRawTransactionArgs['payload']['blockchain']
     payload: SendBlockchainRawTransactionArgs['payload']['transactionPayload']
   }): Promise<string> {
