@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="5.2.9"></a>
+## [5.2.9](https://github.com/nash-io/api-client-typescript/compare/v5.2.7...v5.2.9) (2020-09-07)
+
+
+
 <a name="5.2.7"></a>
 ## [5.2.7](https://github.com/nash-io/api-client-typescript/compare/v5.2.5...v5.2.7) (2020-09-03)
 
