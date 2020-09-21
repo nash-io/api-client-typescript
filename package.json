@@ -1,6 +1,6 @@
 {
   "name": "@neon-exchange/api-client-typescript-legacy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Official TypeScript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
@@ -62,7 +62,7 @@
     "@absinthe/socket": "0.2.1",
     "@cityofzion/neon-js": "4.7.2",
     "@neon-exchange/nash-perf": "1.0.4",
-    "@neon-exchange/nash-protocol-legacy": "0.1.0",
+    "@neon-exchange/nash-protocol-legacy": "0.1.1",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
