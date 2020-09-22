@@ -115,10 +115,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol-legacy@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol-legacy/-/nash-protocol-legacy-0.1.1.tgz#adec4c434de053ed674f21b59ec4cdcd76fa68af"
-  integrity sha512-Vs7S1YDYl52e5kgNLkad2IojViy12CzeIXn9MOrl9sMWJsLSgrBsCRNJd6rD+92sV3wHa0PIORl0r80Pk1HdiQ==
+"@neon-exchange/nash-protocol-legacy@0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol-legacy/-/nash-protocol-legacy-0.1.2.tgz#174bd0d52b98592c95423c7395bb58124c87c9ab"
+  integrity sha512-7RWweocATWcYQcfoi/z1Wrl5RInP+mL2GeZprLZk/fdtVnhGT+YKqkeR1BRwtgoLWVREUTDVCB/3FCjUBO4qxA==
   dependencies:
     bignumber.js "8.1.1"
     bip32 "2.0.3"
