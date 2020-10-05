@@ -4,7 +4,7 @@ import { OrderBuyOrSell } from './order'
 export interface Trade {
   id: string
   makerOrderId: string
-  takerOrderid: string
+  takerOrderId: string
   executedAt: string
   limitPrice: CurrencyPrice
   amount: CurrencyAmount
