@@ -61,9 +61,9 @@ export const detectBlockchain = (address: string): Blockchain | null => {
     return Blockchain.NEO
   }
   if (
-    /^1[a-zA-Z0-9]{33}$/.test(address) ||
-    /^3[a-zA-Z0-9]{33}$/.test(address) ||
-    /^bc1[a-zA-Z0-9]{39}$/.test(address)
+    /^1[a-zA-Z0-9]{25,35}$/.test(address) ||
+    /^3[a-zA-Z0-9]{25,35}$/.test(address) ||
+    /^bc1[a-zA-Z0-9]{39,64}$/.test(address)
   ) {
     return Blockchain.BTC
   }
