@@ -103,6 +103,7 @@ export enum CryptoCurrency {
   NKN = 'nkn',
   NNC = 'nnc',
   NOS = 'nos',
+  NOIA = 'noia',
   NPXS = 'npxs',
   NRVE = 'nrve',
   NULS = 'nuls',
