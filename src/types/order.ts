@@ -14,8 +14,11 @@ export interface CancelledOrder {
 export interface Order {
   amount: CurrencyAmount
   amountRemaining: CurrencyAmount
+  amountExecuted: CurrencyAmount
+  oppositeAmountExecuted: CurrencyAmount
+  avgExecutedPrice: CurrencyAmount | null
   buyOrSell: OrderBuyOrSell
-  cancelAt: number
+  cancelAt: number | null
   cancellationPolicy: OrderCancellationPolicy
   id: string
   limitPrice: CurrencyPrice

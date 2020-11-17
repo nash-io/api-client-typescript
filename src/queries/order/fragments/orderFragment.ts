@@ -13,6 +13,15 @@ export const ORDER_FRAGMENT = gql`
     amountRemaining {
       ...currencyAmountFields
     }
+    amountExecuted {
+      ...currencyAmountFields
+    }
+    oppositeAmountExecuted {
+      ...currencyAmountFields
+    }
+    avgExecutedPrice {
+      ...currencyPriceFields
+    }
     buyOrSell
     cancelAt
     cancellationPolicy
