@@ -9,6 +9,7 @@ import {
   CandleInterval,
   Order,
   DateTime,
+  AccountBalance,
   OrderBuyOrSell,
   OrderStatus,
   OrderType
@@ -107,6 +108,14 @@ export interface NashSocketEvents {
     handlers: SubscriptionHandlers<{
       data: {
         updatedTickers: Ticker[]
+      }
+    }>
+  ): void
+  onUpdatedAccountBalance(
+    variables: { currency?: string },
+    handlers: SubscriptionHandlers<{
+      data: {
+        newTrades: AccountBalance[]
       }
     }>
   ): void
