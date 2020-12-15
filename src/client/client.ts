@@ -101,6 +101,7 @@ import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
 import { NEW_TRADES } from '../subscriptions/newTrades'
 import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
+import { UPDATED_ACCOUNT_BALANCE } from '../subscriptions/updatedAccountBalance'
 
 import {
   DH_FIIL_POOL,
@@ -775,6 +776,18 @@ export class Client {
           AbsintheSocket.send(this.getAbsintheSocket(), {
             operation: gqlToString(UPDATED_TICKERS),
             variables: {}
+          }),
+          handlers
+        )
+      },
+      onUpdatedAccountBalance: (payload, handlers) => {
+        AbsintheSocket.observe(
+          this.getAbsintheSocket(),
+          AbsintheSocket.send(this.getAbsintheSocket(), {
+            operation: gqlToString(UPDATED_ACCOUNT_BALANCE),
+            variables: {
+              payload
+            }
           }),
           handlers
         )

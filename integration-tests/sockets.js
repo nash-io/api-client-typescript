@@ -69,11 +69,12 @@ async function testSubscriptions() {
   }
   let connection = client.createSocketConnection()
   await runTest(connection, 'onNewTrades', {
-    marketName: 'bat_neo'
+    marketName: 'btc_usdc'
   })
   await runTest(connection, 'onUpdatedOrderbook', {
-    marketName: 'bat_neo'
+    marketName: 'btc_usdc'
   })
+  await runTest(connection, 'onUpdatedAccountBalance', {})
   for (const interval of Object.values(Nash.CandleInterval)) {
     await runTest(connection, 'onUpdatedCandles', {
       marketName: 'eth_neo',
