@@ -56,13 +56,13 @@
     "prepare-release": "One-step: clean, build, test, publish docs, and prep a release"
   },
   "engines": {
-    "node": ">=8.9 <11.0.0"
+    "node": ">=8.9 <16.0.0"
   },
   "dependencies": {
     "@absinthe/socket": "0.2.1",
     "@cityofzion/neon-js": "4.7.2",
     "@neon-exchange/nash-perf": "1.0.4",
-    "@neon-exchange/nash-protocol": "3.3.12",
+    "@neon-exchange/nash-protocol": "4.0.1",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
