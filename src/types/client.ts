@@ -115,7 +115,7 @@ export interface NashSocketEvents {
     variables: { currency?: string },
     handlers: SubscriptionHandlers<{
       data: {
-        newTrades: AccountBalance[]
+        updatedAccountBalances: AccountBalance[]
       }
     }>
   ): void
