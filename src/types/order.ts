@@ -60,3 +60,13 @@ export interface OrderPlaced {
   status: OrderStatus
   ordersTillSignState: number
 }
+
+export interface PlaceLimitOrderParams {
+  allowTaker: boolean
+  amount: CurrencyAmount
+  buyOrSell: OrderBuyOrSell
+  cancellationPolicy: OrderCancellationPolicy
+  limitPrice: CurrencyPrice
+  marketName: string
+  cancelAt?: DateTime
+}
