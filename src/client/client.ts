@@ -3986,11 +3986,17 @@ export class Client {
       variables[`s${names[index]}`] = item.signature
     })
 
-    const result = await this.gql.mutate({
-      mutation,
-      variables
-    })
+    try {
+      const result = await this.gql.mutate({
+        mutation,
+        variables
+      })
+      console.info("Result: ", result)
+      return Object.keys(result.data).map(k => result.data[k]) as OrderPlaced[]
 
-    return Object.keys(result.data).map(k => result.data[k]) as OrderPlaced[]
+    } catch(e) {
+      console.info(e)
+    }
+
   }
 }
