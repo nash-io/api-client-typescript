@@ -184,7 +184,9 @@ import {
   Asset,
   MissingNonceError,
   InsufficientFundsError,
-  PlaceLimitOrderParams
+  PlaceLimitOrderParams,
+  OrdersPlaced,
+  OrdersCancelledAndPlaced
 } from '../types'
 import {
   ClientMode,
@@ -3924,42 +3926,13 @@ export class Client {
 
   public async placeLimitOrders(
     params: PlaceLimitOrderParams[]
-  ): Promise<OrderPlaced[]> {
+  ): Promise<OrdersPlaced> {
     await this.prefillRPoolIfNeededForAssets(
       params[0].limitPrice.currencyA,
       params[0].limitPrice.currencyB
     )
 
-    const placeLimitOrderPayloads = await Promise.all(
-      params.map(async param => {
-        const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
-          param.marketName,
-          param.buyOrSell
-        )
-        const normalizedAmount = normalizeAmountForMarket(
-          param.amount,
-          this.marketData[param.marketName]
-        )
-        const normalizedLimitPrice = normalizePriceForMarket(
-          param.limitPrice,
-          this.marketData[param.marketName]
-        )
-        const placeLimitOrderParams = createPlaceLimitOrderParams(
-          param.allowTaker,
-          normalizedAmount,
-          param.buyOrSell,
-          param.cancellationPolicy,
-          normalizedLimitPrice,
-          param.marketName,
-          noncesFrom,
-          noncesTo,
-          nonceOrder,
-          param.cancelAt
-        )
-        const signedPayload = await this.signPayload(placeLimitOrderParams)
-        return signedPayload
-      })
-    )
+    const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(params)
 
     const names = ['A', 'B', 'C', 'D', 'E', 'F'].slice(
       0,
@@ -3991,12 +3964,154 @@ export class Client {
         mutation,
         variables
       })
-      console.info("Result: ", result)
-      return Object.keys(result.data).map(k => result.data[k]) as OrderPlaced[]
 
-    } catch(e) {
-      console.info(e)
+      return {
+        orders: Object.keys(result.data).map(
+          k => result.data[k]
+        ) as OrderPlaced[]
+      }
+    } catch (e) {
+      return {
+        error: e,
+        orders: []
+      }
+    }
+  }
+
+  private generatePlaceOrdersParams = async (
+    params: PlaceLimitOrderParams[]
+  ): Promise<PayloadSignature[]> => {
+    return await Promise.all(
+      params.map(async param => {
+        const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
+          param.marketName,
+          param.buyOrSell
+        )
+        const normalizedAmount = normalizeAmountForMarket(
+          param.amount,
+          this.marketData[param.marketName]
+        )
+        const normalizedLimitPrice = normalizePriceForMarket(
+          param.limitPrice,
+          this.marketData[param.marketName]
+        )
+        const placeLimitOrderParams = createPlaceLimitOrderParams(
+          param.allowTaker,
+          normalizedAmount,
+          param.buyOrSell,
+          param.cancellationPolicy,
+          normalizedLimitPrice,
+          param.marketName,
+          noncesFrom,
+          noncesTo,
+          nonceOrder,
+          param.cancelAt
+        )
+        const signedPayload = await this.signPayload(placeLimitOrderParams)
+        return signedPayload
+      })
+    )
+  }
+
+  /**
+   * Cancel a list of orders by ID.
+   *
+   * @param orderID[]
+   * @returns
+   *
+   * Example
+   * ```
+   * const cancelledOrders = await nash.cancelOrder(['11','12'])
+   * console.log(cancelledOrders)
+   * ```
+   */
+  public async cancelAndPlaceOrders(
+    orderIDs: string[],
+    marketName: string,
+    orders: PlaceLimitOrderParams[]
+  ): Promise<OrdersCancelledAndPlaced> {
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
+    )
+
+    const cancelOrdersPayloads = await Promise.all(
+      orderIDs.map(async id => {
+        const cancelOrderParams = createCancelOrderParams(id, marketName)
+        const signedPayload = await this.signPayload(cancelOrderParams)
+        return signedPayload
+      })
+    )
+
+    const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(orders)
+
+    const allNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
+    const cancelNames = allNames.slice(0, cancelOrdersPayloads.length)
+    const cancelParams = cancelNames
+      .map(name => `$p${name}:CancelOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const cancelAliases = cancelNames
+      .map(
+        name =>
+          `  ${name}: cancelOrder(payload: $p${name}, signature: $s${name}) { orderId }`
+      )
+      .join('\n')
+
+    const placeNames = allNames.slice(
+      cancelOrdersPayloads.length,
+      cancelOrdersPayloads.length + orders.length
+    )
+    const placeOrderParams = placeNames
+      .map(name => `$p${name}:PlaceLimitOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const placeOrderAliases = placeNames
+      .map(
+        name =>
+          `  ${name}: placeLimitOrder(affiliateDeveloperCode: $affiliateDeveloperCode, payload: $p${name}, signature: $s${name}) {\n  id\n  status\n  ordersTillSignState\n }`
+      )
+      .join('\n')
+
+    const mutationStr = `mutation cancelAndPlaceOrders(${cancelParams}, ${placeOrderParams}${
+      placeLimitOrderPayloads.length
+        ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
+        : ''
+    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+    const mutation = gqlstring(mutationStr)
+
+    const variables: any = {}
+    if (placeLimitOrderPayloads.length > 0) {
+      variables.affiliateDeveloperCode = this.affiliateDeveloperCode
     }
 
+    cancelOrdersPayloads.forEach((item, index) => {
+      variables[`p${cancelNames[index]}`] = item.payload
+      variables[`s${cancelNames[index]}`] = item.signature
+    })
+    placeLimitOrderPayloads.forEach((item, index) => {
+      variables[`p${placeNames[index]}`] = item.signedPayload
+      variables[`s${placeNames[index]}`] = item.signature
+    })
+
+    try {
+      const result = await this.gql.mutate({
+        mutation,
+        variables
+      })
+      return {
+        orders: Object.keys(result.data)
+          .filter(k => placeNames.indexOf(k) > -1)
+          .map(k => result.data[k]) as OrderPlaced[],
+        cancelled: Object.keys(result.data)
+          .filter(k => cancelNames.indexOf(k) > -1)
+          .map(k => result.data[k]) as CancelledOrder[]
+      }
+    } catch (e) {
+      return {
+        error: e,
+        orders: [],
+        cancelled: []
+      }
+    }
   }
 }

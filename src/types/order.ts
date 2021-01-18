@@ -70,3 +70,14 @@ export interface PlaceLimitOrderParams {
   marketName: string
   cancelAt?: DateTime
 }
+
+export interface OrdersPlaced {
+  error?: any
+  orders: OrderPlaced[]
+}
+
+export interface OrdersCancelledAndPlaced {
+  error?: any
+  cancelled: CancelledOrder[]
+  orders: OrderPlaced[]
+}
