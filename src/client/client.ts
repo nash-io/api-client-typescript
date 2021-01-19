@@ -183,7 +183,10 @@ import {
   AssetData,
   Asset,
   MissingNonceError,
-  InsufficientFundsError
+  InsufficientFundsError,
+  PlaceLimitOrderParams,
+  OrdersPlaced,
+  OrdersCancelledAndPlaced
 } from '../types'
 import {
   ClientMode,
@@ -192,6 +195,8 @@ import {
   GQLResp,
   PayloadSignature
 } from '../types/client'
+import { default as gqlstring } from 'graphql-tag'
+
 import { BlockchainError } from './movements'
 import { gqlToString } from './queryPrinter'
 import { CryptoCurrency } from '../constants/currency'
@@ -3853,5 +3858,294 @@ export class Client {
   }
   public getBtcAddress(): string {
     return this.apiKey.child_keys[BIP44.BTC].address
+  }
+
+  /*
+    Updates for placing or cancelling multiple orders in same request
+  */
+
+  /**
+   * Cancel a list of orders by ID.
+   *
+   * @param orderID[]
+   * @returns
+   *
+   * Example
+   * ```
+   * const cancelledOrders = await nash.cancelOrder(['11','12'])
+   * console.log(cancelledOrders)
+   * ```
+   */
+  public async cancelOrders(
+    orderIDs: string[],
+    marketName: string
+  ): Promise<CancelledOrder[]> {
+    if (orderIDs.length === 0) {
+      return []
+    }
+
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
+    )
+
+    const cancelOrdersPayloads = await Promise.all(
+      orderIDs.map(async id => {
+        const cancelOrderParams = createCancelOrderParams(id, marketName)
+        const signedPayload = await this.signPayload(cancelOrderParams)
+        return signedPayload
+      })
+    )
+
+    const names = this.generateNames(cancelOrdersPayloads.length)
+
+    const params = names
+      .map(name => `$p${name}:CancelOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const aliases = names
+      .map(
+        name =>
+          `  ${name}: cancelOrder(payload: $p${name}, signature: $s${name}) { orderId }`
+      )
+      .join('\n')
+    const mutationStr = `mutation cancelOrders(${params}) {\n${aliases}\n}`
+    const mutation = gqlstring(mutationStr)
+    const variables = {}
+    cancelOrdersPayloads.forEach((item, index) => {
+      variables[`p${names[index]}`] = item.payload
+      variables[`s${names[index]}`] = item.signature
+    })
+    const result = await this.gql.mutate({
+      mutation,
+      variables
+    })
+    const cancelledOrders = Object.keys(result.data).map(
+      k => result.data[k]
+    ) as CancelledOrder[]
+    return cancelledOrders
+  }
+
+  public async placeLimitOrders(
+    params: PlaceLimitOrderParams[]
+  ): Promise<OrdersPlaced> {
+    if (params.length === 0) {
+      return {
+        orders: []
+      }
+    }
+    await this.prefillRPoolIfNeededForAssets(
+      params[0].limitPrice.currencyA,
+      params[0].limitPrice.currencyB
+    )
+
+    const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(params)
+    const names = this.generateNames(placeLimitOrderPayloads.length)
+
+    const paramNames = names
+      .map(name => `$p${name}:PlaceLimitOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const aliases = names
+      .map(
+        name =>
+          `  ${name}: placeLimitOrder(affiliateDeveloperCode: $affiliateDeveloperCode, payload: $p${name}, signature: $s${name}) {\n  id\n  status\n  ordersTillSignState\n }`
+      )
+      .join('\n')
+    const mutationStr = `mutation placeLimitOrders($affiliateDeveloperCode: AffiliateDeveloperCode, ${paramNames}) {\n${aliases}\n}`
+    const mutation = gqlstring(mutationStr)
+
+    const variables = {
+      affiliateDeveloperCode: this.affiliateDeveloperCode
+    }
+
+    placeLimitOrderPayloads.forEach((item, index) => {
+      variables[`p${names[index]}`] = item.signedPayload
+      variables[`s${names[index]}`] = item.signature
+    })
+
+    try {
+      const result = await this.gql.mutate({
+        mutation,
+        variables
+      })
+
+      return {
+        orders: Object.keys(result.data).map(
+          k => result.data[k]
+        ) as OrderPlaced[]
+      }
+    } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        await this.updateTradedAssetNonces()
+      }
+      return {
+        error: e,
+        orders: []
+      }
+    }
+  }
+
+  /**
+   * Cancel a list of orders by ID.
+   *
+   * @param orderID[]
+   * @returns
+   *
+   * Example
+   * ```
+   * const cancelledOrders = await nash.cancelOrder(['11','12'])
+   * console.log(cancelledOrders)
+   * ```
+   */
+  public async cancelAndPlaceOrders(
+    orderIDs: string[],
+    marketName: string,
+    orders: PlaceLimitOrderParams[]
+  ): Promise<OrdersCancelledAndPlaced> {
+    const [a, b] = marketName.split('_')
+    await this.prefillRPoolIfNeededForAssets(
+      a as CryptoCurrency,
+      b as CryptoCurrency
+    )
+
+    const cancelOrdersPayloads = await Promise.all(
+      orderIDs.map(async id => {
+        const cancelOrderParams = createCancelOrderParams(id, marketName)
+        const signedPayload = await this.signPayload(cancelOrderParams)
+        return signedPayload
+      })
+    )
+
+    const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(orders)
+
+    const cancelNames = this.generateNames(cancelOrdersPayloads.length)
+    const cancelParams = cancelNames
+      .map(name => `$p${name}:CancelOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const cancelAliases = cancelNames
+      .map(
+        name =>
+          `  ${name}: cancelOrder(payload: $p${name}, signature: $s${name}) { orderId }`
+      )
+      .join('\n')
+
+    const placeNames = this.generateNames(
+      orders.length,
+      cancelOrdersPayloads.length
+    )
+
+    const placeOrderParams = placeNames
+      .map(name => `$p${name}:PlaceLimitOrderParams!, $s${name}:Signature!`)
+      .join(',')
+    const placeOrderAliases = placeNames
+      .map(
+        name =>
+          `  ${name}: placeLimitOrder(affiliateDeveloperCode: $affiliateDeveloperCode, payload: $p${name}, signature: $s${name}) {\n  id\n  status\n  ordersTillSignState\n }`
+      )
+      .join('\n')
+
+    const mutationStr = `mutation cancelAndPlaceOrders(${cancelParams}, ${placeOrderParams}${
+      placeLimitOrderPayloads.length
+        ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
+        : ''
+    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+    const mutation = gqlstring(mutationStr)
+
+    const variables: any = {}
+    if (placeLimitOrderPayloads.length > 0) {
+      variables.affiliateDeveloperCode = this.affiliateDeveloperCode
+    }
+
+    cancelOrdersPayloads.forEach((item, index) => {
+      variables[`p${cancelNames[index]}`] = item.payload
+      variables[`s${cancelNames[index]}`] = item.signature
+    })
+    placeLimitOrderPayloads.forEach((item, index) => {
+      variables[`p${placeNames[index]}`] = item.signedPayload
+      variables[`s${placeNames[index]}`] = item.signature
+    })
+
+    try {
+      const result = await this.gql.mutate({
+        mutation,
+        variables
+      })
+      return {
+        orders: Object.keys(result.data)
+          .filter(k => placeNames.indexOf(k) > -1)
+          .map(k => result.data[k]) as OrderPlaced[],
+        cancelled: Object.keys(result.data)
+          .filter(k => cancelNames.indexOf(k) > -1)
+          .map(k => result.data[k]) as CancelledOrder[]
+      }
+    } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        await this.updateTradedAssetNonces()
+      }
+      return {
+        error: e,
+        orders: [],
+        cancelled: []
+      }
+    }
+  }
+
+  private generatePlaceOrdersParams = async (
+    params: PlaceLimitOrderParams[]
+  ): Promise<PayloadSignature[]> => {
+    return await Promise.all(
+      params.map(async param => {
+        const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
+          param.marketName,
+          param.buyOrSell
+        )
+        const normalizedAmount = normalizeAmountForMarket(
+          param.amount,
+          this.marketData[param.marketName]
+        )
+        const normalizedLimitPrice = normalizePriceForMarket(
+          param.limitPrice,
+          this.marketData[param.marketName]
+        )
+        const placeLimitOrderParams = createPlaceLimitOrderParams(
+          param.allowTaker,
+          normalizedAmount,
+          param.buyOrSell,
+          param.cancellationPolicy,
+          normalizedLimitPrice,
+          param.marketName,
+          noncesFrom,
+          noncesTo,
+          nonceOrder,
+          param.cancelAt
+        )
+        const signedPayload = await this.signPayload(placeLimitOrderParams)
+        return signedPayload
+      })
+    )
+  }
+
+  private generateNames = (total: number, offset: number = 0): string[] => {
+    const names = [
+      'A',
+      'B',
+      'C',
+      'D',
+      'E',
+      'F',
+      'G',
+      'H',
+      'I',
+      'J',
+      'K',
+      'L',
+      'M',
+      'N',
+      'O',
+      'P',
+      'Q'
+    ]
+
+    return names.slice(offset, offset + total)
   }
 }

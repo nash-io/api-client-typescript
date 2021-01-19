@@ -47,7 +47,11 @@ export const ETH_NETWORK: NetworkSettingsRecord = {
         contract: '0x00F2B67B5A5EC2FF88B2BE7D5A8D1A39D5929237'
       }
     },
-    nodes: ['https://consensus1.eth.nash.io','https://consensus2.eth.nash.io','https://consensus3.eth.nash.io']
+    nodes: [
+      'https://consensus1.eth.nash.io',
+      'https://consensus2.eth.nash.io',
+      'https://consensus3.eth.nash.io'
+    ]
   },
   [Networks.TestNet]: {
     contracts: {},
