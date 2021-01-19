@@ -3880,6 +3880,10 @@ export class Client {
     orderIDs: string[],
     marketName: string
   ): Promise<CancelledOrder[]> {
+    if (orderIDs.length === 0) {
+      return []
+    }
+
     const [a, b] = marketName.split('_')
     await this.prefillRPoolIfNeededForAssets(
       a as CryptoCurrency,
@@ -3894,10 +3898,8 @@ export class Client {
       })
     )
 
-    const names = ['A', 'B', 'C', 'D', 'E', 'F'].slice(
-      0,
-      cancelOrdersPayloads.length
-    )
+    const names = this.generateNames(cancelOrdersPayloads.length)
+
     const params = names
       .map(name => `$p${name}:CancelOrderParams!, $s${name}:Signature!`)
       .join(',')
@@ -3927,17 +3929,19 @@ export class Client {
   public async placeLimitOrders(
     params: PlaceLimitOrderParams[]
   ): Promise<OrdersPlaced> {
+    if (params.length === 0) {
+      return {
+        orders: []
+      }
+    }
     await this.prefillRPoolIfNeededForAssets(
       params[0].limitPrice.currencyA,
       params[0].limitPrice.currencyB
     )
 
     const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(params)
+    const names = this.generateNames(placeLimitOrderPayloads.length)
 
-    const names = ['A', 'B', 'C', 'D', 'E', 'F'].slice(
-      0,
-      placeLimitOrderPayloads.length
-    )
     const paramNames = names
       .map(name => `$p${name}:PlaceLimitOrderParams!, $s${name}:Signature!`)
       .join(',')
@@ -3971,46 +3975,14 @@ export class Client {
         ) as OrderPlaced[]
       }
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        await this.updateTradedAssetNonces()
+      }
       return {
         error: e,
         orders: []
       }
     }
-  }
-
-  private generatePlaceOrdersParams = async (
-    params: PlaceLimitOrderParams[]
-  ): Promise<PayloadSignature[]> => {
-    return await Promise.all(
-      params.map(async param => {
-        const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
-          param.marketName,
-          param.buyOrSell
-        )
-        const normalizedAmount = normalizeAmountForMarket(
-          param.amount,
-          this.marketData[param.marketName]
-        )
-        const normalizedLimitPrice = normalizePriceForMarket(
-          param.limitPrice,
-          this.marketData[param.marketName]
-        )
-        const placeLimitOrderParams = createPlaceLimitOrderParams(
-          param.allowTaker,
-          normalizedAmount,
-          param.buyOrSell,
-          param.cancellationPolicy,
-          normalizedLimitPrice,
-          param.marketName,
-          noncesFrom,
-          noncesTo,
-          nonceOrder,
-          param.cancelAt
-        )
-        const signedPayload = await this.signPayload(placeLimitOrderParams)
-        return signedPayload
-      })
-    )
   }
 
   /**
@@ -4046,8 +4018,7 @@ export class Client {
 
     const placeLimitOrderPayloads = await this.generatePlaceOrdersParams(orders)
 
-    const allNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
-    const cancelNames = allNames.slice(0, cancelOrdersPayloads.length)
+    const cancelNames = this.generateNames(cancelOrdersPayloads.length)
     const cancelParams = cancelNames
       .map(name => `$p${name}:CancelOrderParams!, $s${name}:Signature!`)
       .join(',')
@@ -4058,10 +4029,11 @@ export class Client {
       )
       .join('\n')
 
-    const placeNames = allNames.slice(
-      cancelOrdersPayloads.length,
-      cancelOrdersPayloads.length + orders.length
+    const placeNames = this.generateNames(
+      orders.length,
+      cancelOrdersPayloads.length
     )
+
     const placeOrderParams = placeNames
       .map(name => `$p${name}:PlaceLimitOrderParams!, $s${name}:Signature!`)
       .join(',')
@@ -4107,11 +4079,73 @@ export class Client {
           .map(k => result.data[k]) as CancelledOrder[]
       }
     } catch (e) {
+      if (e.message.includes(MISSING_NONCES)) {
+        await this.updateTradedAssetNonces()
+      }
       return {
         error: e,
         orders: [],
         cancelled: []
       }
     }
+  }
+
+  private generatePlaceOrdersParams = async (
+    params: PlaceLimitOrderParams[]
+  ): Promise<PayloadSignature[]> => {
+    return await Promise.all(
+      params.map(async param => {
+        const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
+          param.marketName,
+          param.buyOrSell
+        )
+        const normalizedAmount = normalizeAmountForMarket(
+          param.amount,
+          this.marketData[param.marketName]
+        )
+        const normalizedLimitPrice = normalizePriceForMarket(
+          param.limitPrice,
+          this.marketData[param.marketName]
+        )
+        const placeLimitOrderParams = createPlaceLimitOrderParams(
+          param.allowTaker,
+          normalizedAmount,
+          param.buyOrSell,
+          param.cancellationPolicy,
+          normalizedLimitPrice,
+          param.marketName,
+          noncesFrom,
+          noncesTo,
+          nonceOrder,
+          param.cancelAt
+        )
+        const signedPayload = await this.signPayload(placeLimitOrderParams)
+        return signedPayload
+      })
+    )
+  }
+
+  private generateNames = (total: number, offset: number = 0): string[] => {
+    const names = [
+      'A',
+      'B',
+      'C',
+      'D',
+      'E',
+      'F',
+      'G',
+      'H',
+      'I',
+      'J',
+      'K',
+      'L',
+      'M',
+      'N',
+      'O',
+      'P',
+      'Q'
+    ]
+
+    return names.slice(offset, offset + total)
   }
 }
