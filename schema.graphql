@@ -788,6 +788,12 @@ type CompanyResponse {
   website: String
 }
 
+enum CompletePayloadSignatureOperation {
+  DEPOSIT
+  TRANSFER
+  WITHDRAWAL
+}
+
 type CompletePayloadSignatureResponse {
   signature: Base16
 }
@@ -2310,6 +2316,7 @@ type RootMutationType {
   ): [Base16]!
   completePayloadSignature(
     blockchain: Blockchain!
+    operation: CompletePayloadSignatureOperation!
     payload: Base16!
     publicKey: Base16!
     r: Base16!
