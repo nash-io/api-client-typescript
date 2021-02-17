@@ -11,6 +11,8 @@ NOTE: In sandbox, testnet funds are automatically sent to new accounts. The sand
 
 ## Installation
 
+Requires usage of Node 14 or greater.
+
 ```sh
 yarn add @neon-exchange/api-client-typescript
 ```
@@ -19,6 +21,11 @@ yarn add @neon-exchange/api-client-typescript
 
 To get started you need to create an API key. You can find instructions on how to do so further down in this Readme.
 Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
+
+## API Compatibility
+
+Versions 6 and above include a change to order placement logic. The previous order placement logic will no longer be compatible with the exchange, so it is highly recommended to upgrade to version 6 or higher as previous versions will be deprecated.
+
 
 ## Usage
 

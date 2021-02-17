@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.0.7"></a>
+## [6.0.7](https://github.com/nash-io/api-client-typescript/compare/v5.2.25...v6.0.7) (2021-01-26)
+
+
+
+<a name="6.0.5"></a>
+## [6.0.5](https://github.com/nash-io/api-client-typescript/compare/v6.0.3...v6.0.5) (2021-01-21)
+
+
+
+<a name="6.0.3"></a>
+## [6.0.3](https://github.com/nash-io/api-client-typescript/compare/v5.2.29...v6.0.3) (2021-01-21)
+
+
+
+<a name="6.0.1"></a>
+## [6.0.1](https://github.com/nash-io/api-client-typescript/compare/v5.2.25...v6.0.1) (2020-12-15)
+
 <a name="5.2.29"></a>
 ## [5.2.29](https://github.com/nash-io/api-client-typescript/compare/v5.2.27...v5.2.29) (2021-01-19)
 
@@ -9,7 +27,6 @@ All notable changes to this project will be documented in this file. See [standa
 
 <a name="5.2.27"></a>
 ## [5.2.27](https://github.com/nash-io/api-client-typescript/compare/v5.2.25...v5.2.27) (2020-12-16)
-
 
 
 <a name="5.2.25"></a>
