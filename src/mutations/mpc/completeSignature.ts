@@ -6,9 +6,16 @@ export enum CompletePayloadSignatureType {
   Movement = 'MOVEMENT'
 }
 
+export enum CompletePayloadSignatureOperation {
+  Deposit = 'DEPOSIT',
+  Transfer = 'TRANSFER',
+  Withdrawal = 'WITHDRAWAL'
+}
+
 export const COMPLETE_PAYLOAD_SIGNATURE = gql`
   mutation completePayloadSignature(
     $blockchain: Blockchain!
+    $operation: CompletePayloadSignatureOperation!
     $payload: Base16!
     $type: CompletePayloadSignatureType!
     $public_key: Base16!
@@ -17,6 +24,7 @@ export const COMPLETE_PAYLOAD_SIGNATURE = gql`
   ) {
     completePayloadSignature(
       blockchain: $blockchain
+      operation: $operation
       payload: $payload
       publicKey: $public_key
       r: $r
@@ -30,6 +38,7 @@ export const COMPLETE_PAYLOAD_SIGNATURE = gql`
 
 export interface CompletePayloadSignatureArgs {
   blockchain: Blockchain
+  operation: CompletePayloadSignatureOperation
   payload: string
   public_key: string
   r: string
