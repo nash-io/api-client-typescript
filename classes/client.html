@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Client | @neon-exchange/api-client-typescript - v5.2.25</title>
+	<title>Client | @neon-exchange/api-client-typescript - v6.0.9</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">@neon-exchange/api-client-typescript - v5.2.25</a>
+					<a href="../index.html" class="title">@neon-exchange/api-client-typescript - v6.0.9</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -102,7 +102,9 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#cancelallorders" class="tsd-kind-icon">cancel<wbr>All<wbr>Orders</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#cancelandplaceorders" class="tsd-kind-icon">cancel<wbr>And<wbr>Place<wbr>Orders</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#cancelorder" class="tsd-kind-icon">cancel<wbr>Order</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#cancelorders" class="tsd-kind-icon">cancel<wbr>Orders</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#createsocketconnection" class="tsd-kind-icon">create<wbr>Socket<wbr>Connection</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#deposittotradingcontract" class="tsd-kind-icon">deposit<wbr>ToTrading<wbr>Contract</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#disconnect" class="tsd-kind-icon">disconnect</a></li>
@@ -138,6 +140,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#listtrades" class="tsd-kind-icon">list<wbr>Trades</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#login" class="tsd-kind-icon">login</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#placelimitorder" class="tsd-kind-icon">place<wbr>Limit<wbr>Order</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#placelimitorders" class="tsd-kind-icon">place<wbr>Limit<wbr>Orders</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#placemarketorder" class="tsd-kind-icon">place<wbr>Market<wbr>Order</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#placestoplimitorder" class="tsd-kind-icon">place<wbr>Stop<wbr>Limit<wbr>Order</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="client.html#placestopmarketorder" class="tsd-kind-icon">place<wbr>Stop<wbr>Market<wbr>Order</a></li>
@@ -168,7 +171,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L348">client.ts:348</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L354">client.ts:354</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -202,7 +205,7 @@
 					<div class="tsd-signature tsd-kind-icon">api<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">APIKey</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L340">client.ts:340</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L346">client.ts:346</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -218,7 +221,7 @@
 					<div class="tsd-signature tsd-kind-icon">asset<wbr>Data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L348">client.ts:348</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L354">client.ts:354</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -242,7 +245,7 @@
 					<div class="tsd-signature tsd-kind-icon">eth<wbr>Vault<wbr>Contract<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Contract</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L342">client.ts:342</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L348">client.ts:348</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -258,7 +261,7 @@
 					<div class="tsd-signature tsd-kind-icon">market<wbr>Data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L344">client.ts:344</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L350">client.ts:350</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -282,7 +285,7 @@
 					<div class="tsd-signature tsd-kind-icon">nash<wbr>Protocol<wbr>Market<wbr>Data<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ReturnType</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">typeof </span><span class="tsd-signature-type">mapMarketsForNashProtocol</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L346">client.ts:346</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L352">client.ts:352</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -298,7 +301,7 @@
 					<div class="tsd-signature tsd-kind-icon">perf<wbr>Client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PerfClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L338">client.ts:338</a></li>
+							<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L344">client.ts:344</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -321,7 +324,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L507">client.ts:507</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L513">client.ts:513</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -338,7 +341,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L684">client.ts:684</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L690">client.ts:690</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -398,7 +401,7 @@ nash.subscriptions.onUpdatedAccountOrders(
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1932">client.ts:1932</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1938">client.ts:1938</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -420,6 +423,43 @@ console.log(<span class="hljs-keyword">result</span>)</code></pre>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="cancelandplaceorders" class="tsd-anchor"></a>
+					<h3>cancel<wbr>And<wbr>Place<wbr>Orders</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">cancel<wbr>And<wbr>Place<wbr>Orders<span class="tsd-signature-symbol">(</span>orderIDs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, marketName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, orders<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlaceLimitOrderParams</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">OrdersCancelledAndPlaced</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L4035">client.ts:4035</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Cancel a list of orders by ID.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>orderIDs: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>marketName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>orders: <span class="tsd-signature-type">PlaceLimitOrderParams</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">OrdersCancelledAndPlaced</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>Example</p>
+							<pre><code><span class="hljs-keyword">const</span> cancelledOrders = <span class="hljs-keyword">await</span> nash.cancelOrder([<span class="hljs-string">'11'</span>,<span class="hljs-string">'12'</span>])
+<span class="hljs-built_in">console</span>.log(cancelledOrders)</code></pre>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="cancelorder" class="tsd-anchor"></a>
 					<h3>cancel<wbr>Order</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -429,7 +469,7 @@ console.log(<span class="hljs-keyword">result</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1893">client.ts:1893</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1899">client.ts:1899</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -454,6 +494,40 @@ console.log(<span class="hljs-keyword">result</span>)</code></pre>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="cancelorders" class="tsd-anchor"></a>
+					<h3>cancel<wbr>Orders</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">cancel<wbr>Orders<span class="tsd-signature-symbol">(</span>orderIDs<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, marketName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">CancelledOrder</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3914">client.ts:3914</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Cancel a list of orders by ID.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>orderIDs: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li>
+									<h5>marketName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">CancelledOrder</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>Example</p>
+							<pre><code><span class="hljs-keyword">const</span> cancelledOrders = <span class="hljs-keyword">await</span> nash.cancelOrder([<span class="hljs-string">'11'</span>,<span class="hljs-string">'12'</span>])
+<span class="hljs-built_in">console</span>.log(cancelledOrders)</code></pre>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="createsocketconnection" class="tsd-anchor"></a>
 					<h3>create<wbr>Socket<wbr>Connection</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -463,7 +537,7 @@ console.log(<span class="hljs-keyword">result</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L739">client.ts:739</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L745">client.ts:745</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -524,7 +598,7 @@ connection.onUpdatedAccountOrders(
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3057">client.ts:3057</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3080">client.ts:3080</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -547,7 +621,7 @@ connection.onUpdatedAccountOrders(
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L549">client.ts:549</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L555">client.ts:555</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -564,7 +638,7 @@ connection.onUpdatedAccountOrders(
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3282">client.ts:3282</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3309">client.ts:3309</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -587,7 +661,7 @@ connection.onUpdatedAccountOrders(
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1495">client.ts:1495</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1501">client.ts:1501</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -620,7 +694,7 @@ console.log(address)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1605">client.ts:1605</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1611">client.ts:1611</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -653,7 +727,7 @@ console.log(address)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1631">client.ts:1631</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1637">client.ts:1637</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -684,7 +758,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1541">client.ts:1541</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1547">client.ts:1547</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -726,7 +800,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1250">client.ts:1250</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1256">client.ts:1256</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -752,7 +826,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1692">client.ts:1692</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1698">client.ts:1698</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -783,7 +857,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3854">client.ts:3854</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3894">client.ts:3894</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -800,7 +874,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1518">client.ts:1518</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1524">client.ts:1524</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -831,7 +905,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3851">client.ts:3851</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3891">client.ts:3891</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -848,7 +922,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1323">client.ts:1323</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1329">client.ts:1329</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -879,7 +953,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1571">client.ts:1571</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1577">client.ts:1577</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -910,7 +984,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3848">client.ts:3848</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3888">client.ts:3888</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -927,7 +1001,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1163">client.ts:1163</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1169">client.ts:1169</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -958,7 +1032,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1728">client.ts:1728</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1734">client.ts:1734</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -998,7 +1072,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L625">client.ts:625</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L631">client.ts:631</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -1015,7 +1089,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1138">client.ts:1138</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1144">client.ts:1144</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1046,7 +1120,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3129">client.ts:3129</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3152">client.ts:3152</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1069,7 +1143,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2481">client.ts:2481</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2487">client.ts:2487</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1103,7 +1177,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L931">client.ts:931</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L937">client.ts:937</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1187,7 +1261,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1467">client.ts:1467</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1473">client.ts:1473</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1218,7 +1292,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1352">client.ts:1352</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1358">client.ts:1358</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1280,7 +1354,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1400">client.ts:1400</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1406">client.ts:1406</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1325,7 +1399,7 @@ console.log(<span class="hljs-keyword">order</span>)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1435">client.ts:1435</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1441">client.ts:1441</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1370,7 +1444,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1231">client.ts:1231</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1237">client.ts:1237</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1395,7 +1469,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1278">client.ts:1278</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1284">client.ts:1284</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1443,7 +1517,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1303">client.ts:1303</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1309">client.ts:1309</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1468,7 +1542,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1659">client.ts:1659</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1665">client.ts:1665</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1512,7 +1586,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1213">client.ts:1213</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1219">client.ts:1219</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1537,7 +1611,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1189">client.ts:1189</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1195">client.ts:1195</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1581,7 +1655,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L880">client.ts:880</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L886">client.ts:886</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1624,7 +1698,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1996">client.ts:1996</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2002">client.ts:2002</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1678,6 +1752,29 @@ console.log(accountTransaction.transactions)</code></pre>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="placelimitorders" class="tsd-anchor"></a>
+					<h3>place<wbr>Limit<wbr>Orders</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">place<wbr>Limit<wbr>Orders<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PlaceLimitOrderParams</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">OrdersPlaced</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3964">client.ts:3964</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>params: <span class="tsd-signature-type">PlaceLimitOrderParams</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">OrdersPlaced</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="placemarketorder" class="tsd-anchor"></a>
 					<h3>place<wbr>Market<wbr>Order</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -1687,7 +1784,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2127">client.ts:2127</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2133">client.ts:2133</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1733,7 +1830,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2236">client.ts:2236</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2242">client.ts:2242</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1800,7 +1897,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2363">client.ts:2363</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2369">client.ts:2369</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1851,7 +1948,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L518">client.ts:518</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L524">client.ts:524</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1874,7 +1971,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L533">client.ts:533</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L539">client.ts:539</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1900,7 +1997,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2538">client.ts:2538</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2544">client.ts:2544</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1923,7 +2020,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3295">client.ts:3295</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3322">client.ts:3322</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1957,7 +2054,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3796">client.ts:3796</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3836">client.ts:3836</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1988,7 +2085,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1770">client.ts:1770</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1776">client.ts:1776</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2022,7 +2119,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3603">client.ts:3603</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3643">client.ts:3643</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2063,7 +2160,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L1854">client.ts:1854</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L1860">client.ts:1860</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2094,7 +2191,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L2664">client.ts:2664</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L2673">client.ts:2673</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2125,7 +2222,7 @@ console.log(accountTransaction.transactions)</code></pre>
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/90553d0/src/client/client.ts#L3061">client.ts:3061</a></li>
+									<li>Defined in <a href="https://github.com/nash-io/api-client-typescript/blob/16e6eb0/src/client/client.ts#L3084">client.ts:3084</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -2186,7 +2283,13 @@ console.log(accountTransaction.transactions)</code></pre>
 								<a href="client.html#cancelallorders" class="tsd-kind-icon">cancel<wbr>All<wbr>Orders</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="client.html#cancelandplaceorders" class="tsd-kind-icon">cancel<wbr>And<wbr>Place<wbr>Orders</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="client.html#cancelorder" class="tsd-kind-icon">cancel<wbr>Order</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="client.html#cancelorders" class="tsd-kind-icon">cancel<wbr>Orders</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="client.html#createsocketconnection" class="tsd-kind-icon">create<wbr>Socket<wbr>Connection</a>
@@ -2292,6 +2395,9 @@ console.log(accountTransaction.transactions)</code></pre>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="client.html#placelimitorder" class="tsd-kind-icon">place<wbr>Limit<wbr>Order</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="client.html#placelimitorders" class="tsd-kind-icon">place<wbr>Limit<wbr>Orders</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="client.html#placemarketorder" class="tsd-kind-icon">place<wbr>Market<wbr>Order</a>
