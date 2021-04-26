@@ -21,6 +21,10 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
       transactionElements {
         blockchain
         digest
+        payload
+        payloadHash
+        payloadHashFunction
+        signatureFunction
       }
       fees {
         currency
@@ -33,6 +37,10 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
 export interface TransactionElement {
   blockchain: Blockchain
   digest: string
+  payload: string 
+  payloadHash: string
+  payloadHashFunction: string 
+  signatureFunction: string
 }
 
 export interface PrepareMovement {
@@ -49,9 +57,13 @@ export interface PrepareMovementData {
 export interface PrepareMovementVariables {
   payload: {
     address: string
+    backendGeneratedPayload: boolean
+    capQuantityToMaximum?: boolean
     quantity: CurrencyAmount
+    targetAddress?: string
     timestamp: number
     type: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
+    
   }
   signature: Signature
 }

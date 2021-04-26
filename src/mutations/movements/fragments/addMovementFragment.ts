@@ -24,5 +24,12 @@ export const ADD_MOVEMENT_FRAGMENT = gql`
     transactionHash
     fee
     type
+    transactionElements {
+      blockchain
+      digest
+      payload
+      payloadHash
+    }
+    targetAddress  
   }
 `

@@ -132,6 +132,7 @@ import {
 
 import {
   CompletePayloadSignatureType,
+  CompletePayloadSignatureOperation,
   COMPLETE_PAYLOAD_SIGNATURE,
   CompletePayloadSignatureArgs,
   CompletePayloadSignatureResult
@@ -2491,6 +2492,7 @@ export class Client {
     this.requireFull()
     const prepareMovementMovementParams = createPrepareMovementParams(
       address,
+      false,
       quantity,
       type
     )
@@ -2506,6 +2508,7 @@ export class Client {
 
     const movementPayloadParams = createAddMovementParams(
       address,
+      false,
       quantity,
       type,
       result.data.prepareMovement.nonce,
@@ -2615,7 +2618,7 @@ export class Client {
           data: approveAbi
         })
         approveTx.getChainId = () => chainId
-        const approveSignature = await this.signEthTransaction(approveTx)
+        const approveSignature = await this.signEthTransaction(approveTx, CompletePayloadSignatureOperation.Transfer)
         setEthSignature(approveTx, approveSignature)
         const p = await this.web3.eth.sendSignedTransaction(
           '0x' + approveTx.serialize().toString('hex')
@@ -2759,7 +2762,7 @@ export class Client {
 
         ethTx.getChainId = () => chainId
 
-        const ethTxSignature = await this.signEthTransaction(ethTx)
+        const ethTxSignature = await this.signEthTransaction(ethTx, CompletePayloadSignatureOperation.Transfer)
         setEthSignature(ethTx, ethTxSignature)
         const receipt = await this.web3.eth.sendSignedTransaction(
           '0x' + ethTx.serialize().toString('hex')
@@ -2811,7 +2814,7 @@ export class Client {
         }
         transaction.calculate(balance)
         const payload = transaction.serialize(false)
-        const signature = await this.signNeoPayload(payload.toLowerCase())
+        const signature = await this.signNeoPayload(payload.toLowerCase(), CompletePayloadSignatureOperation.Transfer)
         transaction.addWitness(
           tx.Witness.fromSignature(signature, childKey.public_key)
         )
@@ -3005,7 +3008,7 @@ export class Client {
     }
   }
 
-  private async signNeoPayload(payload: string): Promise<string> {
+  private async signNeoPayload(payload: string, operation:CompletePayloadSignatureOperation): Promise<string> {
     const messageHash = u.sha256(payload)
     const childKey = this.apiKey.child_keys[BIP44.NEO]
     const payloadPresig = await computePresig({
@@ -3021,6 +3024,7 @@ export class Client {
     })
     const signature = await this.completePayloadSignature({
       blockchain: Blockchain.NEO,
+      operation,
       payload,
       public_key: childKey.public_key,
       signature: payloadPresig.presig,
@@ -3033,7 +3037,7 @@ export class Client {
     return signature
   }
 
-  private async signEthTransaction(etx: EthTransaction): Promise<string> {
+  private async signEthTransaction(etx: EthTransaction, operation: CompletePayloadSignatureOperation): Promise<string> {
     const childKey = this.apiKey.child_keys[BIP44.ETH]
     const txSignature = await computePresig({
       apiKey: {
@@ -3050,6 +3054,7 @@ export class Client {
     const payload = serializeEthTx(etx)
     const invocationSignature = await this.completePayloadSignature({
       blockchain: Blockchain.ETH,
+      operation,
       payload: payload.toLowerCase(),
       public_key: childKey.public_key,
       signature: txSignature.presig,
@@ -3162,6 +3167,7 @@ export class Client {
     const prepareAMovement = async () => {
       const params = {
         address,
+        backendGeneratedPayload: true,
         quantity: {
           amount: bnAmount.toFormat(
             8,
@@ -3184,6 +3190,8 @@ export class Client {
     }
 
     await prepareAMovement()
+    console.info("Prepared movement: ", preparedMovement)
+
     let signedAddMovementPayload: PayloadSignature
     let addMovementResult: GQLResp<{
       addMovement: AddMovement
@@ -3192,6 +3200,7 @@ export class Client {
       signedAddMovementPayload = await this.signPayload({
         payload: {
           address: childKey.address,
+          backendGeneratedPayload: true,
           nonce: preparedMovement.nonce,
           quantity: {
             amount: movementAmount.toFormat(
@@ -3223,6 +3232,7 @@ export class Client {
       const sanitizedPayload = sanitizeAddMovementPayload(
         signedAddMovementPayload.signedPayload as never
       )
+      console.info("Sanitized add movement payload: ", sanitizedPayload)
       try {
         addMovementResult = await this.gql.mutate<{
           addMovement: AddMovement
@@ -3261,9 +3271,12 @@ export class Client {
         movementId: addMovementResult.data.addMovement.id.toString()
       }
     }
+    console.info("Add movement result: ", addMovementResult)
+    console.info("Signed add movement payload: ", signedAddMovementPayload)
 
     const blockchainSignature = await this.completePayloadSignature({
       blockchain: blockchain.toUpperCase() as Blockchain,
+      operation: movementType === MovementTypeDeposit ? CompletePayloadSignatureOperation.Deposit : CompletePayloadSignatureOperation.Withdrawal,
       payload: signedAddMovementPayload.blockchain_raw.toLowerCase(),
       public_key: childKey.public_key,
       signature: signedAddMovementPayload.blockchain_data.userSig,
@@ -3337,6 +3350,7 @@ export class Client {
       unfinishedTransaction.blockchainSignature ||
       (await this.completePayloadSignature({
         blockchain: blockchain.toUpperCase() as Blockchain,
+        operation: unfinishedTransaction.movement.type === MovementTypeDeposit ? CompletePayloadSignatureOperation.Deposit : CompletePayloadSignatureOperation.Withdrawal,
         payload: signedAddMovementPayload.blockchain_raw.toLowerCase(),
         public_key: childKey.public_key,
         signature: signedAddMovementPayload.blockchain_data.userSig,
@@ -3444,7 +3458,7 @@ export class Client {
         })
         movementTx.getChainId = () => chainId
 
-        const invocationSignature = await this.signEthTransaction(movementTx)
+        const invocationSignature = await this.signEthTransaction(movementTx, movementType === MovementTypeDeposit ? CompletePayloadSignatureOperation.Deposit : CompletePayloadSignatureOperation.Withdrawal)
 
         setEthSignature(movementTx, invocationSignature)
         const serializedEthTx = movementTx.serialize().toString('hex')
@@ -3544,7 +3558,7 @@ export class Client {
           .calculate(balance)
         const payload = neoTransaction.serialize(false)
 
-        const signature = await this.signNeoPayload(payload.toLowerCase())
+        const signature = await this.signNeoPayload(payload.toLowerCase(), movementType === MovementTypeDeposit ? CompletePayloadSignatureOperation.Deposit : CompletePayloadSignatureOperation.Withdrawal)
         neoTransaction.addWitness(
           tx.Witness.fromSignature(signature, childKey.public_key)
         )
@@ -3612,6 +3626,7 @@ export class Client {
   ): Promise<SignMovementResult> {
     const signMovementParams = createAddMovementParams(
       address,
+      false,
       quantity,
       MovementTypeWithdrawal,
       nonce
