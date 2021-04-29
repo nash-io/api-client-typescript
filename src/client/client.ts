@@ -7,8 +7,6 @@ import https from 'https'
 import http from 'http'
 import * as NeonJS from '@cityofzion/neon-js'
 import Promievent from 'promievent'
-import * as bitcoin from 'bitcoinjs-lib'
-import coinSelect from 'coinselect'
 import { u, tx, sc, wallet } from '@cityofzion/neon-core'
 import { TransactionReceipt } from 'web3-core'
 import { Transaction as EthTransaction } from 'ethereumjs-tx'
@@ -48,6 +46,7 @@ import { GET_MOVEMENT } from '../queries/movement/getMovement'
 import { GET_TICKER } from '../queries/market/getTicker'
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder'
 import { CANCEL_ALL_ORDERS_MUTATION } from '../mutations/orders/cancelAllOrders'
+import { GET_BLOCKCHAIN_FEES, BlockchainFees } from '../queries/movement/getBlockchainFees'
 
 import {
   USER_2FA_LOGIN_MUTATION,
@@ -117,7 +116,6 @@ import {
 import {
   checkMandatoryParams,
   detectBlockchain,
-  findBestNetworkNode,
   sleep,
   sanitizeAddMovementPayload
 } from './utils'
@@ -138,11 +136,11 @@ import {
   CompletePayloadSignatureResult
 } from '../mutations/mpc/completeSignature'
 
-import {
-  COMPLETE_BTC_TRANSACTION_SIGNATURES,
-  CompleteBtcTransactionSignaturesArgs,
-  CompleteBtcTransactionSignaturesResult
-} from '../mutations/mpc/completeBTCTransacitonSignatures'
+// import {
+//   COMPLETE_BTC_TRANSACTION_SIGNATURES,
+//   CompleteBtcTransactionSignaturesArgs,
+//   CompleteBtcTransactionSignaturesResult
+// } from '../mutations/mpc/completeBTCTransacitonSignatures'
 
 import {
   SEND_BLOCKCHAIN_RAW_TRANSACTION,
@@ -236,7 +234,7 @@ import {
   SigningPayloadID,
   signPayload,
   fillRPoolIfNeeded,
-  SyncState
+  SyncState,
 } from '@neon-exchange/nash-protocol'
 
 import {
@@ -247,21 +245,13 @@ import {
 import {
   prefixWith0xIfNeeded,
   setEthSignature,
-  transferExternalGetAmount,
   serializeEthTx
 } from './ethUtils'
 
 import { SettlementABI } from './abi/eth/settlementABI'
 import { Erc20ABI } from './abi/eth/erc20ABI'
 
-import {
-  calculateBtcFees,
-  BTC_SATOSHI_MULTIPLIER,
-  networkFromName,
-  calculateFeeRate,
-  P2shP2wpkhScript,
-  getHashAndSighashType
-} from './btcUtils'
+
 export * from './environments'
 import {
   EnvironmentConfig,
@@ -434,7 +424,7 @@ export class Client {
     ) {
       throw new Error(
         'maxEthCostPrTransaction is invalid ' +
-          this.opts.maxEthCostPrTransaction
+        this.opts.maxEthCostPrTransaction
       )
     }
     const network = new NeonJS.rpc.Network({
@@ -586,11 +576,11 @@ export class Client {
       Object.keys(clientHeaders).length === 0
         ? WebSocket
         : // tslint:disable-next-line
-          class extends WebSocket {
-            constructor(endpoint) {
-              super(endpoint, undefined, undefined, clientHeaders)
-            }
+        class extends WebSocket {
+          constructor(endpoint) {
+            super(endpoint, undefined, undefined, clientHeaders)
           }
+        }
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
       automaticReconnect: !this.clientOpts.disableSocketReconnect,
@@ -614,8 +604,8 @@ export class Client {
       params:
         this.wsToken != null
           ? {
-              token: this.wsToken
-            }
+            token: this.wsToken
+          }
           : {}
     })
     socket.connect()
@@ -639,8 +629,8 @@ export class Client {
     if (this.wsToken == null) {
       throw new Error(
         'To use ' +
-          sub +
-          ', you must login() before creating the socket connection'
+        sub +
+        ', you must login() before creating the socket connection'
       )
     }
   }
@@ -2570,8 +2560,8 @@ export class Client {
     if (this.maxEthCostPrTransaction.lt(maxCost)) {
       throw new Error(
         'Transaction ETH cost larger than maxEthCostPrTransaction (' +
-          this.opts.maxEthCostPrTransaction +
-          ')'
+        this.opts.maxEthCostPrTransaction +
+        ')'
       )
     }
   }
@@ -2669,10 +2659,28 @@ export class Client {
     }
   }
 
+  private getBlockchainFees = async (blockchain: Blockchain): Promise<BlockchainFees> => {
+
+    try {
+      const getFeesResult = await this.gql.query<{
+        getBlockchainFees: BlockchainFees
+      }>({
+        query: GET_BLOCKCHAIN_FEES,
+        variables: {
+          blockchain
+        }
+      })
+      return getFeesResult.data.getBlockchainFees
+    } catch (e) {
+      console.error("Could not get blockchain fees: ", e)
+      return null
+    }
+  }
+
   public async transferToExternal(params: {
     quantity: CurrencyAmount
     address: string
-  }): Promise<{ txId: string; gasUsed?: number }> {
+  }): Promise<{ txId: string; gasUsed?: CurrencyAmount }> {
     this.requireMPC()
     const {
       quantity: { currency, amount },
@@ -2681,7 +2689,7 @@ export class Client {
     console.info(
       `Will try sending to address ${address}: ${amount} of ${currency}`
     )
-
+    let transactionFee: CurrencyAmount
     if (this.assetData == null) {
       throw new Error('Asset data null')
     }
@@ -2703,312 +2711,82 @@ export class Client {
         )
       }
     }
-
+    const blockchainFees = await this.getBlockchainFees(blockchain.toUpperCase() as Blockchain)
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
-    switch (blockchain) {
-      case 'eth':
-        const chainId = await this.web3.eth.net.getId()
-        const ethAccountNonce = await this.web3.eth.getTransactionCount(
-          '0x' + childKey.address
-        )
-        const value =
-          currency === CryptoCurrency.ETH ? this.web3.utils.toWei(amount) : '0'
+    const fromAddress = childKey.address
+    let preparedMovement: PrepareMovementData['prepareMovement']
+    const prepareAMovement = async () => {
+      const prepareParams = {
+        address: fromAddress,
+        backendGeneratedPayload: true,
+        gasPrice: blockchainFees.priceMedium,
+        quantity: params.quantity,
+        targetAddress: address,
+        type: "TRANSFER" as MovementType
+      }
+      preparedMovement = await this.prepareMovement(prepareParams)
+    }
 
-        let data = ''
-        if (currency !== CryptoCurrency.ETH) {
-          const erc20Contract = new this.web3.eth.Contract(
-            Erc20ABI,
-            `0x${assetData.hash}`
-          )
-          const externalAmount = transferExternalGetAmount(
-            new BigNumber(amount),
-            assetData,
-            this.isMainNet
-          )
-          data = erc20Contract.methods
-            .transfer(
-              prefixWith0xIfNeeded(address),
-              this.web3.utils.numberToHex(externalAmount)
-            )
-            .encodeABI()
-        }
-        const gasPrice = await this.web3.eth.getGasPrice()
-        const estimate = await this.web3.eth.estimateGas({
-          from: prefixWith0xIfNeeded(this.apiKey.child_keys[BIP44.ETH].address),
-          nonce: ethAccountNonce,
-          to: prefixWith0xIfNeeded(
-            currency === CryptoCurrency.ETH
-              ? '0x7C291eB2D2Ec9A35dba0e2C395c5928cd7d90e51'
-              : assetData.hash
-          ),
-          value,
-          data
-        })
-
-        this.validateTransactionCost(gasPrice, estimate)
-
-        const ethTx = new EthTransaction({
-          nonce: '0x' + ethAccountNonce.toString(16),
-          gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-          gasLimit: '0x' + estimate.toString(16),
-          to: prefixWith0xIfNeeded(
-            currency !== CryptoCurrency.ETH ? assetData.hash : address
-          ),
-          value: '0x' + parseInt(value, 10).toString(16),
-          data: data === '' ? undefined : data
-        })
-
-        ethTx.getChainId = () => chainId
-
-        const ethTxSignature = await this.signEthTransaction(ethTx, CompletePayloadSignatureOperation.Transfer)
-        setEthSignature(ethTx, ethTxSignature)
-        const receipt = await this.web3.eth.sendSignedTransaction(
-          '0x' + ethTx.serialize().toString('hex')
-        )
-        return {
-          txId: receipt.transactionHash,
-          gasUsed: receipt.gasUsed
-        }
-      case 'neo':
-        let transaction: tx.Transaction
-        const nodes = this.opts.neoNetworkSettings.nodes.reverse()
-        const node = await findBestNetworkNode(nodes)
-        const rpcClient = new NeonJS.rpc.RPCClient(node)
-        const balance = await NeonJS.api.neoscan.getBalance(
-          this.opts.neoScan,
-          childKey.address
-        )
-        if (
-          currency === CryptoCurrency.NEO ||
-          currency === CryptoCurrency.GAS
-        ) {
-          transaction = NeonJS.default.create
-            .contractTx()
-            .addIntent(
-              currency.toUpperCase(),
-              new u.Fixed8(amount, 10),
-              address
-            )
-        } else {
-          const sendAmount = parseFloat(amount) * 1e8
-          const timestamp = new BigNumber(createTimestamp32()).toString(16)
-          transaction = new tx.InvocationTransaction({
-            script: NeonJS.default.create.script({
-              scriptHash: assetData.hash,
-              operation: 'transfer',
-              args: [
-                sc.ContractParam.byteArray(childKey.address, 'address'),
-                sc.ContractParam.byteArray(address, 'address'),
-                sc.ContractParam.integer(sendAmount)
-              ]
-            }),
-            gas: 0
+    await prepareAMovement()
+    transactionFee = preparedMovement.fees
+    let signedAddMovementPayload: PayloadSignature
+    let addMovementResult: GQLResp<{
+      addMovement: AddMovement
+    }>
+    signedAddMovementPayload = await this.signPayload({
+      payload: {
+        address: childKey.address,
+        backendGeneratedPayload: true,
+        nonce: preparedMovement.nonce,
+        quantity: params.quantity,
+        targetAddress: address,
+        type: "TRANSFER" as MovementType,
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        recycled_orders: preparedMovement.recycledOrders.map(
+          ({ blockchain: orderBlockchain, message }) => ({
+            blockchain: orderBlockchain,
+            message
           })
-            .addAttribute(
-              tx.TxAttrUsage.Script,
-              u.reverseHex(wallet.getScriptHashFromAddress(childKey.address))
-            )
-            .addAttribute(tx.TxAttrUsage.Remark, timestamp)
-        }
-        transaction.calculate(balance)
-        const payload = transaction.serialize(false)
-        const signature = await this.signNeoPayload(payload.toLowerCase(), CompletePayloadSignatureOperation.Transfer)
-        transaction.addWitness(
-          tx.Witness.fromSignature(signature, childKey.public_key)
-        )
-        const neoStatus = await rpcClient.sendRawTransaction(
-          transaction.serialize(true)
-        )
-
-        if (!neoStatus) {
-          throw new Error('Could not send neo')
-        }
-        return {
-          txId: transaction.hash
-        }
-      case 'btc':
-        const pubKey = Buffer.from(childKey.public_key, 'hex')
-        const externalTransferAmount = new BigNumber(amount).toNumber()
-        const { vins } = await this.getAccountAddress(CryptoCurrency.BTC)
-        const utxos = vins.map(vin => {
-          if (vin.value == null || vin.txid == null || vin.n == null) {
-            throw new Error('Invalid vin')
-          }
-          return {
-            txid: vin.txid,
-            vout: vin.n,
-            value: vin.value.amount as string,
-            height: 0
-          }
-        })
-
-        const btcGasPrice = await calculateFeeRate()
-        const fee = calculateBtcFees(externalTransferAmount, btcGasPrice, utxos)
-        const net = networkFromName(this.opts.btcNetworkSettings.name)
-        const btcTx = new bitcoin.Psbt({ network: net })
-        let utxoInputTotal = fee.times(-1)
-        utxos.forEach(utxo => {
-          utxoInputTotal = utxoInputTotal.plus(utxo.value)
-        })
-
-        let useAll = false
-        if (utxoInputTotal.toFixed(8) === new BigNumber(amount).toFixed(8)) {
-          useAll = true
-        }
-        const transferAmount = Math.round(
-          new BigNumber(amount).times(BTC_SATOSHI_MULTIPLIER).toNumber()
-        )
-        const p2wpkh = bitcoin.payments.p2wpkh({
-          network: net,
-          pubkey: pubKey
-        })
-        // this payment is used by the p2sh payment
-        const p2shPayment = bitcoin.payments.p2sh({
-          network: net,
-          redeem: p2wpkh
-        })
-        // this is the redeemScript used for the P2SH
-        // It is of format 00 14 hash160(pubkey)
-        if (p2shPayment.redeem == null || p2shPayment.redeem.output == null) {
-          throw new Error('Invalid p2shPayment')
-        }
-        const redeem = p2shPayment.redeem.output
-
-        // we recostruct the scriptPubkey from the redeem script
-        // the format is 79 14 hash160(redeem) 87
-        const myScript = Buffer.from(P2shP2wpkhScript(redeem))
-
-        const allUtxo = utxos.map(utxo => ({
-          ...utxo,
-          txId: utxo.txid,
-          value: new BigNumber(utxo.value)
-            .times(BTC_SATOSHI_MULTIPLIER)
-            .toNumber()
-        }))
-
-        let inputs
-        let outputs
-        if (useAll) {
-          inputs = allUtxo
-          outputs = [{ address, value: transferAmount }]
-        } else {
-          // Calculate inputs and outputs using coin selection algorithm
-          const result = coinSelect(
-            allUtxo,
-            [{ address, value: transferAmount }],
-            btcGasPrice
-          )
-          inputs = result.inputs
-          outputs = result.outputs
-        }
-
-        if (!inputs || !outputs) {
-          throw new Error('Insufficient funds')
-        }
-        for (const input of inputs) {
-          const txInput = {
-            hash: input.txId,
-            index: input.vout,
-            witnessUtxo: {
-              script: myScript,
-              value: input.value
-            },
-            redeemScript: redeem
-          }
-          // console.info("added input: ", txInput)
-          btcTx.addInput(txInput)
-        }
-        for (const output of outputs) {
-          btcTx.addOutput({
-            address: output.address || childKey.address,
-            value: output.value
+        ),
+        digests: preparedMovement.transactionElements.map(
+          ({ blockchain: txBlockchain, digest: digest, payload: payload, payloadHash: payloadHash }) => ({
+            blockchain: txBlockchain,
+            digest,
+            payload,
+            payloadHash
           })
-        }
-        // Sign all inputs and build transaction
-        const uTx = btcTx.data.globalMap.unsignedTx
-        const uutx = ((uTx as never) as { tx: bitcoin.Transaction }).tx
+        ),
+        timestamp: new Date().getTime()
+      },
+      kind: SigningPayloadID.addMovementPayload
+    })
 
-        const presignatures: Array<{
-          sighashType: number
-          presig: CompleteBtcTransactionSignaturesArgs['inputPresigs'][0]
-        }> = []
-
-        for (let i = 0; i < inputs.length; i++) {
-          // The function body of sign has been extracted as we want to sign this in our mpc way
-          const { hash, sighashType } = getHashAndSighashType(
-            btcTx.data.inputs,
-            i,
-            pubKey,
-            ((btcTx as never) as { __CACHE: any }).__CACHE,
-            [bitcoin.Transaction.SIGHASH_ALL]
-          )
-          const btcPayloadPresig = await computePresig({
-            apiKey: {
-              client_secret_share: childKey.client_secret_share,
-              paillier_pk: this.apiKey.paillier_pk,
-              public_key: childKey.public_key,
-              server_secret_share_encrypted:
-                childKey.server_secret_share_encrypted
-            },
-            blockchain: Blockchain.BTC,
-            fillPoolFn: this.fillPoolFn,
-            messageHash: hash.toString('hex')
-          })
-
-          presignatures.push({
-            sighashType,
-            presig: {
-              signature: btcPayloadPresig.presig,
-              r: btcPayloadPresig.r,
-              amount: inputs[i].value
-            }
-          })
+    const sanitizedPayload = sanitizeAddMovementPayload(
+      signedAddMovementPayload.signedPayload as never
+    )
+    try {
+      addMovementResult = await this.gql.mutate<{
+        addMovement: AddMovement
+      }>({
+        mutation: ADD_MOVEMENT_MUTATION,
+        variables: {
+          payload: sanitizedPayload,
+          signature: signedAddMovementPayload.signature
         }
-        const completeBtcTransactionPayload = {
-          payload: uutx.toBuffer().toString('hex'),
-          publicKey: childKey.public_key,
-          inputPresigs: presignatures.map(p => p.presig)
-        }
-        const completedInputSignatures = await this.completeBtcTransactionSignatures(
-          completeBtcTransactionPayload
-        )
-        for (let i = 0; i < presignatures.length; i++) {
-          const partialSig = [
-            {
-              pubkey: pubKey,
-              signature: bitcoin.script.signature.encode(
-                Buffer.from(
-                  completedInputSignatures[i].slice(
-                    0,
-                    completedInputSignatures[i].length - 2
-                  ),
-                  'hex'
-                ),
-                presignatures[i].sighashType
-              )
-            }
-          ]
-          btcTx.data.updateInput(i, { partialSig })
-          btcTx.validateSignaturesOfInput(i)
-        }
-        btcTx.finalizeAllInputs()
-        const signedRawBtcTx = btcTx.extractTransaction().toHex()
-        const btcTxResult = await this.sendBlockchainRawTransaction({
-          payload: signedRawBtcTx,
-          blockchain: Blockchain.BTC
-        })
-
-        return {
-          txId: btcTxResult
-        }
-      default:
-        throw new Error('Unsupported blockchain ' + assetData.blockchain)
+      })
+      return {
+        txId: addMovementResult.data.addMovement.transactionHash,
+        gasUsed: transactionFee
+      }
+    } catch (e) {
+      console.info("Could not transfer to external ", e)
+      throw e
     }
   }
 
-  private async signNeoPayload(payload: string, operation:CompletePayloadSignatureOperation): Promise<string> {
+  private async signNeoPayload(payload: string, operation: CompletePayloadSignatureOperation): Promise<string> {
     const messageHash = u.sha256(payload)
     const childKey = this.apiKey.child_keys[BIP44.NEO]
     const payloadPresig = await computePresig({
@@ -3158,6 +2936,7 @@ export class Client {
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
+    const blockchainFees = await this.getBlockchainFees(blockchain.toUpperCase() as Blockchain)
 
     const address = childKey.address
     const bnAmount = new BigNumber(quantity.amount)
@@ -3168,6 +2947,7 @@ export class Client {
       const params = {
         address,
         backendGeneratedPayload: true,
+        gasPrice: blockchainFees.priceMedium,
         quantity: {
           amount: bnAmount.toFormat(
             8,
@@ -3219,9 +2999,11 @@ export class Client {
             })
           ),
           digests: preparedMovement.transactionElements.map(
-            ({ blockchain: txBlockchain, digest: digest }) => ({
+            ({ blockchain: txBlockchain, digest: digest, payload: payload, payloadHash: payloadHash }) => ({
               blockchain: txBlockchain,
-              digest
+              digest,
+              payload,
+              payloadHash
             })
           ),
           timestamp: new Date().getTime()
@@ -3295,75 +3077,6 @@ export class Client {
       txId: resp.txId,
       movementId: addMovementResult.data.addMovement.id
     }
-  }
-
-  public async findPendingChainMovements(
-    chain: TSAPIBlockchain
-  ): Promise<Movement[]> {
-    return (await this.listMovements({
-      status: MovementStatus.PENDING
-    })).filter(movement => {
-      return (
-        this.assetData[movement.currency] != null &&
-        this.assetData[movement.currency].blockchain === chain
-      )
-    })
-  }
-
-  public resumeTradingContractTransaction(unfinishedTransaction: {
-    movement: Movement
-    signature: PayloadSignature
-    blockchainSignature: string
-  }): Promievent<{ txId: string }> {
-    let resolve
-    let reject
-    const out = new Promievent<any>((a, b) => {
-      resolve = a
-      reject = b
-    })
-
-    this._resumeVaultTransaction(unfinishedTransaction, out.emit.bind(out))
-      .then(resolve)
-      .catch(reject)
-
-    return out
-  }
-  private async _resumeVaultTransaction(
-    unfinishedTransaction: {
-      movement: Movement
-      signature: PayloadSignature
-      blockchainSignature?: string
-    },
-    emit: Promievent<any>['emit']
-  ): Promise<{ txId: string }> {
-    const {
-      movement,
-      signature: signedAddMovementPayload
-    } = unfinishedTransaction
-    const assetData = this.assetData[movement.currency]
-    const blockchain = assetData.blockchain
-    const childKey = this.apiKey.child_keys[
-      BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
-    ]
-
-    const blockchainSignature =
-      unfinishedTransaction.blockchainSignature ||
-      (await this.completePayloadSignature({
-        blockchain: blockchain.toUpperCase() as Blockchain,
-        operation: unfinishedTransaction.movement.type === MovementTypeDeposit ? CompletePayloadSignatureOperation.Deposit : CompletePayloadSignatureOperation.Withdrawal,
-        payload: signedAddMovementPayload.blockchain_raw.toLowerCase(),
-        public_key: childKey.public_key,
-        signature: signedAddMovementPayload.blockchain_data.userSig,
-        type: CompletePayloadSignatureType.Movement,
-        r: signedAddMovementPayload.blockchain_data.r
-      }))
-    emit('blockchainSignature', blockchainSignature)
-    const resp = await this.updateDepositWithdrawalMovementWithTx({
-      movement,
-      signedAddMovementPayload,
-      blockchainSignature
-    })
-    return resp
   }
 
   private async updateDepositWithdrawalMovementWithTx({
@@ -3800,18 +3513,18 @@ export class Client {
     }
   }
 
-  private async completeBtcTransactionSignatures(
-    params: CompleteBtcTransactionSignaturesArgs
-  ): Promise<string[]> {
-    const resp = await this.gql.mutate<
-      CompleteBtcTransactionSignaturesResult,
-      CompleteBtcTransactionSignaturesArgs
-    >({
-      mutation: COMPLETE_BTC_TRANSACTION_SIGNATURES,
-      variables: params
-    })
-    return resp.data.completeBtcPayloadSignature
-  }
+  // private async completeBtcTransactionSignatures(
+  //   params: CompleteBtcTransactionSignaturesArgs
+  // ): Promise<string[]> {
+  //   const resp = await this.gql.mutate<
+  //     CompleteBtcTransactionSignaturesResult,
+  //     CompleteBtcTransactionSignaturesArgs
+  //   >({
+  //     mutation: COMPLETE_BTC_TRANSACTION_SIGNATURES,
+  //     variables: params
+  //   })
+  //   return resp.data.completeBtcPayloadSignature
+  // }
 
   public async sendBlockchainRawTransaction(params: {
     blockchain: SendBlockchainRawTransactionArgs['payload']['blockchain']
@@ -4063,7 +3776,7 @@ export class Client {
       placeLimitOrderPayloads.length
         ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
         : ''
-    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+      }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
     const mutation = gqlstring(mutationStr)
 
     const variables: any = {}
