@@ -3,13 +3,15 @@ import { CurrencyAmount, DateTime } from '../types'
 
 import {
   MovementTypeDeposit,
-  MovementTypeWithdrawal
+  MovementTypeWithdrawal,
+  MovementTypeTransfer
 } from '@neon-exchange/nash-protocol'
 
 export type MovementType =
   | typeof MovementTypeDeposit
   | typeof MovementTypeWithdrawal
-  | 'TRANSFER'
+  | typeof MovementTypeTransfer
+
 export enum MovementStatus {
   COMPLETED = 'COMPLETED',
   CREATED = 'CREATED',

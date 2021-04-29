@@ -1,11 +1,7 @@
 import gql from 'graphql-tag'
-import {
-  MovementTypeDeposit,
-  MovementTypeWithdrawal
-} from '@neon-exchange/nash-protocol'
 
 import { ClientSignedState } from '../stateSyncing/fragments'
-import { CurrencyAmount, Signature, Blockchain } from '../../types'
+import { CurrencyAmount, Signature, Blockchain, MovementType } from '../../types'
 
 export const PREPARE_MOVEMENT_MUTATION = gql`
   mutation prepareMovement(
@@ -37,9 +33,9 @@ export const PREPARE_MOVEMENT_MUTATION = gql`
 export interface TransactionElement {
   blockchain: Blockchain
   digest: string
-  payload: string 
+  payload: string
   payloadHash: string
-  payloadHashFunction: string 
+  payloadHashFunction: string
   signatureFunction: string
 }
 
@@ -59,11 +55,12 @@ export interface PrepareMovementVariables {
     address: string
     backendGeneratedPayload: boolean
     capQuantityToMaximum?: boolean
+    gasPrice?: number
     quantity: CurrencyAmount
     targetAddress?: string
     timestamp: number
-    type: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
-    
+    type: MovementType
+
   }
   signature: Signature
 }
