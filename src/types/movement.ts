@@ -31,6 +31,7 @@ export interface Movement {
   fee: string
   publicKey: string
   signature: string
+  transactionElements?: []
   transactionPayload: string
   type: MovementType
 }

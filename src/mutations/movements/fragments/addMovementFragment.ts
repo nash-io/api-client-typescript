@@ -29,6 +29,8 @@ export const ADD_MOVEMENT_FRAGMENT = gql`
       digest
       payload
       payloadHash
+      payloadHashFunction
+      signatureFunction
     }
     targetAddress  
   }
