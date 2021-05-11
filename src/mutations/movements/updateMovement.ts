@@ -1,5 +1,6 @@
 import gql from 'graphql-tag'
-import { Signature, Movement, MovementStatus } from '../../types'
+import { Signature, MovementStatus, CurrencyAmount, DateTime, MovementType } from '../../types'
+import { CryptoCurrency } from 'index'
 
 export const UPDATE_MOVEMENT_MUTATION = gql`
   mutation updateMovement(
@@ -30,7 +31,19 @@ export const UPDATE_MOVEMENT_MUTATION = gql`
 `
 
 export interface UpdateMovementData {
-  updateMovement: Movement
+  address: string
+  confirmations: number
+  currency: CryptoCurrency
+  fee: string | null
+  id: string
+  publicKey: string
+  quantity: CurrencyAmount
+  receivedAt: DateTime
+  signature: string
+  status: MovementStatus
+  transactionHash: string
+  transactionPayload: string
+  type: MovementType
 }
 
 export interface UpdateMovementVariables {
@@ -38,6 +51,7 @@ export interface UpdateMovementVariables {
     movementId: string
     transactionHash?: string
     transactionPayload?: string
+    signedTransactionElements?: []
     status?: MovementStatus
     timestamp: number
     fee: string
