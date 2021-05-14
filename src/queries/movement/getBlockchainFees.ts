@@ -1,7 +1,6 @@
 import gql from 'graphql-tag'
 import { Blockchain } from '@neon-exchange/nash-protocol'
 
-
 export const GET_BLOCKCHAIN_FEES = gql`
   query blockchainFees($blockchain: Blockchain!) {
     getBlockchainFees(blockchain: $blockchain) {

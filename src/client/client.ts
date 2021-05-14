@@ -7,7 +7,7 @@ import https from 'https'
 import http from 'http'
 import * as NeonJS from '@cityofzion/neon-js'
 import Promievent from 'promievent'
-//import { Transaction as EthTransaction } from 'ethereumjs-tx'
+// import { Transaction as EthTransaction } from 'ethereumjs-tx'
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 import BigNumber from 'bignumber.js'
@@ -44,7 +44,10 @@ import { GET_MOVEMENT } from '../queries/movement/getMovement'
 import { GET_TICKER } from '../queries/market/getTicker'
 import { CANCEL_ORDER_MUTATION } from '../mutations/orders/cancelOrder'
 import { CANCEL_ALL_ORDERS_MUTATION } from '../mutations/orders/cancelAllOrders'
-import { GET_BLOCKCHAIN_FEES, BlockchainFees } from '../queries/movement/getBlockchainFees'
+import {
+  GET_BLOCKCHAIN_FEES,
+  BlockchainFees
+} from '../queries/movement/getBlockchainFees'
 
 import {
   USER_2FA_LOGIN_MUTATION,
@@ -82,7 +85,7 @@ import {
 } from '../mutations/movements/prepareMovement'
 import {
   UPDATE_MOVEMENT_MUTATION,
-  UpdateMovementData,
+  UpdateMovementData
 } from '../mutations/movements/updateMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
 import {
@@ -93,7 +96,6 @@ import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
 import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
-// import { UPDATED_ORDER_BOOK } from '../subscriptions/updatedOrderBook'
 import { NEW_TRADES } from '../subscriptions/newTrades'
 import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
@@ -229,7 +231,7 @@ import {
   SigningPayloadID,
   signPayload,
   fillRPoolIfNeeded,
-  SyncState,
+  SyncState
 } from '@neon-exchange/nash-protocol'
 
 import {
@@ -238,13 +240,12 @@ import {
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
 import {
-  prefixWith0xIfNeeded,
+  prefixWith0xIfNeeded
   //  serializeEthTx
 } from './ethUtils'
 
 import { SettlementABI } from './abi/eth/settlementABI'
 import { Erc20ABI } from './abi/eth/erc20ABI'
-
 
 export * from './environments'
 import {
@@ -416,7 +417,7 @@ export class Client {
     ) {
       throw new Error(
         'maxEthCostPrTransaction is invalid ' +
-        this.opts.maxEthCostPrTransaction
+          this.opts.maxEthCostPrTransaction
       )
     }
     const network = new NeonJS.rpc.Network({
@@ -568,11 +569,11 @@ export class Client {
       Object.keys(clientHeaders).length === 0
         ? WebSocket
         : // tslint:disable-next-line
-        class extends WebSocket {
-          constructor(endpoint) {
-            super(endpoint, undefined, undefined, clientHeaders)
+          class extends WebSocket {
+            constructor(endpoint) {
+              super(endpoint, undefined, undefined, clientHeaders)
+            }
           }
-        }
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
       automaticReconnect: !this.clientOpts.disableSocketReconnect,
@@ -596,8 +597,8 @@ export class Client {
       params:
         this.wsToken != null
           ? {
-            token: this.wsToken
-          }
+              token: this.wsToken
+            }
           : {}
     })
     socket.connect()
@@ -621,8 +622,8 @@ export class Client {
     if (this.wsToken == null) {
       throw new Error(
         'To use ' +
-        sub +
-        ', you must login() before creating the socket connection'
+          sub +
+          ', you must login() before creating the socket connection'
       )
     }
   }
@@ -2651,8 +2652,9 @@ export class Client {
   //   }
   // }
 
-  private getBlockchainFees = async (blockchain: Blockchain): Promise<BlockchainFees> => {
-
+  private getBlockchainFees = async (
+    blockchain: Blockchain
+  ): Promise<BlockchainFees> => {
     try {
       const getFeesResult = await this.gql.query<{
         getBlockchainFees: BlockchainFees
@@ -2664,7 +2666,7 @@ export class Client {
       })
       return getFeesResult.data.getBlockchainFees
     } catch (e) {
-      console.error("Could not get blockchain fees: ", e)
+      console.error('Could not get blockchain fees: ', e)
       return null
     }
   }
@@ -2675,12 +2677,9 @@ export class Client {
   }): Promise<{ txId: string; gasUsed?: CurrencyAmount }> {
     this.requireMPC()
     const {
-      quantity: { currency, amount },
+      quantity: { currency },
       address
     } = params
-    console.info(
-      `Will try sending to address ${address}: ${amount} of ${currency}`
-    )
     let transactionFee: CurrencyAmount
     if (this.assetData == null) {
       throw new Error('Asset data null')
@@ -2703,7 +2702,9 @@ export class Client {
         )
       }
     }
-    const blockchainFees = await this.getBlockchainFees(blockchain.toUpperCase() as Blockchain)
+    const blockchainFees = await this.getBlockchainFees(
+      blockchain.toUpperCase() as Blockchain
+    )
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
@@ -2716,13 +2717,12 @@ export class Client {
         gasPrice: blockchainFees.priceMedium,
         quantity: params.quantity,
         targetAddress: address,
-        type: "TRANSFER" as MovementType
+        type: 'TRANSFER' as MovementType
       }
       preparedMovement = await this.prepareMovement(prepareParams)
     }
-
     await prepareAMovement()
-    console.info("Prepared movedement: ", preparedMovement)
+
     transactionFee = preparedMovement.fees
     let signedAddMovementPayload: PayloadSignature
     let addMovementResult: GQLResp<{
@@ -2735,7 +2735,7 @@ export class Client {
         nonce: preparedMovement.nonce,
         quantity: params.quantity,
         targetAddress: address,
-        type: "TRANSFER" as MovementType,
+        type: 'TRANSFER' as MovementType,
         // eslint-disable-next-line @typescript-eslint/camelcase
         recycled_orders: preparedMovement.recycledOrders.map(
           ({ blockchain: orderBlockchain, message }) => ({
@@ -2744,7 +2744,13 @@ export class Client {
           })
         ),
         digests: preparedMovement.transactionElements.map(
-          ({ blockchain: txBlockchain, digest: digest, payload: payload, payloadHash: payloadHash, payloadHashFunction: payloadHashFunction }) => ({
+          ({
+            blockchain: txBlockchain,
+            digest: digest,
+            payload: payload,
+            payloadHash: payloadHash,
+            payloadHashFunction: payloadHashFunction
+          }) => ({
             blockchain: txBlockchain,
             digest,
             payload,
@@ -2775,66 +2781,10 @@ export class Client {
         gasUsed: transactionFee
       }
     } catch (e) {
-      console.info("Could not transfer to external ", e)
+      console.info('Could not transfer to external ', e)
       throw e
     }
   }
-
-  // private async signNeoPayload(payload: string, operation: CompletePayloadSignatureOperation): Promise<string> {
-  //   const messageHash = u.sha256(payload)
-  //   const childKey = this.apiKey.child_keys[BIP44.NEO]
-  //   const payloadPresig = await computePresig({
-  //     apiKey: {
-  //       client_secret_share: childKey.client_secret_share,
-  //       paillier_pk: this.apiKey.paillier_pk,
-  //       public_key: childKey.public_key,
-  //       server_secret_share_encrypted: childKey.server_secret_share_encrypted
-  //     },
-  //     blockchain: Blockchain.NEO,
-  //     fillPoolFn: this.fillPoolFn,
-  //     messageHash
-  //   })
-  //   const signature = await this.completePayloadSignature({
-  //     blockchain: Blockchain.NEO,
-  //     operation,
-  //     payload,
-  //     public_key: childKey.public_key,
-  //     signature: payloadPresig.presig,
-  //     type: CompletePayloadSignatureType.Blockchain,
-  //     r: payloadPresig.r
-  //   })
-  //   if (!wallet.verify(payload, signature, childKey.public_key)) {
-  //     throw new Error('Completed signature not correct')
-  //   }
-  //   return signature
-  // }
-
-  // private async signEthTransaction(etx: EthTransaction, operation: CompletePayloadSignatureOperation): Promise<string> {
-  //   const childKey = this.apiKey.child_keys[BIP44.ETH]
-  //   const txSignature = await computePresig({
-  //     apiKey: {
-  //       client_secret_share: childKey.client_secret_share,
-  //       paillier_pk: this.apiKey.paillier_pk,
-  //       public_key: childKey.public_key,
-  //       server_secret_share_encrypted: childKey.server_secret_share_encrypted
-  //     },
-  //     blockchain: Blockchain.ETH,
-  //     fillPoolFn: this.fillPoolFn,
-  //     messageHash: etx.hash(false).toString('hex')
-  //   })
-
-  //   const payload = serializeEthTx(etx)
-  //   const invocationSignature = await this.completePayloadSignature({
-  //     blockchain: Blockchain.ETH,
-  //     operation,
-  //     payload: payload.toLowerCase(),
-  //     public_key: childKey.public_key,
-  //     signature: txSignature.presig,
-  //     type: CompletePayloadSignatureType.Blockchain,
-  //     r: txSignature.r
-  //   })
-  //   return invocationSignature
-  // }
 
   public depositToTradingContract(quantity: CurrencyAmount) {
     return this.transferToTradingContract(quantity, MovementTypeDeposit)
@@ -2854,7 +2804,6 @@ export class Client {
         timestamp: new Date().getTime()
       }
     })
-
     const data = await this.gql.mutate<
       PrepareMovementData,
       PrepareMovementVariables
@@ -2867,31 +2816,6 @@ export class Client {
     })
     return data.data.prepareMovement
   }
-
-  // private async updateMovement(
-  //   payload: Omit<UpdateMovementVariables['payload'], 'timestamp'>
-  // ): Promise<UpdateMovementData['updateMovement']> {
-  //   const signature = await this.signPayload({
-  //     kind: SigningPayloadID.updateMovementPayload,
-  //     payload: {
-  //       ...payload,
-  //       timestamp: new Date().getTime()
-  //     }
-  //   })
-
-  //   const data = await this.gql.mutate<
-  //     UpdateMovementData,
-  //     UpdateMovementVariables
-  //   >({
-  //     mutation: UPDATE_MOVEMENT_MUTATION,
-  //     variables: {
-  //       payload: signature.payload as UpdateMovementVariables['payload'],
-  //       signature: signature.signature
-  //     }
-  //   })
-
-  //   return data.data.updateMovement
-  // }
 
   private transferToTradingContract(
     quantity: CurrencyAmount,
@@ -2930,7 +2854,9 @@ export class Client {
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
-    const blockchainFees = await this.getBlockchainFees(blockchain.toUpperCase() as Blockchain)
+    const blockchainFees = await this.getBlockchainFees(
+      blockchain.toUpperCase() as Blockchain
+    )
 
     const address = childKey.address
     const bnAmount = new BigNumber(quantity.amount)
@@ -2964,7 +2890,6 @@ export class Client {
     }
 
     await prepareAMovement()
-    console.info("Prepared movement: ", preparedMovement)
 
     let signedAddMovementPayload: PayloadSignature
     let addMovementResult: GQLResp<{
@@ -2993,7 +2918,13 @@ export class Client {
             })
           ),
           digests: preparedMovement.transactionElements.map(
-            ({ blockchain: txBlockchain, digest: digest, payload: payload, payloadHash: payloadHash, payloadHashFunction: payloadHashFunction }) => ({
+            ({
+              blockchain: txBlockchain,
+              digest: digest,
+              payload: payload,
+              payloadHash: payloadHash,
+              payloadHashFunction: payloadHashFunction
+            }) => ({
               blockchain: txBlockchain,
               digest,
               payload,
@@ -3009,7 +2940,7 @@ export class Client {
       const sanitizedPayload = sanitizeAddMovementPayload(
         signedAddMovementPayload.signedPayload as never
       )
-      console.info("Sanitized add movement payload: ", sanitizedPayload)
+
       try {
         addMovementResult = await this.gql.mutate<{
           addMovement: AddMovement
@@ -3048,12 +2979,17 @@ export class Client {
         movementId: addMovementResult.data.addMovement.id.toString()
       }
     }
-    console.info("Add movement result: ", addMovementResult.data.addMovement.transactionElements)
 
     const signedUpdateMovementPayload = await this.signPayload({
       payload: {
         digests: addMovementResult.data.addMovement.transactionElements.map(
-          ({ blockchain: txBlockchain, digest: digest, payload: payload, payloadHash: payloadHash, payloadHashFunction: payloadHashFunction }) => ({
+          ({
+            blockchain: txBlockchain,
+            digest: digest,
+            payload: payload,
+            payloadHash: payloadHash,
+            payloadHashFunction: payloadHashFunction
+          }) => ({
             blockchain: txBlockchain,
             digest,
             payload,
@@ -3069,7 +3005,6 @@ export class Client {
     const sanitizedUpdateMovementPayload = sanitizeAddMovementPayload(
       signedUpdateMovementPayload.signedPayload as never
     )
-    console.info("Signed update movement payload: ", sanitizedUpdateMovementPayload)
 
     try {
       const updateResult = await this.gql.mutate<{
@@ -3081,13 +3016,13 @@ export class Client {
           signature: signedUpdateMovementPayload.signature
         }
       })
-      console.info("Update result: ", updateResult)
+
       return {
         txId: updateResult.data.updateMovement.transactionHash,
         movementId: addMovementResult.data.addMovement.id
       }
     } catch (e) {
-      console.error("Could not update movement: ", e)
+      console.error('Could not update movement: ', e)
     }
     return null
   }
@@ -3289,19 +3224,6 @@ export class Client {
       throw new Error('Could not fetch markets')
     }
   }
-
-  // private async completeBtcTransactionSignatures(
-  //   params: CompleteBtcTransactionSignaturesArgs
-  // ): Promise<string[]> {
-  //   const resp = await this.gql.mutate<
-  //     CompleteBtcTransactionSignaturesResult,
-  //     CompleteBtcTransactionSignaturesArgs
-  //   >({
-  //     mutation: COMPLETE_BTC_TRANSACTION_SIGNATURES,
-  //     variables: params
-  //   })
-  //   return resp.data.completeBtcPayloadSignature
-  // }
 
   public async sendBlockchainRawTransaction(params: {
     blockchain: SendBlockchainRawTransactionArgs['payload']['blockchain']
@@ -3553,7 +3475,7 @@ export class Client {
       placeLimitOrderPayloads.length
         ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
         : ''
-      }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
     const mutation = gqlstring(mutationStr)
 
     const variables: any = {}

@@ -1,7 +1,12 @@
 import gql from 'graphql-tag'
 
 import { ClientSignedState } from '../stateSyncing/fragments'
-import { CurrencyAmount, Signature, Blockchain, MovementType } from '../../types'
+import {
+  CurrencyAmount,
+  Signature,
+  Blockchain,
+  MovementType
+} from '../../types'
 
 export const PREPARE_MOVEMENT_MUTATION = gql`
   mutation prepareMovement(
@@ -60,7 +65,6 @@ export interface PrepareMovementVariables {
     targetAddress?: string
     timestamp: number
     type: MovementType
-
   }
   signature: Signature
 }
