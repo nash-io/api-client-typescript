@@ -1,5 +1,11 @@
 import gql from 'graphql-tag'
-import { Signature, MovementStatus, CurrencyAmount, DateTime, MovementType } from '../../types'
+import {
+  Signature,
+  MovementStatus,
+  CurrencyAmount,
+  DateTime,
+  MovementType
+} from '../../types'
 import { CryptoCurrency } from 'index'
 
 export const UPDATE_MOVEMENT_MUTATION = gql`

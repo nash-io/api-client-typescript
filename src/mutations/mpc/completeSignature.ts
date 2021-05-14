@@ -12,7 +12,6 @@ export enum CompletePayloadSignatureOperation {
   Withdrawal = 'WITHDRAWAL'
 }
 
-
 export const COMPLETE_PAYLOAD_SIGNATURE = gql`
   mutation completePayloadSignature(
     $blockchain: Blockchain!
