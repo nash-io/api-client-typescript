@@ -1,10 +1,6 @@
 import gql from 'graphql-tag'
 
-import {
-  CurrencyAmount,
-  Blockchain,
-  Signature,
-} from '../../types'
+import { CurrencyAmount, Blockchain, Signature } from '../../types'
 
 export const PREPARE_TRANSACTION_MUTATION = gql`
   mutation prepareTransaction(
@@ -33,15 +29,13 @@ export const PREPARE_TRANSACTION_MUTATION = gql`
               currency
               amount
             }
-            targetAddress  
-  
+            targetAddress
           }
         }
       }
     }
   }
 `
-
 
 export const ITERATE_TRANSACTION_MUTATION = gql`
   mutation iterateTransaction(
@@ -60,49 +54,52 @@ export const ITERATE_TRANSACTION_MUTATION = gql`
   }
 `
 
-
-export type ApproveTransaction = {
+export interface ApproveTransaction {
   readonly quantity: CurrencyAmount
   readonly targetAddress: string
 }
 
-
-export type CompleteStakeTransaction = {
+export interface CompleteStakeTransaction {
   readonly stakeId: string
 }
 
-export type CreateStakeTransaction = {
+export interface CreateStakeTransaction {
   readonly duration: number
   readonly quantity: CurrencyAmount
 }
 
-export type DepositTransaction = {
+export interface DepositTransaction {
   readonly assetNonce: number
   readonly quantity: CurrencyAmount
 }
 
-export type GasClaimTransaction = {
+export interface GasClaimTransaction {
   readonly placeholder?: string
 }
 
-
-export type NexSwapTransaction = {
+export interface NexSwapTransaction {
   readonly quantity: CurrencyAmount
 }
 
-
-export type TransferTransaction = {
+export interface TransferTransaction {
   readonly quantity: CurrencyAmount
   readonly targetAddress: string
 }
 
-export type WithdrawalTransaction = {
+export interface WithdrawalTransaction {
   readonly assetNonce: number
   readonly quantity: CurrencyAmount
 }
 
-export type UnionTransactionSpecific = ApproveTransaction | CompleteStakeTransaction | CreateStakeTransaction | DepositTransaction | GasClaimTransaction | NexSwapTransaction | TransferTransaction | WithdrawalTransaction
-
+export type UnionTransactionSpecific =
+  | ApproveTransaction
+  | CompleteStakeTransaction
+  | CreateStakeTransaction
+  | DepositTransaction
+  | GasClaimTransaction
+  | NexSwapTransaction
+  | TransferTransaction
+  | WithdrawalTransaction
 
 export interface TransactionElement {
   blockchain: Blockchain
@@ -113,60 +110,59 @@ export interface TransactionElement {
   signatureFunction: string
 }
 
-export type Transaction = {
+export interface Transaction {
   readonly transactionFee: CurrencyAmount
   readonly transactionNonce?: number
   readonly transactionSpecific: UnionTransactionSpecific
 }
 
-export type InputApproveTransaction = {
+export interface InputApproveTransaction {
   quantity: CurrencyAmount
-  targetAddress: String
+  targetAddress: string
 }
 
-export type InputCompleteStakeTransaction = {
-  stakeId: String
+export interface InputCompleteStakeTransaction {
+  stakeId: string
 }
 
-export type InputCreateStakeTransaction = {
+export interface InputCreateStakeTransaction {
   duration: number
   quantity: CurrencyAmount
 }
 
-export type InputDepositTransaction = {
+export interface InputDepositTransaction {
   capQuantityToMaximum: boolean
   quantity: CurrencyAmount
 }
 
-export type InputGasClaimTransaction = {
+export interface InputGasClaimTransaction {
   /** Object does not have any field, this is a dummy to adhere to graphql standard */
-  placeholder?: String
+  placeholder?: string
 }
 
-export type InputNexSwapTransaction = {
+export interface InputNexSwapTransaction {
   quantity: CurrencyAmount
 }
 
-
-export type InputServerSignedState = {
+export interface InputServerSignedState {
   blockchain: Blockchain
   message: string
 }
 
-export type InputTransferTransaction = {
+export interface InputTransferTransaction {
   capQuantityToMaximum: boolean
   quantity: CurrencyAmount
   targetAddress: string
 }
 
-export type InputWithdrawalTransaction = {
+export interface InputWithdrawalTransaction {
   capQuantityToMaximum: boolean
   quantity: CurrencyAmount
 }
 
-export type PrepareTransactionParams = {
+export interface PrepareTransactionParams {
   payload: {
-    address: String
+    address: string
     approve?: InputApproveTransaction
     blockchain: Blockchain
     completeStake?: InputCompleteStakeTransaction
@@ -182,26 +178,24 @@ export type PrepareTransactionParams = {
   signature: Signature
 }
 
-export type PrepareTransactionData = {
+export interface PrepareTransactionData {
   prepareTransaction: PrepareTransaction
 }
 
-export type PrepareTransaction = {
+export interface PrepareTransaction {
   reference: string
   transaction: Transaction
   transactionElements: TransactionElement[]
 }
 
-
-export type SignedTransactionElement = {
+export interface SignedTransactionElement {
   readonly blockchain: Blockchain
   readonly payloadHash: string
   readonly r: string
   readonly signature: string
 }
 
-
-export type IterateTransactionParams = {
+export interface IterateTransactionParams {
   payload: {
     signedTransactionElements: SignedTransactionElement[]
     reference: string
@@ -210,10 +204,10 @@ export type IterateTransactionParams = {
   signature: Signature
 }
 
-export type IterateTransactionData = {
+export interface IterateTransactionData {
   iterateTransaction: IterateTransaction
 }
 
-export type IterateTransaction = {
+export interface IterateTransaction {
   transactionElements: TransactionElement[]
 }

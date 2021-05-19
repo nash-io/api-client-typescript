@@ -89,7 +89,15 @@ import {
 } from '../mutations/movements/updateMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
 
-import { PrepareTransactionParams, PREPARE_TRANSACTION_MUTATION, IterateTransactionParams, ITERATE_TRANSACTION_MUTATION, PrepareTransactionData, IterateTransactionData, PrepareTransaction } from '../mutations/movements/prepareTransaction'
+import {
+  PrepareTransactionParams,
+  PREPARE_TRANSACTION_MUTATION,
+  IterateTransactionParams,
+  ITERATE_TRANSACTION_MUTATION,
+  PrepareTransactionData,
+  IterateTransactionData,
+  PrepareTransaction
+} from '../mutations/movements/prepareTransaction'
 
 import {
   GET_ACCOUNT_PORTFOLIO,
@@ -406,7 +414,7 @@ export class Client {
     ) {
       throw new Error(
         'maxEthCostPrTransaction is invalid ' +
-        this.opts.maxEthCostPrTransaction
+          this.opts.maxEthCostPrTransaction
       )
     }
     const network = new NeonJS.rpc.Network({
@@ -558,11 +566,11 @@ export class Client {
       Object.keys(clientHeaders).length === 0
         ? WebSocket
         : // tslint:disable-next-line
-        class extends WebSocket {
-          constructor(endpoint) {
-            super(endpoint, undefined, undefined, clientHeaders)
+          class extends WebSocket {
+            constructor(endpoint) {
+              super(endpoint, undefined, undefined, clientHeaders)
+            }
           }
-        }
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
       automaticReconnect: !this.clientOpts.disableSocketReconnect,
@@ -586,8 +594,8 @@ export class Client {
       params:
         this.wsToken != null
           ? {
-            token: this.wsToken
-          }
+              token: this.wsToken
+            }
           : {}
     })
     socket.connect()
@@ -611,8 +619,8 @@ export class Client {
     if (this.wsToken == null) {
       throw new Error(
         'To use ' +
-        sub +
-        ', you must login() before creating the socket connection'
+          sub +
+          ', you must login() before creating the socket connection'
       )
     }
   }
@@ -2552,7 +2560,10 @@ export class Client {
             amount: UNLIMITED_APPROVAL_INT,
             currency: asset.symbol
           },
-          targetAddress: this.opts.ethNetworkSettings.contracts.vault.contract.replace('0x', '')
+          targetAddress: this.opts.ethNetworkSettings.contracts.vault.contract.replace(
+            '0x',
+            ''
+          )
         },
         gasPrice: gasPrice.priceMedium
       }
@@ -2574,7 +2585,9 @@ export class Client {
       return true
     }
 
-    throw new Error(`Failed to approve erc20 token for asset: ${asset} ${gasPrice}`)
+    throw new Error(
+      `Failed to approve erc20 token for asset: ${asset} ${gasPrice}`
+    )
   }
 
   private async approveAndAwaitAllowance(
@@ -2585,10 +2598,7 @@ export class Client {
     const bnAmount = new BigNumber(amount.amount)
     const currentAllowance = await this.queryAllowance(assetData)
     if (currentAllowance.lt(bnAmount)) {
-      await this.approveERC20Transaction(
-        assetData,
-        gasPrice
-      )
+      await this.approveERC20Transaction(assetData, gasPrice)
 
       // We will wait for allowance for up to 20 minutes. After which I think we should time out.
       for (let i = 0; i < 20 * 12 * 4; i++) {
@@ -2746,8 +2756,6 @@ export class Client {
     return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
   }
 
-
-
   private async iterateTransaction(
     payload: any
   ): Promise<IterateTransactionData['iterateTransaction']> {
@@ -2851,7 +2859,10 @@ export class Client {
       blockchain.toUpperCase() as Blockchain
     )
 
-    if (blockchain.toUpperCase() === Blockchain.ETH && quantity.currency.toLowerCase() != CryptoCurrency.ETH) {
+    if (
+      blockchain.toUpperCase() === Blockchain.ETH &&
+      quantity.currency.toLowerCase() !== CryptoCurrency.ETH
+    ) {
       await this.approveAndAwaitAllowance(assetData, quantity, blockchainFees)
     }
 
@@ -3472,7 +3483,7 @@ export class Client {
       placeLimitOrderPayloads.length
         ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
         : ''
-      }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
     const mutation = gqlstring(mutationStr)
 
     const variables: any = {}
