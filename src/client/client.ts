@@ -88,6 +88,9 @@ import {
   UpdateMovementData
 } from '../mutations/movements/updateMovement'
 import { AddMovement } from '../mutations/movements/fragments/addMovementFragment'
+
+import { PrepareTransactionParams, PREPARE_TRANSACTION_MUTATION, IterateTransactionParams, ITERATE_TRANSACTION_MUTATION, PrepareTransactionData, IterateTransactionData, PrepareTransaction } from '../mutations/movements/prepareTransaction'
+
 import {
   GET_ACCOUNT_PORTFOLIO,
   GetAccountPortfolioParams
@@ -126,20 +129,6 @@ import {
   SIGN_STATES_MUTATION,
   SYNC_STATES_MUTATION
 } from '../mutations/stateSyncing'
-
-// import {
-//   CompletePayloadSignatureType,
-//   CompletePayloadSignatureOperation,
-//   COMPLETE_PAYLOAD_SIGNATURE,
-//   CompletePayloadSignatureArgs,
-//   CompletePayloadSignatureResult
-// } from '../mutations/mpc/completeSignature'
-
-// import {
-//   COMPLETE_BTC_TRANSACTION_SIGNATURES,
-//   CompleteBtcTransactionSignaturesArgs,
-//   CompleteBtcTransactionSignaturesResult
-// } from '../mutations/mpc/completeBTCTransacitonSignatures'
 
 import {
   SEND_BLOCKCHAIN_RAW_TRANSACTION,
@@ -254,7 +243,6 @@ import {
   EnvironmentConfiguration
 } from './environments'
 import { Socket as PhoenixSocket } from '../client/phoenix'
-
 const WebSocket = require('websocket').w3cwebsocket
 
 /** @internal */
@@ -284,6 +272,7 @@ export const BIG_NUMBER_FORMAT = {
 
 export const UNLIMITED_APPROVAL =
   '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe'
+export const UNLIMITED_APPROVAL_INT = (2 ** 256 - 1).toString(16)
 
 export class Client {
   private _socket = null
@@ -417,7 +406,7 @@ export class Client {
     ) {
       throw new Error(
         'maxEthCostPrTransaction is invalid ' +
-          this.opts.maxEthCostPrTransaction
+        this.opts.maxEthCostPrTransaction
       )
     }
     const network = new NeonJS.rpc.Network({
@@ -569,11 +558,11 @@ export class Client {
       Object.keys(clientHeaders).length === 0
         ? WebSocket
         : // tslint:disable-next-line
-          class extends WebSocket {
-            constructor(endpoint) {
-              super(endpoint, undefined, undefined, clientHeaders)
-            }
+        class extends WebSocket {
+          constructor(endpoint) {
+            super(endpoint, undefined, undefined, clientHeaders)
           }
+        }
     const socket = new PhoenixSocket(this.wsUri, {
       transport: Transport,
       automaticReconnect: !this.clientOpts.disableSocketReconnect,
@@ -597,8 +586,8 @@ export class Client {
       params:
         this.wsToken != null
           ? {
-              token: this.wsToken
-            }
+            token: this.wsToken
+          }
           : {}
     })
     socket.connect()
@@ -622,8 +611,8 @@ export class Client {
     if (this.wsToken == null) {
       throw new Error(
         'To use ' +
-          sub +
-          ', you must login() before creating the socket connection'
+        sub +
+        ', you must login() before creating the socket connection'
       )
     }
   }
@@ -2548,109 +2537,72 @@ export class Client {
     }
   }
 
-  // private validateTransactionCost(gasPrice: string, estimate: number) {
-  //   const maxCost = new BigNumber(gasPrice).multipliedBy(estimate)
-  //   if (this.maxEthCostPrTransaction.lt(maxCost)) {
-  //     throw new Error(
-  //       'Transaction ETH cost larger than maxEthCostPrTransaction (' +
-  //       this.opts.maxEthCostPrTransaction +
-  //       ')'
-  //     )
-  //   }
-  // }
+  private async approveERC20Transaction(
+    asset: AssetData,
+    gasPrice: BlockchainFees
+  ): Promise<any> {
+    let prepareResult: PrepareTransaction
+    const approveAddr = this.apiKey.child_keys[BIP44.ETH].address
+    const prepareATransaction = async () => {
+      const prepareParams = {
+        address: approveAddr,
+        blockchain: asset.blockchain.toUpperCase() as Blockchain,
+        approve: {
+          quantity: {
+            amount: UNLIMITED_APPROVAL_INT,
+            currency: asset.symbol
+          },
+          targetAddress: this.opts.ethNetworkSettings.contracts.vault.contract.replace('0x', '')
+        },
+        gasPrice: gasPrice.priceMedium
+      }
+      prepareResult = await this.prepareTransaction(prepareParams)
+    }
+    await prepareATransaction()
 
-  // private async approveERC20Transaction(
-  //   asset: AssetData,
-  //   childKey: ChildKey,
-  //   _amount: BigNumber
-  // ): Promise<TransactionReceipt> {
-  //   for (let i = 0; i < 5; i++) {
-  //     try {
-  //       const chainId = await this.web3.eth.net.getId()
-  //       const erc20Contract = await new this.web3.eth.Contract(
-  //         Erc20ABI,
-  //         '0x' + asset.hash
-  //       )
-  //       const approveAbi = erc20Contract.methods
-  //         .approve(
-  //           this.opts.ethNetworkSettings.contracts.vault.contract,
-  //           UNLIMITED_APPROVAL
-  //         )
-  //         .encodeABI()
+    const iterateTxPayload = await this.signPayload({
+      payload: {
+        reference: prepareResult.reference,
+        transactionElements: prepareResult.transactionElements,
+        timestamp: new Date().getTime()
+      },
+      kind: SigningPayloadID.iterateTransactionPayload
+    })
 
-  //       const ethApproveNonce = await this.web3.eth.getTransactionCount(
-  //         '0x' + childKey.address
-  //       )
-  //       const nonce = '0x' + ethApproveNonce.toString(16)
+    const iterateResult = await this.iterateTransaction(iterateTxPayload)
+    if (iterateResult.transactionElements.length === 0) {
+      return true
+    }
 
-  //       const estimate = await this.web3.eth.estimateGas({
-  //         from: '0x' + this.apiKey.child_keys[BIP44.ETH].address,
-  //         nonce: ethApproveNonce,
-  //         to: '0x' + asset.hash,
-  //         data: approveAbi
-  //       })
+    throw new Error(`Failed to approve erc20 token for asset: ${asset} ${gasPrice}`)
+  }
 
-  //       const gasPrice = await this.web3.eth.getGasPrice()
-  //       this.validateTransactionCost(gasPrice, estimate)
-  //       const approveTx = new EthTransaction({
-  //         nonce, // + movement.data.assetNonce,
-  //         gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-  //         gasLimit: '0x' + estimate.toString(16),
-  //         to: '0x' + asset.hash,
-  //         value: 0,
-  //         data: approveAbi
-  //       })
-  //       approveTx.getChainId = () => chainId
-  //       const approveSignature = await this.signEthTransaction(approveTx, CompletePayloadSignatureOperation.Transfer)
-  //       setEthSignature(approveTx, approveSignature)
-  //       const p = await this.web3.eth.sendSignedTransaction(
-  //         '0x' + approveTx.serialize().toString('hex')
-  //       )
-  //       return p
-  //     } catch (e) {
-  //       console.info('Error approving tx: ', e.message)
-  //       if (
-  //         e.message === 'Returned error: replacement transaction underpriced'
-  //       ) {
-  //         // console.log('approve failed, retrying approve in 15 seconds')
-  //         await sleep(15000)
-  //         continue
-  //       } else if (e.message.inde) {
-  //         throw e
-  //       }
-  //     }
-  //   }
-  //   throw new Error('Failed to approve erc20 token')
-  // }
+  private async approveAndAwaitAllowance(
+    assetData: AssetData,
+    amount: CurrencyAmount,
+    gasPrice: BlockchainFees
+  ): Promise<void> {
+    const bnAmount = new BigNumber(amount.amount)
+    const currentAllowance = await this.queryAllowance(assetData)
+    if (currentAllowance.lt(bnAmount)) {
+      await this.approveERC20Transaction(
+        assetData,
+        gasPrice
+      )
 
-  // private async approveAndAwaitAllowance(
-  //   assetData: AssetData,
-  //   childKey: ChildKey,
-  //   amount: string
-  // ): Promise<void> {
-  //   const bnAmount = new BigNumber(amount)
-  //   const currentAllowance = await this.queryAllowance(assetData)
-  //   if (currentAllowance.lt(bnAmount)) {
-  //     console.info('Will approve allowance')
-  //     await this.approveERC20Transaction(
-  //       assetData,
-  //       childKey,
-  //       bnAmount.minus(currentAllowance)
-  //     )
-
-  //     // We will wait for allowance for up to 20 minutes. After which I think we should time out.
-  //     for (let i = 0; i < 20 * 12 * 4; i++) {
-  //       const latestAllowance = await this.queryAllowance(assetData)
-  //       if (latestAllowance.gte(bnAmount)) {
-  //         return
-  //       }
-  //       await sleep(5000)
-  //     }
-  //     throw new Error('Eth approval timed out')
-  //   } else {
-  //     console.info('Already has enough approved')
-  //   }
-  // }
+      // We will wait for allowance for up to 20 minutes. After which I think we should time out.
+      for (let i = 0; i < 20 * 12 * 4; i++) {
+        const latestAllowance = await this.queryAllowance(assetData)
+        if (latestAllowance.gte(bnAmount)) {
+          return
+        }
+        await sleep(5000)
+      }
+      throw new Error('Eth approval timed out')
+    } else {
+      console.info('Already has enough approved')
+    }
+  }
 
   private getBlockchainFees = async (
     blockchain: Blockchain
@@ -2794,6 +2746,47 @@ export class Client {
     return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
   }
 
+
+
+  private async iterateTransaction(
+    payload: any
+  ): Promise<IterateTransactionData['iterateTransaction']> {
+    const data = await this.gql.mutate<
+      IterateTransactionData,
+      IterateTransactionParams
+    >({
+      mutation: ITERATE_TRANSACTION_MUTATION,
+      variables: {
+        payload: payload.payload as IterateTransactionParams['payload'],
+        signature: payload.signature
+      }
+    })
+    return data.data.iterateTransaction
+  }
+
+  private async prepareTransaction(
+    payload: Omit<PrepareTransactionParams['payload'], 'timestamp'>
+  ): Promise<PrepareTransactionData['prepareTransaction']> {
+    const signature = await this.signPayload({
+      kind: SigningPayloadID.prepareTransactionPayload,
+      payload: {
+        ...payload,
+        timestamp: new Date().getTime()
+      }
+    })
+    const data = await this.gql.mutate<
+      PrepareTransactionData,
+      PrepareTransactionParams
+    >({
+      mutation: PREPARE_TRANSACTION_MUTATION,
+      variables: {
+        payload: signature.payload as PrepareTransactionParams['payload'],
+        signature: signature.signature
+      }
+    })
+    return data.data.prepareTransaction
+  }
+
   private async prepareMovement(
     payload: Omit<PrepareMovementVariables['payload'], 'timestamp'>
   ): Promise<PrepareMovementData['prepareMovement']> {
@@ -2857,6 +2850,10 @@ export class Client {
     const blockchainFees = await this.getBlockchainFees(
       blockchain.toUpperCase() as Blockchain
     )
+
+    if (blockchain.toUpperCase() === Blockchain.ETH && quantity.currency.toLowerCase() != CryptoCurrency.ETH) {
+      await this.approveAndAwaitAllowance(assetData, quantity, blockchainFees)
+    }
 
     const address = childKey.address
     const bnAmount = new BigNumber(quantity.amount)
@@ -3475,7 +3472,7 @@ export class Client {
       placeLimitOrderPayloads.length
         ? ', $affiliateDeveloperCode: AffiliateDeveloperCode'
         : ''
-    }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
+      }) {\n${cancelAliases}\n${placeOrderAliases}\n}`
     const mutation = gqlstring(mutationStr)
 
     const variables: any = {}
