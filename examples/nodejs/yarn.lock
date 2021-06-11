@@ -99,7 +99,7 @@
     core-js "2.6.0"
     graphql "14.0.2"
 
-"@neon-exchange/api-client-typescript@^5.1.11":
+"@neon-exchange/api-client-typescript@5.1.11":
   version "5.1.11"
   resolved "https://registry.yarnpkg.com/@neon-exchange/api-client-typescript/-/api-client-typescript-5.1.11.tgz#f2334b65726a862fcb9c87fe3c9d97ff8c1a9c77"
   integrity sha512-dwucfO6QhuoSDiva5Re0wyuZTXtmDLI/9hSlahKn/E3UHBLc2CDbgnqFIXP6zFbDmzDbvzHxnh5V2FWD1vpPNw==
@@ -2124,9 +2124,9 @@ node-gyp-build@^4.2.0:
   integrity sha512-MN6ZpzmfNCRM+3t57PTJHgHyw/h4OWnZ6mR8P5j/uZtqQr46RRuDE/P+g3n0YR/AiYXeWixZZzaip77gdICfRg==
 
 normalize-url@^4.1.0:
-  version "4.5.0"
-  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.0.tgz#453354087e6ca96957bd8f5baf753f5982142129"
-  integrity sha512-2s47yzUxdexf1OhyRi4Em83iQk0aPvwTddtFz4hnSSw9dCEsLEGf6SwIO8ss/19S9iBb5sJaOuTvTGDeZI00BQ==
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-4.5.1.tgz#0dd90cf1288ee1d1313b87081c9a5932ee48518a"
+  integrity sha512-9UZCFRHQdNrfTpGg8+1INIg93B6zE0aXMVFkw1WFwvO4SlZywU6aLg5Of0Ap/PgcbSw4LNxvMWXMeugwMCX0AA==
 
 number-to-bn@1.7.0:
   version "1.7.0"
