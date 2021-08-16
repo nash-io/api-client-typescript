@@ -2786,12 +2786,12 @@ export class Client {
     }
   }
 
-  public depositToTradingContract(quantity: CurrencyAmount) {
-    return this.transferToTradingContract(quantity, MovementTypeDeposit)
+  public depositToTradingContract(quantity: CurrencyAmount, feeLevel: 'low' | 'medium' | 'high' = 'medium') {
+    return this.transferToTradingContract(quantity, MovementTypeDeposit, feeLevel)
   }
 
-  public withdrawFromTradingContract(quantity: CurrencyAmount) {
-    return this.transferToTradingContract(quantity, MovementTypeWithdrawal)
+  public withdrawFromTradingContract(quantity: CurrencyAmount, feeLevel: 'low' | 'medium' | 'high' = 'medium') {
+    return this.transferToTradingContract(quantity, MovementTypeWithdrawal, feeLevel)
   }
 
   private async prepareMovement(
@@ -2819,10 +2819,11 @@ export class Client {
 
   private transferToTradingContract(
     quantity: CurrencyAmount,
-    movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal
+    movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal,
+    feeLevel: 'low' | 'medium' | 'high' = 'medium'
   ): Promievent<{ txId: string; movementId: string }> {
     const promise = new Promievent((resolve, reject) =>
-      this._transferToTradingContract(quantity, movementType, (...args) =>
+      this._transferToTradingContract(quantity, movementType, feeLevel, (...args) =>
         promise.emit(...args)
       )
         .then(resolve)
@@ -2840,9 +2841,9 @@ export class Client {
   private async _transferToTradingContract(
     quantity: CurrencyAmount,
     movementType: typeof MovementTypeDeposit | typeof MovementTypeWithdrawal,
+    feeLevel: 'low' | 'medium' | 'high',
     emit: Promievent<any>['emit']
   ): Promise<{ txId: string; movementId: string }> {
-    this.requireMPC()
     if (this.assetData == null) {
       throw new Error('Asset data null')
     }
@@ -2851,15 +2852,31 @@ export class Client {
     }
     const assetData = this.assetData[quantity.currency]
     const blockchain = assetData.blockchain
-    const childKey = this.apiKey.child_keys[
-      BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
-    ]
+    let address
+    try {
+      const childKey = this.apiKey.child_keys[
+        BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
+      ] 
+      address = childKey.address
+    } catch(e) {
+      address = this.nashCoreConfig.wallets[blockchain].address
+    }
+      
     const blockchainFees = await this.getBlockchainFees(
       blockchain.toUpperCase() as Blockchain
     )
 
-    const address = childKey.address
     const bnAmount = new BigNumber(quantity.amount)
+
+    let gasPrice = blockchainFees.priceMedium
+    switch (feeLevel) {
+      case 'low':
+        gasPrice = blockchainFees.priceLow
+        break;
+      case 'high':
+        gasPrice = blockchainFees.priceHigh
+        break;      
+    }
 
     let preparedMovement: PrepareMovementData['prepareMovement']
     let movementAmount = bnAmount
@@ -2867,7 +2884,7 @@ export class Client {
       const params = {
         address,
         backendGeneratedPayload: true,
-        gasPrice: blockchainFees.priceMedium,
+        gasPrice,
         quantity: {
           amount: bnAmount.toFormat(
             8,
@@ -2898,7 +2915,7 @@ export class Client {
     while (true) {
       signedAddMovementPayload = await this.signPayload({
         payload: {
-          address: childKey.address,
+          address,
           backendGeneratedPayload: true,
           nonce: preparedMovement.nonce,
           quantity: {
