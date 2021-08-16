@@ -2786,12 +2786,26 @@ export class Client {
     }
   }
 
-  public depositToTradingContract(quantity: CurrencyAmount, feeLevel: 'low' | 'medium' | 'high' = 'medium') {
-    return this.transferToTradingContract(quantity, MovementTypeDeposit, feeLevel)
+  public depositToTradingContract(
+    quantity: CurrencyAmount,
+    feeLevel: 'low' | 'medium' | 'high' = 'medium'
+  ) {
+    return this.transferToTradingContract(
+      quantity,
+      MovementTypeDeposit,
+      feeLevel
+    )
   }
 
-  public withdrawFromTradingContract(quantity: CurrencyAmount, feeLevel: 'low' | 'medium' | 'high' = 'medium') {
-    return this.transferToTradingContract(quantity, MovementTypeWithdrawal, feeLevel)
+  public withdrawFromTradingContract(
+    quantity: CurrencyAmount,
+    feeLevel: 'low' | 'medium' | 'high' = 'medium'
+  ) {
+    return this.transferToTradingContract(
+      quantity,
+      MovementTypeWithdrawal,
+      feeLevel
+    )
   }
 
   private async prepareMovement(
@@ -2823,8 +2837,11 @@ export class Client {
     feeLevel: 'low' | 'medium' | 'high' = 'medium'
   ): Promievent<{ txId: string; movementId: string }> {
     const promise = new Promievent((resolve, reject) =>
-      this._transferToTradingContract(quantity, movementType, feeLevel, (...args) =>
-        promise.emit(...args)
+      this._transferToTradingContract(
+        quantity,
+        movementType,
+        feeLevel,
+        (...args) => promise.emit(...args)
       )
         .then(resolve)
         .catch(reject)
@@ -2856,12 +2873,12 @@ export class Client {
     try {
       const childKey = this.apiKey.child_keys[
         BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
-      ] 
+      ]
       address = childKey.address
-    } catch(e) {
+    } catch (e) {
       address = this.nashCoreConfig.wallets[blockchain].address
     }
-      
+
     const blockchainFees = await this.getBlockchainFees(
       blockchain.toUpperCase() as Blockchain
     )
@@ -2872,10 +2889,10 @@ export class Client {
     switch (feeLevel) {
       case 'low':
         gasPrice = blockchainFees.priceLow
-        break;
+        break
       case 'high':
         gasPrice = blockchainFees.priceHigh
-        break;      
+        break
     }
 
     let preparedMovement: PrepareMovementData['prepareMovement']
