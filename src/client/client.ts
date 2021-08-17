@@ -127,25 +127,19 @@ import {
   SYNC_STATES_MUTATION
 } from '../mutations/stateSyncing'
 
-// import {
-//   CompletePayloadSignatureType,
-//   CompletePayloadSignatureOperation,
-//   COMPLETE_PAYLOAD_SIGNATURE,
-//   CompletePayloadSignatureArgs,
-//   CompletePayloadSignatureResult
-// } from '../mutations/mpc/completeSignature'
-
-// import {
-//   COMPLETE_BTC_TRANSACTION_SIGNATURES,
-//   CompleteBtcTransactionSignaturesArgs,
-//   CompleteBtcTransactionSignaturesResult
-// } from '../mutations/mpc/completeBTCTransacitonSignatures'
-
 import {
   SEND_BLOCKCHAIN_RAW_TRANSACTION,
   SendBlockchainRawTransactionArgs,
   SendBlockchainRawTransactionResult
 } from '../mutations/blockchain/sendBlockchainRawTransaction'
+
+import {
+  CreateApiKeyArgs,
+  CreateApiKeyResponse,
+  CreateApiKeyResult,
+  CREATE_APIKEY_MUTATION
+} from '../mutations/account/createApiKey'
+import { PaillierProof } from '../mutations/account/generatePallierProof'
 
 import {
   normalizePriceForMarket,
@@ -192,7 +186,7 @@ import {
   GQLResp,
   PayloadSignature
 } from '../types/client'
-import { default as gqlstring } from 'graphql-tag'
+import gql, { default as gqlstring } from 'graphql-tag'
 
 import { BlockchainError } from './movements'
 import { gqlToString } from './queryPrinter'
@@ -203,7 +197,6 @@ import {
   BIP44,
   Blockchain,
   bufferize,
-  //  computePresig,
   Config,
   createAddMovementParams,
   createCancelOrderParams,
@@ -213,7 +206,6 @@ import {
   createPlaceMarketOrderParams,
   createPlaceStopLimitOrderParams,
   createPlaceStopMarketOrderParams,
-  createPrepareMovementParams,
   createSendBlockchainRawTransactionParams,
   createSignStatesParams,
   createSyncStatesParams,
@@ -231,7 +223,11 @@ import {
   SigningPayloadID,
   signPayload,
   fillRPoolIfNeeded,
-  SyncState
+  SyncState,
+  GenerateProofFn,
+  decryptSecretKey,
+  generateAPIKeys,
+  GenerateApiKeysParams
 } from '@neon-exchange/nash-protocol'
 
 import {
@@ -908,7 +904,7 @@ export class Client {
    * Example
    * ```
    * try {
-   *   nash.legacyLogin({
+   *   nash.passwordLogin({
    *     email: "email@domain.com",
    *     password: "example"
    *   })
@@ -917,14 +913,14 @@ export class Client {
    * }
    * ```
    */
-  public async legacyLogin({
+  public async passwordLogin({
     email,
     password,
     twoFaCode,
     walletIndices = { neo: 1, eth: 1, btc: 1 },
-    presetWallets,
-    salt = ''
-  }: LegacyLoginParams): Promise<void> {
+    salt = '',
+    net = 'MainNet'
+  }: LegacyLoginParams): Promise<Config> {
     this.walletIndices = walletIndices
     const keys = await getHKDFKeysFromPassword(password, salt)
 
@@ -978,11 +974,7 @@ export class Client {
     }
 
     if (resp.data.signIn.account.encryptedSecretKey === null) {
-      console.log(
-        'keys not present in the CAS: creating and uploading as we speak.'
-      )
-
-      await this.createAndUploadKeys(keys.encryptionKey, presetWallets)
+      await this.createAndUploadKeys(keys.encryptionKey, net)
     }
 
     const aead = {
@@ -996,23 +988,16 @@ export class Client {
       encryptionKey: keys.encryptionKey,
       aead,
       marketData: mapMarketsForNashProtocol(this.marketData),
-      assetData: this.assetData
+      assetData: this.assetData,
+      net: net as 'MainNet' | 'TestNet' | 'LocalNet'
     }
 
     this.nashCoreConfig = await initialize(this.initParams)
-    if (this.opts.debug) {
-      console.log(this.nashCoreConfig)
-    }
-
-    if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig }
-      cloned.wallets = presetWallets
-      this.nashCoreConfig = cloned
-    }
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
     // after login we should always try to get asset nonces
     await this.updateTradedAssetNonces()
+    return this.nashCoreConfig
   }
 
   private async doTwoFactorLogin(twoFaCode: string): Promise<any> {
@@ -1041,9 +1026,94 @@ export class Client {
     }
   }
 
+  public createApiKey = async (
+    name: string,
+    password: string,
+    walletIndices: any,
+    network: 'LocalNet' | 'MainNet' = 'LocalNet',
+    twoFaCode?: string
+  ): Promise<CreateApiKeyResult> => {
+    try {
+      const keys = await getHKDFKeysFromPassword(password, '')
+
+      const createApiKeyData = await this.gql.mutate<
+        CreateApiKeyResponse,
+        CreateApiKeyArgs
+      >({
+        mutation: CREATE_APIKEY_MUTATION,
+        variables: {
+          name,
+          password: keys.authKey.toString('hex'),
+          twoFa: twoFaCode
+        }
+      })
+
+      const { token, secrets } = createApiKeyData.data.createApiKey
+      const generateProofFn: GenerateProofFn = async () => {
+        const generateQueryResp = await this.gql.query<{
+          getPaillierProof: PaillierProof
+        }>({
+          query: gql`
+            query ApiKeysViewGenerateProof {
+              getPaillierProof {
+                correctKeyProof {
+                  sigmaVec
+                }
+                paillierPk {
+                  n
+                }
+              }
+            }
+          `
+        })
+        if (
+          generateQueryResp.errors != null ||
+          generateQueryResp.data == null
+        ) {
+          throw new Error('gen proof failed')
+        }
+        const ret = {
+          correct_key_proof: {
+            sigma_vec: generateQueryResp.data.getPaillierProof.correctKeyProof
+              .sigmaVec as string[]
+          },
+          paillier_pk: {
+            n: generateQueryResp.data.getPaillierProof.paillierPk.n[0]!
+          }
+        }
+        return ret
+      }
+
+      const secretKey = await decryptSecretKey(keys.encryptionKey, {
+        encryptedSecretKey: bufferize(secrets.encryptedSecretKey),
+        nonce: bufferize(secrets.encryptedSecretKeyNonce),
+        tag: bufferize(secrets.encryptedSecretKeyTag)
+      })
+      const generateKeyParams: GenerateApiKeysParams = {
+        walletIndices,
+        secret: secretKey.toString('hex'),
+        net: network,
+        generateProofFn
+      }
+      const apiKeys = await generateAPIKeys(generateKeyParams)
+
+      const apiSecret = Buffer.from(JSON.stringify(apiKeys), 'utf-8').toString(
+        'base64'
+      )
+
+      return {
+        apiKey: token,
+        secret: apiSecret
+      }
+    } catch (e) {
+      console.error('Error creating API Keys: ', e)
+      return null
+    }
+  }
+
   private async createAndUploadKeys(
     encryptionKey: Buffer,
-    presetWallets?: object
+    net: string
   ): Promise<void> {
     const secretKey = getSecretKey()
     const res = encryptSecretKey(encryptionKey, secretKey)
@@ -1063,16 +1133,11 @@ export class Client {
       encryptionKey,
       aead,
       marketData: mapMarketsForNashProtocol(this.marketData),
-      assetData: this.assetData
+      assetData: this.assetData,
+      net: net as 'MainNet' | 'TestNet' | 'LocalNet'
     }
 
     this.nashCoreConfig = await initialize(this.initParams)
-
-    if (presetWallets !== undefined) {
-      const cloned: any = { ...this.nashCoreConfig }
-      cloned.wallets = presetWallets
-      this.nashCoreConfig = cloned
-    }
 
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
     await this.gql.mutate<AddKeysResult, AddKeysArgs>({
@@ -2460,72 +2525,6 @@ export class Client {
     )
   }
 
-  /**
-   * Used by our internal trading bot
-   * @param  {string}                      address
-   * @param  {CurrencyAmount}              quantity
-   * @param  {MovementType}                type
-   * @return {Promise<SignMovementResult>}
-   */
-  public async legacyAddMovement(
-    address: string,
-    quantity: CurrencyAmount,
-    type: MovementType
-  ): Promise<SignMovementResult> {
-    this.requireFull()
-    const prepareMovementMovementParams = createPrepareMovementParams(
-      address,
-      false,
-      quantity,
-      type
-    )
-
-    const preparePayload = await this.signPayload(prepareMovementMovementParams)
-    const result = await this.gql.mutate({
-      mutation: PREPARE_MOVEMENT_MUTATION,
-      variables: {
-        payload: preparePayload.payload,
-        signature: preparePayload.signature
-      }
-    })
-
-    const movementPayloadParams = createAddMovementParams(
-      address,
-      false,
-      quantity,
-      type,
-      result.data.prepareMovement.nonce,
-      null,
-      result.data.prepareMovement.recycledOrders,
-      result.data.prepareMovement.transactionElements
-    )
-
-    const signedMovement = await this.signPayload(movementPayloadParams)
-    const payload = { ...signedMovement.payload }
-    payload.signedTransactionElements =
-      signedMovement.signedPayload.signed_transaction_elements
-    payload.resignedOrders = payload.recycled_orders
-    delete payload.digests
-    delete payload.recycled_orders
-    delete payload.blockchainSignatures
-
-    const addMovementResult = await this.gql.mutate({
-      mutation: ADD_MOVEMENT_MUTATION,
-      variables: {
-        payload,
-        signature: signedMovement.signature
-      }
-    })
-
-    // after deposit or withdrawal we want to update nonces
-    await this.updateTradedAssetNonces()
-
-    return {
-      result: addMovementResult.data.addMovement,
-      blockchain_data: signedMovement.blockchain_data
-    }
-  }
-
   public async queryAllowance(assetData: AssetData): Promise<BigNumber> {
     let approvalPower = assetData.blockchainPrecision
     if (assetData.symbol === CryptoCurrency.USDC) {
@@ -2547,110 +2546,6 @@ export class Client {
       return new BigNumber(0)
     }
   }
-
-  // private validateTransactionCost(gasPrice: string, estimate: number) {
-  //   const maxCost = new BigNumber(gasPrice).multipliedBy(estimate)
-  //   if (this.maxEthCostPrTransaction.lt(maxCost)) {
-  //     throw new Error(
-  //       'Transaction ETH cost larger than maxEthCostPrTransaction (' +
-  //       this.opts.maxEthCostPrTransaction +
-  //       ')'
-  //     )
-  //   }
-  // }
-
-  // private async approveERC20Transaction(
-  //   asset: AssetData,
-  //   childKey: ChildKey,
-  //   _amount: BigNumber
-  // ): Promise<TransactionReceipt> {
-  //   for (let i = 0; i < 5; i++) {
-  //     try {
-  //       const chainId = await this.web3.eth.net.getId()
-  //       const erc20Contract = await new this.web3.eth.Contract(
-  //         Erc20ABI,
-  //         '0x' + asset.hash
-  //       )
-  //       const approveAbi = erc20Contract.methods
-  //         .approve(
-  //           this.opts.ethNetworkSettings.contracts.vault.contract,
-  //           UNLIMITED_APPROVAL
-  //         )
-  //         .encodeABI()
-
-  //       const ethApproveNonce = await this.web3.eth.getTransactionCount(
-  //         '0x' + childKey.address
-  //       )
-  //       const nonce = '0x' + ethApproveNonce.toString(16)
-
-  //       const estimate = await this.web3.eth.estimateGas({
-  //         from: '0x' + this.apiKey.child_keys[BIP44.ETH].address,
-  //         nonce: ethApproveNonce,
-  //         to: '0x' + asset.hash,
-  //         data: approveAbi
-  //       })
-
-  //       const gasPrice = await this.web3.eth.getGasPrice()
-  //       this.validateTransactionCost(gasPrice, estimate)
-  //       const approveTx = new EthTransaction({
-  //         nonce, // + movement.data.assetNonce,
-  //         gasPrice: '0x' + parseInt(gasPrice, 10).toString(16),
-  //         gasLimit: '0x' + estimate.toString(16),
-  //         to: '0x' + asset.hash,
-  //         value: 0,
-  //         data: approveAbi
-  //       })
-  //       approveTx.getChainId = () => chainId
-  //       const approveSignature = await this.signEthTransaction(approveTx, CompletePayloadSignatureOperation.Transfer)
-  //       setEthSignature(approveTx, approveSignature)
-  //       const p = await this.web3.eth.sendSignedTransaction(
-  //         '0x' + approveTx.serialize().toString('hex')
-  //       )
-  //       return p
-  //     } catch (e) {
-  //       console.info('Error approving tx: ', e.message)
-  //       if (
-  //         e.message === 'Returned error: replacement transaction underpriced'
-  //       ) {
-  //         // console.log('approve failed, retrying approve in 15 seconds')
-  //         await sleep(15000)
-  //         continue
-  //       } else if (e.message.inde) {
-  //         throw e
-  //       }
-  //     }
-  //   }
-  //   throw new Error('Failed to approve erc20 token')
-  // }
-
-  // private async approveAndAwaitAllowance(
-  //   assetData: AssetData,
-  //   childKey: ChildKey,
-  //   amount: string
-  // ): Promise<void> {
-  //   const bnAmount = new BigNumber(amount)
-  //   const currentAllowance = await this.queryAllowance(assetData)
-  //   if (currentAllowance.lt(bnAmount)) {
-  //     console.info('Will approve allowance')
-  //     await this.approveERC20Transaction(
-  //       assetData,
-  //       childKey,
-  //       bnAmount.minus(currentAllowance)
-  //     )
-
-  //     // We will wait for allowance for up to 20 minutes. After which I think we should time out.
-  //     for (let i = 0; i < 20 * 12 * 4; i++) {
-  //       const latestAllowance = await this.queryAllowance(assetData)
-  //       if (latestAllowance.gte(bnAmount)) {
-  //         return
-  //       }
-  //       await sleep(5000)
-  //     }
-  //     throw new Error('Eth approval timed out')
-  //   } else {
-  //     console.info('Already has enough approved')
-  //   }
-  // }
 
   private getBlockchainFees = async (
     blockchain: Blockchain
@@ -3282,19 +3177,6 @@ export class Client {
     })
     return resp.data.sendBlockchainRawTransaction
   }
-
-  // private async completePayloadSignature(
-  //   params: CompletePayloadSignatureArgs
-  // ): Promise<string> {
-  //   const resp = await this.gql.mutate<
-  //     { completePayloadSignature: CompletePayloadSignatureResult },
-  //     CompletePayloadSignatureArgs
-  //   >({
-  //     mutation: COMPLETE_PAYLOAD_SIGNATURE,
-  //     variables: params
-  //   })
-  //   return resp.data.completePayloadSignature.signature
-  // }
 
   private async fetchAssetData(): Promise<Record<string, AssetData>> {
     const assetList = {}
