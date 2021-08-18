@@ -26,8 +26,8 @@ export interface LegacyLoginParams {
   password: string
   twoFaCode?: string
   walletIndices?: { [key: string]: number }
-  presetWallets?: object
   salt?: string
+  net?: string
 }
 export interface AccountPortfolioBalance {
   allocation: number
