@@ -5,11 +5,8 @@ import fetch from 'node-fetch'
 import toHex from 'array-buffer-to-hex'
 import https from 'https'
 import http from 'http'
-import * as NeonJS from '@cityofzion/neon-js'
 import Promievent from 'promievent'
-// import { Transaction as EthTransaction } from 'ethereumjs-tx'
-import Web3 from 'web3'
-import { Contract } from 'web3-eth-contract'
+
 import BigNumber from 'bignumber.js'
 import { ApolloError } from './ApolloError'
 import { LIST_MARKETS_QUERY } from '../queries/market/listMarkets'
@@ -140,6 +137,13 @@ import {
   CREATE_APIKEY_MUTATION
 } from '../mutations/account/createApiKey'
 import { PaillierProof } from '../mutations/account/generatePallierProof'
+import {
+  InputApproveTransaction,
+  ITERATE_TRANSATION_MUTATION,
+  PrepareTransactionParams,
+  PrepareTransactionResponse,
+  PREPARE_TRANSATION_MUTATION
+} from '../mutations/movements/prepareTransaction'
 
 import {
   normalizePriceForMarket,
@@ -170,7 +174,6 @@ import {
   CurrencyPrice,
   LegacyLoginParams,
   NonceSet,
-  SignMovementResult,
   AssetData,
   Asset,
   MissingNonceError,
@@ -198,7 +201,6 @@ import {
   Blockchain,
   bufferize,
   Config,
-  createAddMovementParams,
   createCancelOrderParams,
   createGetAssetsNoncesParams,
   createListMovementsParams,
@@ -235,13 +237,7 @@ import {
   SignStatesFields
 } from 'mutations/stateSyncing/fragments/signStatesFragment'
 
-import {
-  prefixWith0xIfNeeded
-  //  serializeEthTx
-} from './ethUtils'
-
-import { SettlementABI } from './abi/eth/settlementABI'
-import { Erc20ABI } from './abi/eth/erc20ABI'
+import { prefixWith0xIfNeeded } from './ethUtils'
 
 export * from './environments'
 import {
@@ -257,7 +253,8 @@ const WebSocket = require('websocket').w3cwebsocket
 const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.ETH]: BIP44.ETH,
   [Blockchain.BTC]: BIP44.BTC,
-  [Blockchain.NEO]: BIP44.NEO
+  [Blockchain.NEO]: BIP44.NEO,
+  [Blockchain.AVAXC]: BIP44.AVAXC
 }
 
 /** @internal */
@@ -280,7 +277,7 @@ export const BIG_NUMBER_FORMAT = {
 
 export const UNLIMITED_APPROVAL =
   '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe'
-
+export const ACCEPTABLE_APPROVAL = '0xffffffffffffffffffffffffffffe'
 export class Client {
   private _socket = null
   private mode: ClientMode = ClientMode.NONE
@@ -308,9 +305,7 @@ export class Client {
 
   private wsToken: string
   private wsUri: string
-  private isMainNet: boolean
   private gql: GQL
-  private web3: Web3
   private authorization: string
   private walletIndices: { [key: string]: number }
 
@@ -323,8 +318,6 @@ export class Client {
   public perfClient: PerfClient
   /** @internal */
   public apiKey: APIKey
-  /** @internal */
-  public ethVaultContract: Contract
   /** @internal */
   public marketData: { [key: string]: Market }
   /** @internal */
@@ -356,9 +349,6 @@ export class Client {
       headers: {},
       ...clientOpts
     }
-    this.isMainNet = this.opts.host === EnvironmentConfiguration.production.host
-
-    this.web3 = new Web3(this.opts.ethNetworkSettings.nodes[0])
 
     if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {
       throw new Error(`Invalid API host '${opts.host}'`)
@@ -416,15 +406,6 @@ export class Client {
           this.opts.maxEthCostPrTransaction
       )
     }
-    const network = new NeonJS.rpc.Network({
-      ...this.opts.neoNetworkSettings,
-      name: this.opts.neoNetworkSettings.name
-    })
-    NeonJS.default.add.network(network, true)
-    this.ethVaultContract = new this.web3.eth.Contract(
-      SettlementABI,
-      this.opts.ethNetworkSettings.contracts.vault.contract
-    )
 
     const query: GQL['query'] = async params => {
       let obj: GQLResp<any>
@@ -2525,28 +2506,6 @@ export class Client {
     )
   }
 
-  public async queryAllowance(assetData: AssetData): Promise<BigNumber> {
-    let approvalPower = assetData.blockchainPrecision
-    if (assetData.symbol === CryptoCurrency.USDC) {
-      approvalPower = this.isMainNet ? 6 : 18
-    }
-    const erc20Contract = new this.web3.eth.Contract(
-      Erc20ABI,
-      `0x${assetData.hash}`
-    )
-    try {
-      const res = await erc20Contract.methods
-        .allowance(
-          `0x${this.apiKey.child_keys[BIP44.ETH].address}`,
-          this.opts.ethNetworkSettings.contracts.vault.contract
-        )
-        .call()
-      return new BigNumber(res).div(Math.pow(10, approvalPower))
-    } catch (e) {
-      return new BigNumber(0)
-    }
-  }
-
   private getBlockchainFees = async (
     blockchain: Blockchain
   ): Promise<BlockchainFees> => {
@@ -2764,14 +2723,20 @@ export class Client {
     }
     const assetData = this.assetData[quantity.currency]
     const blockchain = assetData.blockchain
-    let address
-    try {
-      const childKey = this.apiKey.child_keys[
-        BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
-      ]
-      address = childKey.address
-    } catch (e) {
-      address = this.nashCoreConfig.wallets[blockchain].address
+    const childKey = this.apiKey.child_keys[
+      BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
+    ]
+    const address = childKey.address
+
+    if (
+      blockchain === 'eth' &&
+      movementType === MovementTypeDeposit &&
+      quantity.currency !== CryptoCurrency.ETH
+    ) {
+      await this.approveAndAwaitAllowance(
+        quantity,
+        this.opts.ethNetworkSettings.contracts.vault.contract
+      )
     }
 
     const blockchainFees = await this.getBlockchainFees(
@@ -2956,51 +2921,125 @@ export class Client {
     return null
   }
 
-  /**
-   * Sign a withdraw request.
-   *
-   * @param address
-   * @param quantity
-   * @returns
-   *
-   * Example
-   * ```typescript
-   * import { createCurrencyAmount } from '@neon-exchange/api-client-ts'
-   *
-   * const address = 'd5480a0b20e2d056720709a9538b17119fbe9fd6';
-   * const amount = createCurrencyAmount('1.5', CryptoCurrency.ETH);
-   * const signedMovement = await nash.signWithdrawRequest(address, amount);
-   * console.log(signedMovement)
-   * ```
-   */
-  public async signWithdrawRequest(
-    address: string,
-    quantity: CurrencyAmount,
-    nonce?: number
-  ): Promise<SignMovementResult> {
-    const signMovementParams = createAddMovementParams(
-      address,
-      false,
-      quantity,
-      MovementTypeWithdrawal,
-      nonce
+  public approveAndAwaitAllowance = async (
+    amount: CurrencyAmount,
+    targetAddress: string,
+    feeLevel: 'low' | 'med' | 'high' = 'med'
+  ): Promise<boolean> => {
+    const assetData = this.assetData[amount.currency]
+    const blockchain = assetData.blockchain.toUpperCase() as Blockchain
+    const childKey = this.apiKey.child_keys[BLOCKCHAIN_TO_BIP44[blockchain]]
+    const address = childKey.address
+
+    const blockchainFees = await this.getBlockchainFees(
+      blockchain.toUpperCase() as Blockchain
     )
-    const signedPayload = await this.signPayload(signMovementParams)
-    const result = await this.gql.mutate({
-      mutation: ADD_MOVEMENT_MUTATION,
+
+    let gasPrice = blockchainFees.priceMedium
+    switch (feeLevel) {
+      case 'low':
+        gasPrice = blockchainFees.priceLow
+        break
+      case 'high':
+        gasPrice = blockchainFees.priceHigh
+        break
+    }
+
+    const approveParams: InputApproveTransaction = {
+      minimumQuantity: {
+        amount: new BigNumber(ACCEPTABLE_APPROVAL, 16).toString(),
+        assetHash: assetData.hash,
+        blockchain
+      },
+      quantity: {
+        amount: new BigNumber(UNLIMITED_APPROVAL, 16).toString(),
+        assetHash: assetData.hash,
+        blockchain
+      },
+      targetAddress: targetAddress.replace('0x', '')
+    }
+
+    const prepareParams: PrepareTransactionParams = {
+      address,
+      approve: approveParams,
+      blockchain,
+      gasPrice,
+      timestamp: new Date().getTime()
+    }
+
+    const sendPrepare = async (
+      params: PrepareTransactionParams
+    ): Promise<PrepareTransactionResponse> => {
+      params.timestamp = new Date().getTime()
+
+      const signedPrepareTx = await this.signPayload({
+        payload: prepareParams,
+        kind: SigningPayloadID.prepareTransactionPayload
+      })
+      try {
+        const prepareTxResult = await this.gql.mutate({
+          mutation: PREPARE_TRANSATION_MUTATION,
+          variables: {
+            payload: signedPrepareTx.payload,
+            signature: signedPrepareTx.signature
+          }
+        })
+        return {
+          ...prepareTxResult.data.prepareTransaction,
+          approvalNeeded: true
+        }
+      } catch (e) {
+        if (
+          e.message.includes(
+            'Specified minimum amount to approve is already covered by current allowance'
+          )
+        ) {
+          return {
+            reference: '',
+            transaction: null,
+            transactionElements: [],
+            approvalNeeded: false
+          }
+        }
+        throw e
+      }
+    }
+
+    const prepareResult = await sendPrepare(prepareParams)
+    if (!prepareResult.approvalNeeded) {
+      return true
+    }
+
+    const signedIteratePayload = await this.signPayload({
+      payload: {
+        reference: prepareResult.reference,
+        transactionElements: prepareResult.transactionElements,
+        timestamp: new Date().getTime()
+      },
+      kind: SigningPayloadID.iterateTransactionPayload
+    })
+
+    const iterateTxResult = await this.gql.mutate({
+      mutation: ITERATE_TRANSATION_MUTATION,
       variables: {
-        payload: signedPayload.payload,
-        signature: signedPayload.signature
+        payload: signedIteratePayload.payload,
+        signature: signedIteratePayload.signature
       }
     })
 
-    // after deposit or withdrawal we want to update nonces
-    await this.updateTradedAssetNonces()
-
-    return {
-      result: result.data.addMovement,
-      blockchain_data: signedPayload.blockchain_data
+    if (
+      iterateTxResult.data.iterateTransaction &&
+      iterateTxResult.data.iterateTransaction.transactionElements.length === 0
+    ) {
+      let result = prepareResult
+      while (result.approvalNeeded) {
+        await sleep(10000)
+        result = await sendPrepare(prepareParams)
+      }
+      return true
     }
+
+    return false
   }
 
   /**
