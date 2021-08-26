@@ -275,9 +275,8 @@ export const BIG_NUMBER_FORMAT = {
   prefix: ''
 }
 
-export const UNLIMITED_APPROVAL =
-  '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe'
-export const ACCEPTABLE_APPROVAL = '0xffffffffffffffffffffffffffffe'
+export const UNLIMITED_APPROVAL = Number.MAX_SAFE_INTEGER
+
 export class Client {
   private _socket = null
   private mode: ClientMode = ClientMode.NONE
@@ -2947,7 +2946,7 @@ export class Client {
 
     const approveParams: InputApproveTransaction = {
       minimumQuantity: {
-        amount: new BigNumber(ACCEPTABLE_APPROVAL, 16).toString(),
+        amount: new BigNumber(amount.amount, 16).toString(),
         assetHash: assetData.hash,
         blockchain
       },
