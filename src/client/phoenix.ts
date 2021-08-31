@@ -980,7 +980,7 @@ export class Socket {
     this.encode = opts.encode || this.defaultEncoder
     this.decode = opts.decode || this.defaultDecoder
     this.automaticReconnect = opts.automaticReconnect || true
-    process.on('exit', () => {
+    process.once('exit', () => {
       if (this.conn) {
         this.unloaded = true
         this.abnormalClose('unloaded')
