@@ -1,6 +1,3 @@
-import { Transaction as EthTransaction } from 'ethereumjs-tx'
-import { toBuffer, stripZeros } from 'ethereumjs-util'
-import * as rlp from 'rlp'
 import BigNumber from 'bignumber.js'
 
 import { CryptoCurrency } from '../constants/currency'
@@ -11,32 +8,6 @@ export function prefixWith0xIfNeeded(addr: string): string {
     return addr
   }
   return '0x' + addr
-}
-
-export function serializeEthTx(tx: EthTransaction): string {
-  return rlp
-    .encode([
-      ...tx.raw.slice(0, 6),
-      toBuffer(tx.getChainId()),
-      stripZeros(toBuffer(0)),
-      stripZeros(toBuffer(0))
-    ])
-    .toString('hex')
-}
-
-export function setEthSignature(tx: EthTransaction, sig: string) {
-  tx.r = Buffer.from(sig.slice(0, 64), 'hex')
-  tx.s = Buffer.from(sig.slice(64, 128), 'hex')
-  tx.v = Buffer.from(
-    (parseInt(sig.slice(128, 130), 10) + (tx.getChainId() * 2 + 35)).toString(
-      16
-    ),
-    'hex'
-  )
-
-  if (!tx.verifySignature()) {
-    throw new Error('Invalid signature')
-  }
 }
 
 export function transferExternalGetAmount(
