@@ -61,7 +61,7 @@
   "dependencies": {
     "@absinthe/socket": "0.2.1",
     "@neon-exchange/nash-perf": "1.0.4",
-    "@neon-exchange/nash-protocol": "4.3.3",
+    "@neon-exchange/nash-protocol": "^4.5.1",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
