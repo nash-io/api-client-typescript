@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@neon-exchange/api-client-typescript": "5.1.11"
+    "@neon-exchange/api-client-typescript": "^6.2.5"
   },
   "name": "nash-client-sample",
   "version": "1.0.0",

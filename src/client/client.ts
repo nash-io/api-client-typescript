@@ -94,7 +94,6 @@ import { LIST_ASSETS_QUERY } from '../queries/asset/listAsset'
 import { NEW_ACCOUNT_TRADES } from '../subscriptions/newAccountTrades'
 import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
 import { NEW_TRADES } from '../subscriptions/newTrades'
-import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
 import { UPDATED_ACCOUNT_BALANCE } from '../subscriptions/updatedAccountBalance'
 
@@ -245,7 +244,8 @@ import {
   ClientOptions,
   EnvironmentConfiguration
 } from './environments'
-import { Socket as PhoenixSocket } from '../client/phoenix'
+import { Socket as PhoenixSocket } from 'phoenix'
+import { GraphQLError } from 'graphql'
 
 const WebSocket = require('websocket').w3cwebsocket
 
@@ -452,7 +452,7 @@ export class Client {
         obj.headers = resp.headers
         if (obj.errors) {
           throw new ApolloError({
-            graphQLErrors: obj.errors
+            graphQLErrors: obj.errors as GraphQLError[]
           })
         }
       }
@@ -739,8 +739,7 @@ export class Client {
         AbsintheSocket.observe(
           this.getAbsintheSocket(),
           AbsintheSocket.send(this.getAbsintheSocket(), {
-            operation: gqlToString(UPDATED_TICKERS),
-            variables: {}
+            '@icebob/node-memwatch': '^2.1.0'
           }),
           handlers
         )
@@ -1928,8 +1927,6 @@ export class Client {
     orderID: string,
     marketName: string
   ): Promise<CancelledOrder> {
-    const m1 = this.perfClient.start('cancelOrder')
-    const m2 = this.perfClient.start('cancelOrder_' + marketName)
     const [a, b] = marketName.split('_')
     await this.prefillRPoolIfNeededForAssets(
       a as CryptoCurrency,
@@ -1946,8 +1943,6 @@ export class Client {
       }
     })
     const cancelledOrder = result.data.cancelOrder as CancelledOrder
-    m1.end()
-    m2.end()
     return cancelledOrder
   }
 
@@ -1964,8 +1959,6 @@ export class Client {
    * ```
    */
   public async cancelAllOrders(marketName?: string): Promise<boolean> {
-    const m1 = this.perfClient.start('cancelAllOrders')
-    const m2 = this.perfClient.start('cancelAllOrders_' + (marketName || 'all'))
     let cancelAllOrderParams: any = {
       timestamp: createTimestamp()
     }
@@ -1989,8 +1982,6 @@ export class Client {
       }
     })
     const cancelledOrder = result.data.cancelAllOrders.accepted
-    m1.end()
-    m2.end()
 
     return cancelledOrder
   }
@@ -2036,28 +2027,6 @@ export class Client {
     marketName: string,
     cancelAt?: DateTime
   ): Promise<OrderPlaced> {
-    const measurementPlaceOrder = this.perfClient.start('placeLimitOrder')
-    const measurementPlaceLimitOrder = this.perfClient.start(
-      'placeLimitOrder_' + marketName
-    )
-    checkMandatoryParams(
-      {
-        allowTaker,
-        Type: 'boolean'
-      },
-      {
-        amount,
-        limitPrice,
-        Type: 'object'
-      },
-      {
-        cancellationPolicy,
-        buyOrSell,
-        marketName,
-        Type: 'string'
-      }
-    )
-
     const { nonceOrder, noncesFrom, noncesTo } = this.getNoncesForTrade(
       marketName,
       buyOrSell
@@ -2086,11 +2055,7 @@ export class Client {
       nonceOrder,
       cancelAt
     )
-    const measurementSignPayload = this.perfClient.start(
-      'signPayloadLimitOrder_' + marketName
-    )
     const signedPayload = await this.signPayload(placeLimitOrderParams)
-    measurementSignPayload.end()
     try {
       const result = await this.gql.mutate<{
         placeLimitOrder: OrderPlaced
@@ -2102,8 +2067,6 @@ export class Client {
           signature: signedPayload.signature
         }
       })
-      measurementPlaceOrder.end()
-      measurementPlaceLimitOrder.end()
 
       await this.handleOrderPlaced(result.data.placeLimitOrder)
 
@@ -3064,7 +3027,6 @@ export class Client {
   private async signPayloadMpc(
     payloadAndKind: PayloadAndKind
   ): Promise<PayloadSignature> {
-    const m = this.perfClient.start('signPayloadMpc')
     this.requireMPC()
     const signedPayload = await preSignPayload(this.apiKey, payloadAndKind, {
       fillPoolFn: this.fillPoolFn,
@@ -3081,9 +3043,9 @@ export class Client {
       blockchain_raw: signedPayload.blockchainRaw,
       signedPayload: signedPayload.payload
     }
-    m.end()
     return out
   }
+
   private async signPayloadFull(
     payloadAndKind: PayloadAndKind
   ): Promise<PayloadSignature> {

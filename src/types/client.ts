@@ -1,5 +1,5 @@
 import * as AbsintheSocket from '@absinthe/socket'
-import { Socket as PhoenixSocket } from '../client/phoenix'
+import { Socket as PhoenixSocket } from 'phoenix'
 
 import {
   OrderBook,

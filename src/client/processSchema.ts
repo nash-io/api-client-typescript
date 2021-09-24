@@ -147,9 +147,6 @@ async function run() {
       if (t.astNode && t.astNode.kind === 'EnumTypeDefinition') {
         return name
       }
-      if (t.astNode && t.astNode.kind === 'InputValueDefinition') {
-        return name
-      }
       if (t.astNode && t.astNode.kind === 'InputObjectTypeDefinition') {
         return name
       }
