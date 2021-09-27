@@ -162,6 +162,7 @@ export enum CryptoCurrency {
   TRAC = 'trac',
   TUSD = 'tusd',
   USDC = 'usdc',
+  USDT = 'usdt',
   UTD = 'utd',
   VEN = 'ven',
   VERI = 'veri',
