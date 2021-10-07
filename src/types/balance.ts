@@ -6,5 +6,7 @@ export interface AccountBalance {
   inOrders: CurrencyAmount
   pending: CurrencyAmount
   personal: CurrencyAmount
+  staked: CurrencyAmount
+  total: CurrencyAmount
   depositAddress: string
 }

@@ -17,6 +17,12 @@ export const ACCOUNT_BALANCE_FRAGMENT = gql`
     personal {
       ...currencyAmountFields
     }
+    staked {
+      ...currencyAmountFields
+    }
+    total {
+      ...currencyAmountFields
+    }
     asset {
       ...assetFields
     }

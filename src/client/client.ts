@@ -1575,6 +1575,9 @@ export class Client {
     fiatSymbol,
     period
   }: GetAccountPortfolioParams = {}): Promise<AccountPortfolio> {
+    console.warn(
+      'getAccountPortfolio is deprecated.  Please use listAccountBalances'
+    )
     const result = await this.gql.query<{
       getAccountPortfolio: AccountPortfolio
     }>({
