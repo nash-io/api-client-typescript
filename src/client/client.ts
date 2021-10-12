@@ -96,6 +96,7 @@ import { UPDATED_ACCOUNT_ORDERS } from '../subscriptions/updatedAccountOrders'
 import { NEW_TRADES } from '../subscriptions/newTrades'
 import { UPDATED_CANDLES } from '../subscriptions/updatedCandles'
 import { UPDATED_ACCOUNT_BALANCE } from '../subscriptions/updatedAccountBalance'
+import { UPDATED_TICKERS } from '../subscriptions/updatedTickers'
 
 import {
   DH_FIIL_POOL,
@@ -739,7 +740,8 @@ export class Client {
         AbsintheSocket.observe(
           this.getAbsintheSocket(),
           AbsintheSocket.send(this.getAbsintheSocket(), {
-            '@icebob/node-memwatch': '^2.1.0'
+            operation: gqlToString(UPDATED_TICKERS),
+            variables: {}
           }),
           handlers
         )
