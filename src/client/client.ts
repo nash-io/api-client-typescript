@@ -863,7 +863,7 @@ export class Client {
     this.nashProtocolMarketData = mapMarketsForNashProtocol(this.marketData)
     this.assetData = await this.fetchAssetData()
     this.pallierPkStr = JSON.stringify(this.apiKey.paillier_pk)
-    this.currentOrderNonce = 0
+    this.currentOrderNonce = createTimestamp32()
     await this.updateTradedAssetNonces()
   }
 
