@@ -276,6 +276,8 @@ export const BIG_NUMBER_FORMAT = {
   prefix: ''
 }
 
+const TRADABLE_CHAINS = ['btc','eth','neo']
+
 export const UNLIMITED_APPROVAL = Number.MAX_SAFE_INTEGER
 
 export class Client {
@@ -3187,12 +3189,14 @@ export class Client {
     const assetList = {}
     const assets: Asset[] = await this.listAssets()
     for (const a of assets) {
-      assetList[a.symbol] = {
-        hash: a.hash,
-        precision: 8,
-        symbol: a.symbol,
-        blockchainPrecision: a.blockchainPrecision,
-        blockchain: a.blockchain
+      if(TRADABLE_CHAINS.includes(a.blockchain.toString().toLowerCase())) {
+        assetList[a.symbol] = {
+          hash: a.hash,
+          precision: 8,
+          symbol: a.symbol,
+          blockchainPrecision: a.blockchainPrecision,
+          blockchain: a.blockchain
+        }
       }
     }
     return assetList
