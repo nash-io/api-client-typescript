@@ -96,17 +96,17 @@
     core-js "2.6.0"
     graphql "14.0.2"
 
-"@neon-exchange/api-client-typescript@5.0.11":
-  version "5.0.11"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/api-client-typescript/-/api-client-typescript-5.0.11.tgz#7dee8744762b93bb1631f362d96d36906c703660"
-  integrity sha512-3vv+2OBXg7WDSglBD/ZkJreWV/YilgoNXO5HlKLY24kl/JsL7ROTiYw8ugnuXYMluUDzm4s2vdROZvjNECxS0Q==
+"@neon-exchange/api-client-typescript@5.1.11":
+  version "5.1.11"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/api-client-typescript/-/api-client-typescript-5.1.11.tgz#f2334b65726a862fcb9c87fe3c9d97ff8c1a9c77"
+  integrity sha512-dwucfO6QhuoSDiva5Re0wyuZTXtmDLI/9hSlahKn/E3UHBLc2CDbgnqFIXP6zFbDmzDbvzHxnh5V2FWD1vpPNw==
   dependencies:
     "@absinthe/socket" "0.2.1"
     "@cityofzion/neon-js" "4.7.2"
     "@neon-exchange/nash-perf" "1.0.4"
-    "@neon-exchange/nash-protocol" "3.2.17"
+    "@neon-exchange/nash-protocol" "3.3.7"
     "@types/isomorphic-fetch" "0.0.35"
-    "@types/node" "^13.9.8"
+    "@types/node" "13.9.8"
     "@types/request" "2.48.1"
     array-buffer-to-hex "1.0.0"
     bitcoinjs-lib "5.1.7"
@@ -117,11 +117,12 @@
     node-fetch "2.3.0"
     phoenix "1.4.14"
     phoenix-channels "1.0.0"
-    promievent "^0.1.3"
+    promievent "0.1.3"
     semver "7.3.2"
     set-cookie-parser "2.4.5"
     sha.js "2.4.11"
     web3 "1.2.6"
+    websocket "1.0.31"
 
 "@neon-exchange/nash-perf@1.0.4":
   version "1.0.4"
@@ -132,10 +133,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@3.2.17":
-  version "3.2.17"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-3.2.17.tgz#089a0b278eb395d73ec4b9e5239cd5f2d5023b05"
-  integrity sha512-rqRW5V+6VL/5QwWQLCz3gRwcDE1j/qIQeuRphrRMJg6KLifV8fIG8KR78sGvWRDQ/4pBHRmsh06RRy7BkMjzeA==
+"@neon-exchange/nash-protocol@3.3.7":
+  version "3.3.7"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-3.3.7.tgz#c03f9c534189321847123bdd76fbb143399e0685"
+  integrity sha512-La2iuKtHmJ4yfVrg4s27c4iB5kgZFeiCxOhN+ofCFBqgubp62SGhceZnqRjidKd6bovwik19mRWT5kA+lp/hLQ==
   dependencies:
     bignumber.js "8.1.1"
     bip32 "2.0.3"
@@ -150,7 +151,7 @@
     futoin-hkdf "1.0.2"
     int64-buffer "0.99.1007"
     keccak "2.0.0"
-    lodash "4.17.11"
+    lodash "4.17.15"
     node-fetch "2.6.0"
     randombytes "2.1.0"
     scrypt-js "2.0.4"
@@ -221,7 +222,7 @@
     "@types/node" "*"
     form-data "^3.0.0"
 
-"@types/node@*", "@types/node@^13.9.8":
+"@types/node@*", "@types/node@13.9.8":
   version "13.9.8"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.9.8.tgz#09976420fc80a7a00bf40680c63815ed8c7616f4"
   integrity sha512-1WgO8hsyHynlx7nhP1kr0OFzsgKz5XDQL+Lfc3b1Q3qIln/n8cKD4m09NJ0+P1Rq7Zgnc7N0+SsMnoD1rEb0kA==
@@ -1824,6 +1825,11 @@ lodash@4.17.11:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
 
+lodash@4.17.15:
+  version "4.17.15"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
+  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+
 loglevel-plugin-prefix@0.8.4:
   version "0.8.4"
   resolved "https://registry.yarnpkg.com/loglevel-plugin-prefix/-/loglevel-plugin-prefix-0.8.4.tgz#2fe0e05f1a820317d98d8c123e634c1bd84ff644"
@@ -1928,9 +1934,9 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   integrity sha1-9sAMHAsIIkblxNmd+4x8CDsrWCo=
 
 minimist@^1.2.5:
-  version "1.2.5"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
-  integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.6.tgz#8637a5b759ea0d6e98702cfb3a9283323c93af44"
+  integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
 
 minipass@^2.6.0, minipass@^2.8.6, minipass@^2.9.0:
   version "2.9.0"
@@ -2179,7 +2185,7 @@ process@~0.5.1:
   resolved "https://registry.yarnpkg.com/process/-/process-0.5.2.tgz#1638d8a8e34c2f440a91db95ab9aeb677fc185cf"
   integrity sha1-FjjYqONML0QKkduVq5rrZ3/Bhc8=
 
-promievent@^0.1.3:
+promievent@0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/promievent/-/promievent-0.1.3.tgz#a0573e9f5e6b38a65687afe9795737babbf798fe"
   integrity sha512-BFBgLS6kvAacyrEvrIwF2Yf5TfFx5pm9uz4qCGzJRuO7FQpn44UajE6B88c/1phA4yv2dH+rd2CYZOevgBVUJQ==
@@ -3053,7 +3059,7 @@ web3@1.2.6:
     web3-shh "1.2.6"
     web3-utils "1.2.6"
 
-websocket@^1.0.24:
+websocket@1.0.31, websocket@^1.0.24:
   version "1.0.31"
   resolved "https://registry.yarnpkg.com/websocket/-/websocket-1.0.31.tgz#e5d0f16c3340ed87670e489ecae6144c79358730"
   integrity sha512-VAouplvGKPiKFDTeCCO65vYHsyay8DqoBSlzIO3fayrfOgU94lQN5a1uWVnFrMLceTJw/+fQXR5PGbUVRaHshQ==
