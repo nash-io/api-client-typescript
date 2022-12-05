@@ -738,10 +738,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@4.5.12":
-  version "4.5.12"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.5.12.tgz#7dd1425371ca623a8318ff47eaed42a8e2f64e05"
-  integrity sha512-T+tN82vSObQb2hNtcDE6A8KhTEW7Pnfs5GeSDQjMnWIKpSSVzFO+ZlW3vz3FM1aEDjye1KFuqV9zZgq3vQyQMg==
+"@neon-exchange/nash-protocol@4.9.5":
+  version "4.9.5"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.9.5.tgz#910c6a9bb3ea17a559081cbb3d9ed62899ecab90"
+  integrity sha512-Sxn077lSMYzwz2fLiwV2gxtnEFxd1aSB83wHLqINqdCNA8qlQDh8R7ciNU5sdMr7tN4RsGnH+gMp0lz5lNu6Dg==
   dependencies:
     bchaddrjs "^0.5.2"
     bignumber.js "8.1.1"

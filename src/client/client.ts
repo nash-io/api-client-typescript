@@ -255,7 +255,8 @@ const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.ETH]: BIP44.ETH,
   [Blockchain.BTC]: BIP44.BTC,
   [Blockchain.NEO]: BIP44.NEO,
-  [Blockchain.AVAXC]: BIP44.AVAXC
+  [Blockchain.AVAXC]: BIP44.AVAXC,
+  [Blockchain.POLYGON]: BIP44.POLYGON
 }
 
 /** @internal */
