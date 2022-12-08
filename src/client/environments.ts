@@ -1,4 +1,10 @@
-import { NEO_NETWORK, BTC_NETWORK, Networks, ETH_NETWORK } from './networks'
+import {
+  NEO_NETWORK,
+  BTC_NETWORK,
+  Networks,
+  ETH_NETWORK,
+  POLYGON_NETWORK
+} from './networks'
 
 export interface EnvironmentConfig {
   host: string
@@ -7,6 +13,7 @@ export interface EnvironmentConfig {
   neoScan?: string
   neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
   ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
+  polygonNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
   btcNetworkSettings?: typeof BTC_NETWORK[Networks.MainNet]
   isLocal: boolean
 }
@@ -30,6 +37,7 @@ export const EnvironmentConfiguration = {
     host: 'app.nash.io',
     neoScan: 'https://neoscan.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.MainNet],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.MainNet],
     neoNetworkSettings: NEO_NETWORK[Networks.MainNet],
     btcNetworkSettings: BTC_NETWORK[Networks.MainNet],
     isLocal: false
@@ -38,6 +46,7 @@ export const EnvironmentConfiguration = {
     host: 'app.sandbox.nash.io',
     neoScan: 'https://explorer.neo.sandbox.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Sandbox],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Sandbox],
     neoNetworkSettings: NEO_NETWORK[Networks.Sandbox],
     btcNetworkSettings: BTC_NETWORK[Networks.Sandbox],
     isLocal: false
@@ -46,6 +55,7 @@ export const EnvironmentConfiguration = {
     host: 'app.master.nash.io',
     neoScan: 'https://neo-local-explorer.master.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Master],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Master],
     neoNetworkSettings: NEO_NETWORK[Networks.Master],
     btcNetworkSettings: BTC_NETWORK[Networks.Master],
     isLocal: false
@@ -54,6 +64,7 @@ export const EnvironmentConfiguration = {
     host: 'app.staging.nash.io',
     neoScan: 'https://neo-local-explorer.staging.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Staging],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Staging],
     neoNetworkSettings: NEO_NETWORK[Networks.Staging],
     btcNetworkSettings: BTC_NETWORK[Networks.Staging],
     isLocal: false
@@ -62,6 +73,7 @@ export const EnvironmentConfiguration = {
     host: 'app.dev1.nash.io',
     neoScan: 'https://neo-local-explorer.dev1.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev1],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Dev1],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev1],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev1],
     isLocal: false
@@ -70,6 +82,7 @@ export const EnvironmentConfiguration = {
     host: 'app.dev2.nash.io',
     neoScan: 'https://neo-local-explorer.dev2.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev2],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Dev2],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev2],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev2],
     isLocal: false
@@ -78,6 +91,7 @@ export const EnvironmentConfiguration = {
     host: 'app.dev3.nash.io',
     neoScan: 'https://neo-local-explorer.dev3.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev3],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Dev3],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev3],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev3],
     isLocal: false
@@ -86,6 +100,7 @@ export const EnvironmentConfiguration = {
     host: 'app.dev4.nash.io',
     neoScan: 'https://neo-local-explorer.dev4.nash.io/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.Dev4],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.Dev4],
     neoNetworkSettings: NEO_NETWORK[Networks.Dev4],
     btcNetworkSettings: BTC_NETWORK[Networks.Dev4],
     isLocal: false
@@ -94,6 +109,7 @@ export const EnvironmentConfiguration = {
     host: 'localhost:4000',
     neoScan: 'http://localhost:7000/api/test_net',
     ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.LocalNet],
     neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
     btcNetworkSettings: BTC_NETWORK[Networks.LocalNet],
     isLocal: true
@@ -102,6 +118,7 @@ export const EnvironmentConfiguration = {
     host: 'host.docker.internal:4000',
     neoScan: 'http://host.docker.internal:7000/api/test_net',
     ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.LocalNet],
     neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
     btcNetworkSettings: BTC_NETWORK[Networks.LocalNet],
     isLocal: true
@@ -110,6 +127,7 @@ export const EnvironmentConfiguration = {
     host: 'cas',
     neoScan: 'http://chain-local-neo/api/main_net',
     ethNetworkSettings: ETH_NETWORK[Networks.LocalNet],
+    polygonNetworkSettings: POLYGON_NETWORK[Networks.LocalNet],
     neoNetworkSettings: NEO_NETWORK[Networks.LocalNet],
     btcNetworkSettings: BTC_NETWORK[Networks.LocalNet],
     isLocal: true

@@ -180,7 +180,10 @@ export enum CryptoCurrency {
   YEZ = 'yez',
   ZIL = 'zil',
   ZPT = 'zpt',
-  ZRX = 'zrx'
+  ZRX = 'zrx',
+
+  MATIC = 'matic',
+  DERC20 = 'derc20'
 }
 
 export const NEO_SYSTEM_ASSETS = [CryptoCurrency.NEO, CryptoCurrency.GAS]

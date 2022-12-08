@@ -107,6 +107,97 @@ export const ETH_NETWORK: NetworkSettingsRecord = {
   }
 }
 
+export const POLYGON_NETWORK: NetworkSettingsRecord = {
+  [Networks.MainNet]: {
+    contracts: {
+      vault: {
+        contract: 'replace_me'
+      }
+    },
+    nodes: ['https://replace_me']
+  },
+  [Networks.TestNet]: {
+    contracts: {},
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.NexNet]: {
+    contracts: {},
+    nodes: []
+  },
+  [Networks.LocalNet]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Staging]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Master]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Sandbox]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Dev1]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Dev2]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Dev3]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.Dev4]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  },
+  [Networks.QA1]: {
+    contracts: {
+      vault: {
+        contract: '0xd720aDf19BdBB0e8d8a832322F24729757c58896'
+      }
+    },
+    nodes: ['https://matic-mumbai.chainstacklabs.com']
+  }
+}
+
 // Contracts for all environments except mainnet, testnet, and nexnet
 const LOCAL_NEO_CONTRACTS: NetworkSettings['contracts'] = {
   staking: {
