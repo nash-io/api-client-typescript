@@ -277,7 +277,7 @@ export const BIG_NUMBER_FORMAT = {
   prefix: ''
 }
 
-const TRADABLE_CHAINS = ['btc','eth','neo']
+const TRADABLE_CHAINS = ['btc', 'eth', 'neo', 'polygon']
 
 export const UNLIMITED_APPROVAL = Number.MAX_SAFE_INTEGER
 
@@ -1123,6 +1123,45 @@ export class Client {
 
     this.nashCoreConfig = await initialize(this.initParams)
 
+    const wallets = [
+      {
+        address: this.nashCoreConfig.wallets.neo.address,
+        blockchain: 'NEO',
+        publicKey: this.nashCoreConfig.wallets.neo.publicKey,
+        chainIndex: 1
+      },
+      {
+        address: this.nashCoreConfig.wallets.eth.address,
+        blockchain: 'ETH',
+        publicKey: this.nashCoreConfig.wallets.eth.publicKey,
+        chainIndex: 1
+      },
+      {
+        address: this.nashCoreConfig.wallets.btc.address,
+        blockchain: 'BTC',
+        publicKey: this.nashCoreConfig.wallets.btc.publicKey,
+        chainIndex: 1
+      },
+      {
+        address: `C-0x${this.nashCoreConfig.wallets.avaxc.address}`,
+        blockchain: 'AVAXC',
+        publicKey: this.nashCoreConfig.wallets.avaxc.publicKey,
+        chainIndex: 1
+      },
+      {
+        address: this.nashCoreConfig.wallets.polygon.address,
+        blockchain: 'POLYGON',
+        publicKey: this.nashCoreConfig.wallets.polygon.publicKey,
+        chainIndex: 1
+      },
+      {
+        address: this.nashCoreConfig.wallets.neo3.address,
+        blockchain: 'NEO3',
+        publicKey: this.nashCoreConfig.wallets.neo3.publicKey,
+        chainIndex: 1
+      }
+    ]
+
     this.publicKey = this.nashCoreConfig.payloadSigningKey.publicKey
     await this.gql.mutate<AddKeysResult, AddKeysArgs>({
       mutation: ADD_KEYS_WITH_WALLETS_MUTATION,
@@ -1131,32 +1170,7 @@ export class Client {
         encryptedSecretKeyNonce: toHex(this.initParams.aead.nonce),
         encryptedSecretKeyTag: toHex(this.initParams.aead.tag),
         signaturePublicKey: this.nashCoreConfig.payloadSigningKey.publicKey,
-        wallets: [
-          {
-            address: this.nashCoreConfig.wallets.neo.address,
-            blockchain: 'NEO',
-            publicKey: this.nashCoreConfig.wallets.neo.publicKey,
-            chainIndex: this.nashCoreConfig.wallets.neo.index
-              ? this.nashCoreConfig.wallets.neo.index
-              : 0
-          },
-          {
-            address: this.nashCoreConfig.wallets.eth.address,
-            blockchain: 'ETH',
-            publicKey: this.nashCoreConfig.wallets.eth.publicKey,
-            chainIndex: this.nashCoreConfig.wallets.eth.index
-              ? this.nashCoreConfig.wallets.eth.index
-              : 0
-          },
-          {
-            address: this.nashCoreConfig.wallets.btc.address,
-            blockchain: 'BTC',
-            publicKey: this.nashCoreConfig.wallets.btc.publicKey,
-            chainIndex: this.nashCoreConfig.wallets.btc.index
-              ? this.nashCoreConfig.wallets.btc.index
-              : 0
-          }
-        ]
+        wallets
       }
     })
   }
@@ -2693,20 +2707,24 @@ export class Client {
     }
     const assetData = this.assetData[quantity.currency]
     const blockchain = assetData.blockchain
+
     const childKey = this.apiKey.child_keys[
       BLOCKCHAIN_TO_BIP44[blockchain.toUpperCase() as Blockchain]
     ]
     const address = childKey.address
-
-    if (
-      blockchain === 'eth' &&
-      movementType === MovementTypeDeposit &&
-      quantity.currency !== CryptoCurrency.ETH
-    ) {
-      await this.approveAndAwaitAllowance(
-        quantity,
-        this.opts.ethNetworkSettings.contracts.vault.contract
-      )
+    if (blockchain === 'eth' || blockchain === 'polygon') {
+      if (
+        movementType === MovementTypeDeposit &&
+        quantity.currency !== CryptoCurrency.ETH &&
+        quantity.currency !== CryptoCurrency.MATIC
+      ) {
+        await this.approveAndAwaitAllowance(
+          quantity,
+          blockchain === 'eth'
+            ? this.opts.ethNetworkSettings.contracts.vault.contract
+            : this.opts.polygonNetworkSettings.contracts.vault.contract
+        )
+      }
     }
 
     const blockchainFees = await this.getBlockchainFees(
@@ -2727,6 +2745,7 @@ export class Client {
 
     let preparedMovement: PrepareMovementData['prepareMovement']
     let movementAmount = bnAmount
+
     const prepareAMovement = async () => {
       const params = {
         address,
@@ -3190,7 +3209,7 @@ export class Client {
     const assetList = {}
     const assets: Asset[] = await this.listAssets()
     for (const a of assets) {
-      if(TRADABLE_CHAINS.includes(a.blockchain.toString().toLowerCase())) {
+      if (TRADABLE_CHAINS.includes(a.blockchain.toString().toLowerCase())) {
         assetList[a.symbol] = {
           hash: a.hash,
           precision: 8,

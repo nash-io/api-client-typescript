@@ -32,7 +32,10 @@ export type InputPayload = Record<string, any>
 export enum Blockchain {
   NEO = 'neo',
   ETH = 'eth',
-  BTC = 'btc'
+  BTC = 'btc',
+  AVAXC = 'avaxc',
+  POLYGON = 'polygon',
+  NEO3 = 'neo3'
 }
 
 export enum Period {
