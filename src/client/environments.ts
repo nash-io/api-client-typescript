@@ -13,7 +13,7 @@ export interface EnvironmentConfig {
   neoScan?: string
   neoNetworkSettings?: typeof NEO_NETWORK[Networks.MainNet]
   ethNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
-  polygonNetworkSettings?: typeof ETH_NETWORK[Networks.MainNet]
+  polygonNetworkSettings?: typeof POLYGON_NETWORK[Networks.MainNet]
   btcNetworkSettings?: typeof BTC_NETWORK[Networks.MainNet]
   isLocal: boolean
 }
