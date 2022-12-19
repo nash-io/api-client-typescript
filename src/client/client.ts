@@ -279,6 +279,40 @@ export const BIG_NUMBER_FORMAT = {
 
 const TRADABLE_CHAINS = ['btc', 'eth', 'neo', 'polygon']
 
+const TRADABLE_ASSETS = {
+  btc: ['btc'],
+  neo: [
+    'nos',
+    'lx',
+    'ava',
+    'phx',
+    'neo',
+    'guard',
+    'gas',
+    'nnn',
+    'nex',
+    'tmn',
+    'efx'
+  ],
+  eth: [
+    'usdc',
+    'eth',
+    'link',
+    'zrx',
+    'bat',
+    'gunthy',
+    'ant',
+    'trac',
+    'qnt',
+    'usdt',
+    'rlc',
+    'noia',
+    'mco',
+    'efx'
+  ],
+  polygon: ['matic', 'weth', 'wbtc', 'derc20']
+}
+
 export const UNLIMITED_APPROVAL = Number.MAX_SAFE_INTEGER
 
 export class Client {
@@ -3210,12 +3244,16 @@ export class Client {
     const assets: Asset[] = await this.listAssets()
     for (const a of assets) {
       if (TRADABLE_CHAINS.includes(a.blockchain.toString().toLowerCase())) {
-        assetList[a.symbol] = {
-          hash: a.hash,
-          precision: 8,
-          symbol: a.symbol,
-          blockchainPrecision: a.blockchainPrecision,
-          blockchain: a.blockchain
+        const tradeableOnChain =
+          TRADABLE_ASSETS[a.blockchain.toString().toLowerCase()]
+        if (tradeableOnChain.includes(a.symbol)) {
+          assetList[a.symbol] = {
+            hash: a.hash,
+            precision: 8,
+            symbol: a.symbol,
+            blockchainPrecision: a.blockchainPrecision,
+            blockchain: a.blockchain
+          }
         }
       }
     }
