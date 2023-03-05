@@ -738,10 +738,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@4.9.7":
-  version "4.9.7"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.9.7.tgz#41dddf25618d394291313a1f1a13dcfc42e5014a"
-  integrity sha512-pEq3rKk8qgclkZmFnRBedSI2mLaEm68kUUVmyH/3SJZOMrnof6xySlV1pBr91ooPq0TP8aKC9CjCt2j28dpC8g==
+"@neon-exchange/nash-protocol@4.9.9":
+  version "4.9.9"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.9.9.tgz#49bcc11d8f39902a87ffda4162c537c96cd55401"
+  integrity sha512-yF1Df/EIocViwgVqhEMzDqXaGawjkFpTLsNsQuRzeFFQPlgVg2Rre9bxqIHtcQTcGCAka2mEiIirZwHXowhD6Q==
   dependencies:
     bchaddrjs "^0.5.2"
     bignumber.js "8.1.1"
@@ -5212,9 +5212,9 @@ minimist-options@^3.0.1:
     is-plain-obj "^1.1.0"
 
 minimist@^1.1.1, minimist@^1.1.3, minimist@^1.2.0, minimist@^1.2.5:
-  version "1.2.5"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
-  integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.8.tgz#c1a464e7693302e082a075cee0c057741ac4772c"
+  integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
 
 mixin-deep@^1.2.0:
   version "1.3.2"
