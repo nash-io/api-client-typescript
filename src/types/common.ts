@@ -35,7 +35,8 @@ export enum Blockchain {
   BTC = 'btc',
   AVAXC = 'avaxc',
   POLYGON = 'polygon',
-  NEO3 = 'neo3'
+  NEO3 = 'neo3',
+  ARBITRUM = 'arbitrum'
 }
 
 export enum Period {

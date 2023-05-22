@@ -256,7 +256,8 @@ const BLOCKCHAIN_TO_BIP44 = {
   [Blockchain.BTC]: BIP44.BTC,
   [Blockchain.NEO]: BIP44.NEO,
   [Blockchain.AVAXC]: BIP44.AVAXC,
-  [Blockchain.POLYGON]: BIP44.POLYGON
+  [Blockchain.POLYGON]: BIP44.POLYGON,
+  [Blockchain.ARBITRUM]: BIP44.ARBITRUM
 }
 
 /** @internal */
@@ -1188,6 +1189,12 @@ export class Client {
         publicKey: this.nashCoreConfig.wallets.polygon.publicKey,
         chainIndex: 1
       },
+      {
+        address: this.nashCoreConfig.wallets.arbitrum.address,
+        blockchain: 'ARBITRUM',
+        publicKey: this.nashCoreConfig.wallets.arbitrum.publicKey,
+        chainIndex: 1
+      },      
       {
         address: this.nashCoreConfig.wallets.neo3.address,
         blockchain: 'NEO3',
