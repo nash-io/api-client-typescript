@@ -1,6 +1,6 @@
 {
   "name": "@neon-exchange/api-client-typescript",
-  "version": "6.4.8",
+  "version": "6.4.10",
   "description": "Official TypeScript client for interacting with the Nash exchange",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
@@ -61,7 +61,7 @@
   "dependencies": {
     "@absinthe/socket": "0.2.1",
     "@neon-exchange/nash-perf": "1.0.4",
-    "@neon-exchange/nash-protocol": "4.11.1",
+    "@neon-exchange/nash-protocol": "4.11.3",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
