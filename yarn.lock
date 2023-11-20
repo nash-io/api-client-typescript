@@ -738,10 +738,10 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@4.11.5":
-  version "4.11.5"
-  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.11.5.tgz#554ca620dc4e8a46feed62d68f7b9bd817ac7d61"
-  integrity sha512-KHo5IvTDgwpZmg0wvdMHeBcNkJzMI5G/Wgpi3wlE2ISKiGv8CnwX/N4OBYQc459//JM8LlNFY59lvvRVzXW0BA==
+"@neon-exchange/nash-protocol@4.11.9":
+  version "4.11.9"
+  resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.11.9.tgz#69d658ef12e82a25b44601f136b344ea340d7ade"
+  integrity sha512-Sb7DA35WhIWmU+9Qns5sm3qx2FHt2Z+uyKbug4602Kji8w6/xZaOgX4GI0ZEnIfND6YASdD6XOFNilEzcmPWUA==
   dependencies:
     bchaddrjs "^0.5.2"
     bignumber.js "8.1.1"
@@ -761,7 +761,7 @@
     lodash "4.17.21"
     node-fetch "2.6.0"
     randombytes "2.1.0"
-    scrypt-js "2.0.4"
+    scrypt-async "2.0.1"
     sha3 "2.0.4"
     smart-buffer "4.2.0"
     tiny-secp256k1 "1.1.3"
@@ -6536,10 +6536,10 @@ sax@^1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scrypt-js@2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/scrypt-js/-/scrypt-js-2.0.4.tgz#32f8c5149f0797672e551c07e230f834b6af5f16"
-  integrity sha512-4KsaGcPnuhtCZQCxFxN3GVYIhKFPTdLd8PLC552XwbMndtD0cjRFAhDuuydXQ0h08ZfPgzqe6EKHozpuH74iDw==
+scrypt-async@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/scrypt-async/-/scrypt-async-2.0.1.tgz#4318dae48a8b7cc3b8fe05f75f4164a7d973d25d"
+  integrity sha512-wHR032jldwZNy7Tzrfu7RccOgGf8r5hyDMSP2uV6DpLiBUsR8JsDcx/in73o2UGVVrH5ivRFdNsFPcjtl3LErQ==
 
 secp256k1@^3.0.1:
   version "3.8.0"
