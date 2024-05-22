@@ -75,6 +75,7 @@
     "semver": "7.3.5",
     "set-cookie-parser": "2.4.5",
     "sha.js": "2.4.11",
+    "web3-utils": "1.2.1",
     "websocket": "1.0.34"
   },
   "devDependencies": {
