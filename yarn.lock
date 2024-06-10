@@ -738,7 +738,7 @@
     node-fetch "2.6.0"
     semver "7.3.2"
 
-"@neon-exchange/nash-protocol@4.11.21":
+"@neon-exchange/nash-protocol@^4.11.21":
   version "4.11.21"
   resolved "https://registry.yarnpkg.com/@neon-exchange/nash-protocol/-/nash-protocol-4.11.21.tgz#4679d2560d7653540cef7dcde8c42db988176aad"
   integrity sha512-OH3gFL2Hqt1fJgJhvSQA+nyLUuQxni76vyyQItp81fte7yH9m0ImYOIpdDpn8wxjdrMHRtyfstr373LsXGjPzA==
