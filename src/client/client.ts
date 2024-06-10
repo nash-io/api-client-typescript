@@ -311,7 +311,7 @@ const TRADABLE_ASSETS = {
     'mco',
     'efx'
   ],
-  polygon: ['matic', 'weth', 'wbtc', 'derc20']
+  polygon: ['matic', 'weth', 'wbtc', 'derc20','usdc.p']
 }
 
 export const UNLIMITED_APPROVAL = Number.MAX_SAFE_INTEGER
