@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.4.30"></a>
+## [6.4.30](https://github.com/nash-io/api-client-typescript/compare/v6.4.29...v6.4.30) (2025-11-21)
+
+
+
 <a name="6.4.29"></a>
 ## [6.4.29](https://github.com/nash-io/api-client-typescript/compare/v6.4.28...v6.4.29) (2025-11-21)
 
