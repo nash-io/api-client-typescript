@@ -469,6 +469,8 @@ export class Client {
         const result = await promise
         return result
       } else {
+        const abortController = new AbortController()
+        const abortTimer = setTimeout(() => abortController.abort(), 30000)
         const resp = await fetch(this.apiUri, {
           method: 'POST',
           headers: this.headers,
@@ -477,8 +479,8 @@ export class Client {
             query: gqlToString(params.query),
             variables: params.variables
           }),
-          timeout: 30000
-        })
+          signal: abortController.signal
+        }).finally(() => clearTimeout(abortTimer))
         if (resp.status !== 200) {
           let msg = `API error. Status code: ${resp.status}`
           if (resp.body) {
@@ -487,7 +489,7 @@ export class Client {
           }
           throw new Error(msg)
         }
-        obj = await resp.json()
+        obj = (await resp.json()) as GQLResp<any>
         obj.headers = resp.headers
         if (obj.errors) {
           throw new ApolloError({

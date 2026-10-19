@@ -13,6 +13,7 @@ jobs:
       with:
         node-version: '14'
     - run: yarn install --frozen-lockfile
+    - run: yarn audit --level critical
     - run: yarn test:lint
     - run: yarn test:unit
     - run: yarn test:unit:cov
