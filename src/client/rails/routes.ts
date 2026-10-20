@@ -1,0 +1,108 @@
+import { RailsRequestOptions } from '../../types/rails'
+
+export interface RailsRoute {
+  method: 'GET' | 'POST' | 'DELETE'
+  path: string
+  public?: boolean
+}
+
+export const RAILS_ROUTES = {
+  getOpenApi: { method: 'GET', path: '/openapi.json', public: true },
+  getPartner: { method: 'GET', path: '/partner' },
+  listCustomers: { method: 'GET', path: '/customers' },
+  createCustomer: { method: 'POST', path: '/customers' },
+  getCustomer: { method: 'GET', path: '/customers/{customer_id}' },
+  getCustomerKyc: { method: 'GET', path: '/customers/{customer_id}/kyc' },
+  initiateCustomerKyc: {
+    method: 'POST',
+    path: '/customers/{customer_id}/kyc/initiate'
+  },
+  acceptCustomerTerms: { method: 'POST', path: '/customers/{customer_id}/terms' },
+  getComplianceRequirements: {
+    method: 'GET',
+    path: '/customers/{customer_id}/compliance/requirements'
+  },
+  confirmPersonalInformation: {
+    method: 'POST',
+    path: '/customers/{customer_id}/compliance/personal-information'
+  },
+  submitSourceOfFunds: {
+    method: 'POST',
+    path: '/customers/{customer_id}/compliance/source-of-funds'
+  },
+  answerComplianceRequest: {
+    method: 'POST',
+    path: '/customers/{customer_id}/compliance/requests/{request_id}/answer'
+  },
+  submitComplianceDocuments: {
+    method: 'POST',
+    path: '/customers/{customer_id}/compliance/requests/{request_id}/documents'
+  },
+  listBlockchains: { method: 'GET', path: '/blockchains' },
+  createWalletChallenge: { method: 'POST', path: '/wallets/challenge' },
+  registerWallet: { method: 'POST', path: '/wallets' },
+  listCustomerWallets: { method: 'GET', path: '/customers/{customer_id}/wallets' },
+  verifyBankAccount: { method: 'POST', path: '/bank-accounts' },
+  listPaymentMethods: { method: 'GET', path: '/payment-methods' },
+  listQuotes: { method: 'GET', path: '/quotes' },
+  createQuote: { method: 'POST', path: '/quotes' },
+  createDryQuote: { method: 'POST', path: '/quotes/dry-quote' },
+  getQuote: { method: 'GET', path: '/quotes/{quote_id}' },
+  cancelQuote: { method: 'POST', path: '/quotes/{quote_id}/cancel' },
+  confirmBuy: { method: 'POST', path: '/quotes/{quote_id}/confirm-buy' },
+  confirmInstantBuy: {
+    method: 'POST',
+    path: '/quotes/{quote_id}/confirm-instant-buy'
+  },
+  confirmSell: { method: 'POST', path: '/quotes/{quote_id}/confirm-sell' },
+  recalculateQuote: { method: 'POST', path: '/quotes/{quote_id}/recalculate' },
+  reconfirmQuote: { method: 'POST', path: '/quotes/{quote_id}/reconfirm' },
+  listOrders: { method: 'GET', path: '/orders' },
+  listWebhookSubscriptions: { method: 'GET', path: '/webhooks/subscriptions' },
+  createWebhookSubscription: {
+    method: 'POST',
+    path: '/webhooks/subscriptions'
+  },
+  cancelWebhookSubscription: {
+    method: 'DELETE',
+    path: '/webhooks/subscriptions/{subscription_id}'
+  },
+  rotateWebhookSecret: {
+    method: 'POST',
+    path: '/webhooks/subscriptions/{subscription_id}/rotate'
+  },
+  listSubscriptionDeliveries: {
+    method: 'GET',
+    path: '/webhooks/subscriptions/{subscription_id}/deliveries'
+  },
+  listWebhookDeliveries: { method: 'GET', path: '/webhooks/deliveries' },
+  listApiKeys: { method: 'GET', path: '/api-keys' },
+  getApiKey: { method: 'GET', path: '/api-keys/{api_key_id}' },
+  revokeApiKey: { method: 'DELETE', path: '/api-keys/{api_key_id}' },
+  fillDhPool: { method: 'POST', path: '/signing/dh-pool' },
+  completePayloadSignature: {
+    method: 'POST',
+    path: '/signing/payload-signatures'
+  },
+  completeBtcPayloadSignature: {
+    method: 'POST',
+    path: '/signing/btc-payload-signatures'
+  },
+  sendRawTransaction: { method: 'POST', path: '/signing/raw-transactions' },
+  prepareTransaction: { method: 'POST', path: '/signing/transactions/prepare' },
+  iterateTransaction: { method: 'POST', path: '/signing/transactions/iterate' },
+  cancelTransaction: { method: 'POST', path: '/signing/transactions/cancel' }
+} as const
+
+export type RailsOperationName = keyof typeof RAILS_ROUTES
+
+export interface DispatchOptions {
+  segments?: Record<string, string>
+  query?: object
+  customerId?: string
+  body?: unknown
+  rawBody?: Buffer
+  contentType?: string
+  contentDigest?: string
+  options?: RailsRequestOptions
+}

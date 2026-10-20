@@ -17,7 +17,7 @@
 
 ## Architecture
 
-The public `Client` facade lives in `src/client/client.ts` (~3.6k lines); the Rails REST surface and shared HTTP signer live in `src/client/rails.ts` and `src/client/requestSigning.ts`.
+The public `Client` facade lives in `src/client/client.ts` (~3.6k lines); the Rails REST surface is organized under `src/client/rails/` and shares HTTP signing with `src/client/requestSigning.ts`.
 
 - `src/queries/`, `src/mutations/`, `src/subscriptions/` — one file per GraphQL operation, each exporting an `UPPER_SNAKE` `gql` tagged template plus co-located `Params`/`Data` types; shared pieces live in `fragments/` subfolders per domain (market, order, movement, ...).
 - `src/client/processSchema.ts` — the registry: every operation must be added to its `queries` map or `validate-queries` won't see it.
@@ -33,6 +33,7 @@ The public `Client` facade lives in `src/client/client.ts` (~3.6k lines); the Ra
 ## Conventions & gotchas
 
 - Lint is tslint (not eslint) with prettier `singleQuote`; several recommended rules are off (see `tslint.json`). Don't introduce ESLint config or reformat untouched code.
+- Split source files exceeding 500 lines into focused modules.
 - Unit tests: Jest + ts-jest; `testMatch` picks up `*.spec.ts`/`*.test.ts` under the repo. Focused request-signing tests live in `src/client/httpAuthentication.spec.ts`; other unit specs include `src/client/utils.spec.ts` and `src/helpers/currency.spec.ts`. `src/client/client.spec.integration.ts` is commented-out dead harness.
 - `integration-tests/*.js` are manual scripts run against `build/main` and a real environment (`NASH_ENV`, real API keys) — never part of `yarn test`. Same for `examples/` (each has its own package.json).
 - Amounts/prices are strings formatted through `BigNumber` with `BIG_NUMBER_FORMAT` (8 decimals, `ROUND_FLOOR`); never use JS numbers for money.
