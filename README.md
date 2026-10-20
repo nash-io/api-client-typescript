@@ -73,6 +73,51 @@ const run = async () => {
 run()
 ```
 
+## Nash Rails API
+
+`client.rails` talks to the Rails REST service separately from GraphQL and websockets. Configure `railsApiUrl` with the complete versioned base path for the same deployment; the SDK does not infer it from the GraphQL host:
+
+```typescript
+import {
+  Client,
+  EnvironmentConfiguration,
+  RailsApiError
+} from '@neon-exchange/api-client-typescript'
+
+const client = new Client({
+  ...EnvironmentConfiguration.dev1,
+  railsApiUrl: 'https://rails.sandbox.nash.io/rails/api/v1'
+})
+
+await client.login({
+  apiKey: process.env.NASH_API_KEY!,
+  secret: process.env.NASH_API_SECRET!
+})
+
+const openApi = await client.rails.getOpenApi()
+const customer = await client.rails.createCustomer(
+  { email: 'customer@example.test', countryCode: 'NL' },
+  { idempotencyKey: 'customer-create-1' }
+)
+await client.rails.getCustomer(customer.id)
+
+try {
+  await client.rails.getPartner()
+} catch (error) {
+  if (error instanceof RailsApiError) {
+    console.error(error.status, error.code, error.backendMessage, error.details)
+  }
+}
+```
+
+MPC Rails requests require an API-key login and a registered `request_signing_key`. Create replacement credentials with `Client.createApiKey(...)` before migrating; its secret includes the matching key registered during creation. Existing secrets without that key are rejected before network traffic. Do not edit a legacy secret to add an arbitrary private key. Keep the new secret private and revoke the old API key separately after migration.
+
+Rails API keys need the scopes required by each operation. `getOpenApi()` is public. Partner operations such as `getPartner()` and `listCustomers()` use partner authorization; customer-resource methods send that resource's ID in `nash-customer-id`. A `customer_id` filter on `listOrders()` is a filter, not an authorization context.
+
+For document uploads, call `submitComplianceDocuments(customerId, requestId, documents)` with `Buffer` data, filenames, and optional MIME types. The SDK buffers the multipart body to sign its exact bytes and SHA-256 digest. State-changing calls accept `RailsRequestOptions.idempotencyKey`, forwarded as `Idempotency-Key`; reusing the same key for the same request replays the prior result, while changing request data may be rejected by the backend. Monetary inputs and wire amounts are decimal strings, not JavaScript numbers. `RailsApiError` exposes HTTP `status`, stable `code`, `backendMessage`, and sanitized `details`; its `.message` does not echo arbitrary backend text.
+
+
+
 ## Nodejs usage
 
 Using the client in node can be done like below. See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).
