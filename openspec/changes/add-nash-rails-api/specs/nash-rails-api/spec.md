@@ -6,7 +6,7 @@ Expose the complete documented Nash Rails REST surface through typed SDK calls t
 
 ### Requirement: Complete documented operation coverage
 
-The SDK SHALL expose a named public function for each of the following 46 operations from the [deployed OpenAPI document](https://rails.arm-dev1.nash.io/rails/api/v1/openapi.json), inspected on 2026-10-20. Paths below are relative to the configured Rails API base URL. A generic raw request escape hatch SHALL NOT substitute for named operation coverage. No undocumented credential-creation or credential-rotation REST endpoint SHALL be invented.
+The SDK SHALL expose a named public function for each of the following 46 operations from the [deployed OpenAPI document](https://rails.sandbox.nash.io/rails/api/v1/openapi.json), inspected on 2026-10-20. Paths below are relative to the configured Rails API base URL. A generic raw request escape hatch SHALL NOT substitute for named operation coverage. No undocumented credential-creation or credential-rotation REST endpoint SHALL be invented.
 
 | Domain | Method | Relative path |
 | --- | --- | --- |
@@ -69,7 +69,7 @@ The SDK SHALL expose a named public function for each of the following 46 operat
 
 ### Requirement: Explicit Rails base URL and transport separation
 
-The SDK SHALL support a Rails API base URL independent of the exchange GraphQL host, preserving any configured path prefix. The inspected development deployment SHALL be usable with `https://rails.arm-dev1.nash.io/rails/api/v1`. The SDK SHALL NOT silently substitute `/api/v1` for `/rails/api/v1`, duplicate the prefix, or derive an unverified Rails host from the exchange host. A missing Rails base URL SHALL reject a Rails operation clearly without breaking existing exchange-only construction. Remote signed traffic SHALL require HTTPS; the existing explicit local-development mode SHALL permit HTTP. Rails calls SHALL always use HTTP regardless of the exchange websocket option.
+The SDK SHALL support a Rails API base URL independent of the exchange GraphQL host, preserving any configured path prefix. The inspected development deployment SHALL be usable with `https://rails.sandbox.nash.io/rails/api/v1`. The SDK SHALL NOT silently substitute `/api/v1` for `/rails/api/v1`, duplicate the prefix, or derive an unverified Rails host from the exchange host. A missing Rails base URL SHALL reject a Rails operation clearly without breaking existing exchange-only construction. Remote signed traffic SHALL require HTTPS; the existing explicit local-development mode SHALL permit HTTP. Rails calls SHALL always use HTTP regardless of the exchange websocket option.
 
 #### Scenario: Custom prefixed environment
 
