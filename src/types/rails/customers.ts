@@ -1,0 +1,81 @@
+import { RailsEnvironment } from './common'
+
+export interface RailsCustomerCreation {
+  email: string
+  countryCode: string
+  offeringConsent?: boolean
+  stateCode?: string
+  [key: string]: unknown
+}
+
+export interface RailsCreatedCustomer {
+  environment: RailsEnvironment
+  id: string
+  email: string
+}
+
+export interface RailsCustomerSummary {
+  id: string
+  emailMasked: string | null
+  kycStatus: string | null
+  createdAt: string
+}
+
+export interface RailsCustomerPage {
+  environment: RailsEnvironment
+  items: RailsCustomerSummary[]
+  nextCursor: string | null
+}
+
+export interface RailsKycRequirementField {
+  field: string
+  type: string
+  mandatory: boolean
+}
+
+export interface RailsKycRequirement {
+  type: 'identity_verification'
+  description: string
+  required: boolean
+  step: 'face_scan' | 'document_scan' | 'complete'
+  fields: RailsKycRequirementField[]
+}
+
+export interface RailsKycSnapshot {
+  status: string
+  requirements: RailsKycRequirement[]
+  failureDetail: string | null
+}
+
+export interface RailsCustomer {
+  environment: RailsEnvironment
+  id: string
+  kyc: RailsKycSnapshot
+}
+
+export interface RailsKycStatus {
+  environment: RailsEnvironment
+  status: string
+  requirements: RailsKycRequirement[]
+  failureDetail: string | null
+}
+
+export interface RailsKycInitiation {
+  environment: RailsEnvironment
+  status: string
+  requirements: RailsKycRequirement[]
+  failureDetail: string | null
+}
+
+export interface RailsListCustomersFilters {
+  customer_id?: string
+  cursor?: string
+  limit?: number
+}
+
+export type RailsListCustomersResponse = RailsCustomerPage
+export type RailsCreateCustomerRequest = RailsCustomerCreation
+export type RailsCreateCustomerResponse = RailsCreatedCustomer
+export type RailsGetCustomerResponse = RailsCustomer
+export type RailsGetCustomerKycResponse = RailsKycStatus
+export type RailsInitiateCustomerKycResponse = RailsKycInitiation
