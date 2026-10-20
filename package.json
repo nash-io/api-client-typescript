@@ -36,7 +36,7 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn",
     "clean": "rm -rf build test",
-    "doc": "typedoc --ignoreCompilerErrors --includeVersion --excludeExternals --excludeNotExported --excludePrivate --excludeProtected --inputFiles src/client/client.ts --inputFiles src/client/environments.ts --mode file --out docs",
+    "doc": "typedoc --ignoreCompilerErrors --includeVersion --excludeExternals --excludeNotExported --excludePrivate --excludeProtected --inputFiles src/client/client.ts --inputFiles src/client/environments.ts --inputFiles src/client/rails.ts --inputFiles src/types/rails.ts --mode file --out docs",
     "all": "yarn reset && yarn test && yarn cov:check",
     "prepare-release": "yarn all && yarn version",
     "preinstall": "node preinstall.js",
@@ -65,7 +65,10 @@
     "@types/isomorphic-fetch": "0.0.35",
     "@types/node": "13.9.8",
     "@types/request": "2.48.1",
+    "abort-controller": "3.0.0",
     "array-buffer-to-hex": "1.0.0",
+    "bitcoinjs-lib": "5.0.5",
+    "form-data": "2.5.4",
     "graphql": "15.5.2",
     "graphql-tag": "2.12.5",
     "lodash": "4.17.21",
@@ -147,5 +150,6 @@
     "reportPath": "coverage",
     "reportFile": "jest-sq-report.xml",
     "indent": 4
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

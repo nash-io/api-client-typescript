@@ -69,13 +69,13 @@ Alternative rejected: global customer headers, response unwrapping, generated id
 
 For compliance documents accept binary buffers plus filenames/content types, serialize `documents[]` parts once with the final boundary, hash the resulting buffer, and transmit that exact buffer. Use a multipart facility already available through the chosen existing HTTP package if it can expose exact serialized bytes; otherwise use the minimal existing compatible multipart dependency as a declared direct dependency. Do not add an independent upload framework. Set the matching multipart content type and `nash-content-sha256`, then sign the digest string as the canonical body value.
 
-Buffering is a deliberate ceiling: this SDK path targets compliance documents, not unbounded file streaming. Document the deployed backend's upload limits once verified. Do not invent a client limit or a fake streaming digest that hashes different bytes from the sent boundary. A future streaming design would need exact prehash/spooling rather than changing this protocol.
+Buffering is a deliberate ceiling: this SDK path targets compliance documents, not unbounded file streaming. Upload size/count limits are unverified because the deployed OpenAPI and compliance guide do not publish them. Document this limitation; do not invent a client limit or a fake streaming digest that hashes different bytes from the sent boundary. A future streaming design would need exact prehash/spooling rather than changing this protocol.
 
 ### 7. Verify behavior, not wrappers
 
 Keep focused permanent checks for the published fixed signature vector, tampered canonical fields, invalid secret rejection without network/state mutation, first-login HTTP signing, independent request keys, concurrent customer isolation, and multipart byte integrity. Exercise error-code propagation and public unauthenticated OpenAPI retrieval. Avoid 46 mock-echo tests or source-text assertions.
 
-During apply, run a throwaway local HTTP receiver with a known request key and inspect/verify captured GraphQL and Rails requests, including JSON, query encoding, bodyless actions, and multipart. Use a coverage script to compare the operation table with named methods and the fetched OpenAPI routes without permanently testing copies of dispatch wiring. Then run a live read-only authenticated Rails request if an appropriately scoped credential is available; never create customers, execute fiat actions, or revoke credentials as a smoke check without authorization.
+During apply, run a throwaway local HTTP receiver with a known request key and inspect/verify captured GraphQL and Rails requests, including JSON, query encoding, bodyless actions, and multipart. Compare the 46 named operations, including six quote actions, with the fetched OpenAPI routes. Live authenticated GraphQL acceptance and Rails route-scope verification remain release gates when compatible credentials are unavailable; user authorized full implementation with local proof and explicit disclosure of those deferred gates. Never create customers, execute fiat actions, or revoke credentials as a live smoke check without authorization.
 
 ## Risks / Trade-offs
 
@@ -91,7 +91,7 @@ During apply, run a throwaway local HTTP receiver with a known request key and i
 
 ## Migration Plan
 
-1. Verify target backend request-key registration and authenticated GraphQL HTTP support, refresh its schema, and confirm its Rails base URL and route scopes.
+1. Refresh the target schema and verify published backend contracts, Rails base URL, and documented route scopes. If compatible credentials are unavailable, proceed with local signature-verifying proof while retaining authenticated GraphQL acceptance and Rails route-scope verification as deferred release gates.
 2. Implement and verify new credential creation plus strict login validation, shared signing, all Rails operations, and public exports together; do not ship a partially authenticated namespace.
 3. Publish a breaking release note and examples showing how to obtain a matching registered credential and configure `railsApiUrl`. Existing exchange-only environment objects remain usable, but old API-key secrets do not.
 4. Consumers create or re-export compatible credentials before switching SDK versions, validate read-only traffic, then revoke superseded credentials separately if appropriate. API-key creation remains the existing interactive/MPC path; no REST creation/rotation endpoint is assumed.

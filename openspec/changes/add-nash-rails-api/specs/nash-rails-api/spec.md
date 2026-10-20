@@ -89,7 +89,12 @@ The SDK SHALL support a Rails API base URL independent of the exchange GraphQL h
 
 ### Requirement: Typed inputs and complete backend responses
 
-Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. Monetary amounts SHALL remain strings. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
+Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. All monetary inputs SHALL be decimal strings; the SDK SHALL reject numeric or structured-number money inputs rather than converting them through JavaScript floating-point values. All monetary responses SHALL expose numeric wire amounts as exact strings, preserving raw asset-precision integers and fixed-point scale fields without precision loss. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata, except for converting numeric money representations to strings. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
+
+#### Scenario: Exact monetary representation
+
+- **WHEN** a quote/order response contains a numeric fiat/crypto amount or a fixed-point currency object, or a consumer submits a quote/source-of-funds amount
+- **THEN** the SDK exposes or accepts the exact amount as a string, leaves its documented asset scale intact, and never rounds through a JavaScript number
 
 #### Scenario: Paginated results and one-time secrets
 

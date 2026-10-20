@@ -6,6 +6,15 @@ import toHex from 'array-buffer-to-hex'
 import https from 'https'
 import http from 'http'
 import Promievent from 'promievent'
+import AbortController from 'abort-controller'
+import { ECPair } from 'bitcoinjs-lib'
+import { RailsClient } from './rails'
+import {
+  AuthenticatedApiSecret,
+  RequestCredentials,
+  authenticatedHeaders,
+  decodeApiSecret
+} from './requestSigning'
 
 import BigNumber from 'bignumber.js'
 import { ApolloError } from './ApolloError'
@@ -196,7 +205,6 @@ import { gqlToString } from './queryPrinter'
 import { CryptoCurrency } from '../constants/currency'
 
 import {
-  APIKey,
   BIP44,
   Blockchain,
   bufferize,
@@ -345,6 +353,9 @@ export class Client {
   private wsUri: string
   private gql: GQL
   private authorization: string
+  private requestCredentials?: RequestCredentials
+  /** Rails REST API; configure EnvironmentConfig.railsApiUrl explicitly. */
+  public readonly rails: RailsClient
   private walletIndices: { [key: string]: number }
 
   private tradedAssets: string[] = []
@@ -355,7 +366,7 @@ export class Client {
   /** @internal */
   public perfClient: PerfClient
   /** @internal */
-  public apiKey: APIKey
+  public apiKey: AuthenticatedApiSecret
   /** @internal */
   public marketData: { [key: string]: Market }
   /** @internal */
@@ -387,6 +398,11 @@ export class Client {
       headers: {},
       ...clientOpts
     }
+    this.rails = new RailsClient(
+      this.opts,
+      () => this.mode === ClientMode.MPC ? this.requestCredentials : undefined,
+      this.clientOpts.headers
+    )
 
     if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {
       throw new Error(`Invalid API host '${opts.host}'`)
@@ -469,32 +485,54 @@ export class Client {
         const result = await promise
         return result
       } else {
+        const body = JSON.stringify({
+          query: gqlToString(params.query),
+          variables: params.variables
+        })
+        const protectedRequest = this.mode === ClientMode.MPC
+        let headers = this.headers
+        if (protectedRequest) {
+          const credentials = this.requestCredentials
+          if (!credentials) {
+            throw new Error('API-key request-signing credentials are not initialized')
+          }
+          headers = authenticatedHeaders(
+            credentials,
+            'POST',
+            new URL(this.apiUri),
+            body,
+            '',
+            headers
+          )
+        }
         const abortController = new AbortController()
         const abortTimer = setTimeout(() => abortController.abort(), 30000)
-        const resp = await fetch(this.apiUri, {
-          method: 'POST',
-          headers: this.headers,
-          agent,
-          body: JSON.stringify({
-            query: gqlToString(params.query),
-            variables: params.variables
-          }),
-          signal: abortController.signal
-        }).finally(() => clearTimeout(abortTimer))
-        if (resp.status !== 200) {
-          let msg = `API error. Status code: ${resp.status}`
-          if (resp.body) {
-            const responseContent = await resp.text()
-            msg += ` / body: ${responseContent}`
-          }
-          throw new Error(msg)
-        }
-        obj = (await resp.json()) as GQLResp<any>
-        obj.headers = resp.headers
-        if (obj.errors) {
-          throw new ApolloError({
-            graphQLErrors: obj.errors as GraphQLError[]
+        try {
+          const resp = await fetch(this.apiUri, {
+            method: 'POST',
+            headers,
+            agent,
+            body,
+            redirect: protectedRequest ? 'manual' : 'follow',
+            signal: abortController.signal
           })
+          if (resp.status !== 200) {
+            let msg = `API error. Status code: ${resp.status}`
+            if (resp.body) {
+              const responseContent = await resp.text()
+              msg += ` / body: ${responseContent}`
+            }
+            throw new Error(msg)
+          }
+          obj = (await resp.json()) as typeof obj
+          obj.headers = resp.headers
+          if (obj.errors) {
+            throw new ApolloError({
+              graphQLErrors: obj.errors as GraphQLError[]
+            })
+          }
+        } finally {
+          clearTimeout(abortTimer)
         }
       }
       return obj
@@ -890,10 +928,15 @@ export class Client {
     apiKey: string
     secret: string
   }): Promise<void> {
+    const decoded = decodeApiSecret(secret)
+    if (typeof apiKey !== 'string' || apiKey.length === 0 || /[\r\n]/.test(apiKey)) {
+      throw new Error('Invalid API-key credential identifier')
+    }
+    this.requestCredentials = { apiKey, requestKey: decoded.requestKey }
     this.mode = ClientMode.MPC
     this.authorization = `Token ${apiKey}`
     this.wsToken = apiKey
-    this.apiKey = JSON.parse(Buffer.from(secret, 'base64').toString('utf-8'))
+    this.apiKey = decoded.secret
     this._headers = {
       'Content-Type': 'application/json',
       Authorization: this.authorization
@@ -1056,6 +1099,7 @@ export class Client {
   ): Promise<CreateApiKeyResult> => {
     try {
       const keys = await getHKDFKeysFromPassword(password, '')
+      const requestKey = ECPair.makeRandom()
 
       const createApiKeyData = await this.gql.mutate<
         CreateApiKeyResponse,
@@ -1065,7 +1109,8 @@ export class Client {
         variables: {
           name,
           password: keys.authKey.toString('hex'),
-          twoFa: twoFaCode
+          twoFa: twoFaCode,
+          requestPublicKey: requestKey.publicKey.toString('hex')
         }
       })
 
@@ -1118,9 +1163,17 @@ export class Client {
       }
       const apiKeys = await generateAPIKeys(generateKeyParams)
 
-      const apiSecret = Buffer.from(JSON.stringify(apiKeys), 'utf-8').toString(
-        'base64'
-      )
+      const requestPrivateKey = requestKey.privateKey
+      if (!requestPrivateKey) {
+        throw new Error('Failed to generate API request-signing key')
+      }
+      const apiSecret = Buffer.from(
+        JSON.stringify({
+          ...apiKeys,
+          request_signing_key: requestPrivateKey.toString('hex')
+        }),
+        'utf-8'
+      ).toString('base64')
 
       return {
         apiKey: token,
