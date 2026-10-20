@@ -13,9 +13,15 @@ jobs:
       with:
         node-version: '14'
     - run: yarn install --frozen-lockfile
-    # yarn audit returns a non-zero exit code if there are ANY vulnerabilities
-    # A return code of 16 or above indicates findings at a "critical" level so let's concentrate on these for now
-    - run: yarn audit --level=critical; [[ $? -ge 8 ]] && exit 1 || exit 0
+    # --level filters output, not Yarn's exit-code bitmask; Bash uses -e.
+    - run: |
+        audit_status=0
+        yarn audit --level=critical || audit_status=$?
+        # Fail on critical findings (bit 16) or an audit execution error (1).
+        if [[ $audit_status -eq 1 || $audit_status -ge 16 ]]; then
+          exit 1
+        fi
+      shell: bash
     - run: yarn test:lint
     - run: yarn test:unit
     - run: yarn test:unit:cov
