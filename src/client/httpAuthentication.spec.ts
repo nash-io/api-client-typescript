@@ -47,7 +47,7 @@ interface CapturedRequest {
 }
 const calls = (): Array<[string, CapturedRequest]> => send.mock.calls
 const client = (headers: Record<string, string> = {}) => new Client({
-  host: 'localhost:4000', isLocal: true, railsApiUrl: 'http://localhost:4000/rails/api/v1'
+  host: 'localhost:4000', isLocal: true, railsApiUrl: 'http://localhost:4000/api/v1'
 }, { headers })
 
 function verify(url: string, request: CapturedRequest): boolean {
@@ -55,7 +55,7 @@ function verify(url: string, request: CapturedRequest): boolean {
   const target = new URL(url)
   const body = headers['nash-content-sha256'] || (request.body ? request.body.toString() : '')
   const canonical = [headers['nash-timestamp'], request.method.toUpperCase(), target.pathname + target.search,
-    headers['nash-customer-id'] || '', body].join('\n')
+  headers['nash-customer-id'] || '', body].join('\n')
   return publicKey.verify(createHash('sha256').update(canonical).digest(), Buffer.from(headers['nash-signature'], 'hex'))
 }
 
@@ -65,17 +65,17 @@ beforeEach(() => {
     const body = typeof request.body === 'string' ? request.body : ''
     const data = body.includes('ListMarkets') ? { listMarkets: [] }
       : body.includes('ListAssetsQuery') ? { listAssets: [] }
-      : { getAssetsNonces: [] }
+        : { getAssetsNonces: [] }
     return { status: 200, ok: true, headers: {}, json: async () => ({ data }), text: async () => JSON.stringify({ data }) }
   })
 })
 afterEach(() => jest.restoreAllMocks())
 
 it('matches the published compact signature and binds all five canonical fields', () => {
-  const url = new URL('https://rails.example/rails/api/v1/customers?limit=20')
+  const url = new URL('https://rails.example/api/v1/customers?limit=20')
   const signature = signRequest(pair, '1791907200', 'GET', url)
   expect(signature).toBe('8c3f8c0d4346640135f61fee37f9bb9f762491f49fe11409ec9ce70d39fb73387a7da053a383e2e5ec2fcb8b1635fe8be17635ba9a8db2cd959be1481bf8d0d5')
-  const fields = ['1791907200', 'GET', '/rails/api/v1/customers?limit=20', '', '']
+  const fields = ['1791907200', 'GET', '/api/v1/customers?limit=20', '', '']
   fields.forEach((_, index) => {
     const changed = [...fields]
     changed[index] += 'x'
@@ -158,8 +158,8 @@ it('isolates concurrent customers and keeps partner filters separate from author
   send.mockClear()
   await Promise.all([sdk.rails.getCustomer('customer/a'), sdk.rails.getCustomer('customer/b')])
   expect(calls().map(([capturedUrl, capturedRequest]) => [new URL(capturedUrl).pathname, capturedRequest.headers['nash-customer-id'], verify(capturedUrl, capturedRequest)])).toEqual([
-    ['/rails/api/v1/customers/customer%2Fa', 'customer/a', true],
-    ['/rails/api/v1/customers/customer%2Fb', 'customer/b', true]
+    ['/api/v1/customers/customer%2Fa', 'customer/a', true],
+    ['/api/v1/customers/customer%2Fb', 'customer/b', true]
   ])
   await sdk.rails.listOrders({ customer_id: 'customer/a', cursor: 'a+b/雪?=&', limit: 0 })
   const [listUrl, listRequest] = calls()[2]
@@ -271,10 +271,14 @@ it('registers fresh request public keys and exports only matching local private 
   generate.mockResolvedValue(mpc)
   send.mockImplementation(async () => ({
     status: 200,
-    json: async () => ({ data: { createApiKey: {
-      token: 'created',
-      secrets: { encryptedSecretKey: '00', encryptedSecretKeyNonce: '00', encryptedSecretKeyTag: '00' }
-    } } })
+    json: async () => ({
+      data: {
+        createApiKey: {
+          token: 'created',
+          secrets: { encryptedSecretKey: '00', encryptedSecretKeyNonce: '00', encryptedSecretKeyTag: '00' }
+        }
+      }
+    })
   }))
   const sdk = client()
   const first = await sdk.createApiKey('first', 'password', {})

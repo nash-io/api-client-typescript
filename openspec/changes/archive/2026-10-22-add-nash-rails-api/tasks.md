@@ -6,7 +6,7 @@
 
 Apply prerequisite findings:
 - Target schema refreshed from `https://app.arm-dev1.nash.io/api/graphql`; `createApiKey` accepts `requestPublicKey: Base16`, `password: String!`, and optional `twoFa: String`. The proposed creation operation validates against live introspection without executing a mutation.
-- The deployed OpenAPI matches all 46 method/path pairs above and specifies `/rails/api/v1`. Its multipart contract uses `documents[]` and the raw-body SHA-256 digest. Upload size/count limits are unverified: neither OpenAPI nor the compliance guide publishes them.
+- The deployed OpenAPI matches all 46 method/path pairs above and specifies `/api/v1`. Its multipart contract uses `documents[]` and the raw-body SHA-256 digest. Upload size/count limits are unverified: neither OpenAPI nor the compliance guide publishes them.
 - No compatible live credential was found: relevant environment variables and integration credential files are absent, and the checked-in example lacks `request_signing_key`. No live calls were made; signed GraphQL acceptance and authenticated route-scope verification remain deferred release gates.
 - User authorized proceeding with full implementation and local signature-verifying smoke checks despite those unavailable live prerequisites; quote action coverage follows the six deployed routes.
 

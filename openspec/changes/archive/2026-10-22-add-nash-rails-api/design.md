@@ -4,7 +4,7 @@ See `proposal.md` for motivation and the three capability specs for behavior. Th
 
 The checked-in `schema.graphql` exposes only `createApiKey(name: String!)`, whereas the existing operation already sends password and two-factor arguments. It has no request-public-key argument, and the mutation is absent from the validation registry. This is a backend-contract prerequisite, not permission to guess GraphQL spelling or suppress query validation.
 
-The inspected Rails OpenAPI server prefix is `/rails/api/v1`. The authentication guide's environment table instead lists `/api/v1`, and its request examples use `/rails/api/v1`. No Rails URL exists in the current environment contract. `bitcoinjs-lib@5.0.5`, which includes `ECPair`, already appears in `yarn.lock` through `nash-protocol`; it is not a direct SDK dependency. Node >=14 and TypeScript 3.8 remain constraints.
+The inspected Rails OpenAPI server prefix is `/api/v1`. The authentication guide's environment table instead lists `/api/v1`, and its request examples use `/api/v1`. No Rails URL exists in the current environment contract. `bitcoinjs-lib@5.0.5`, which includes `ECPair`, already appears in `yarn.lock` through `nash-protocol`; it is not a direct SDK dependency. Node >=14 and TypeScript 3.8 remain constraints.
 
 ## Goals / Non-Goals
 

@@ -5,7 +5,7 @@
 //
 // yarn build
 // NASH_ENV=dev1 \
-// NASH_RAILS_API_URL=https://rails.sandbox.nash.io/rails/api/v1 \
+// NASH_RAILS_API_URL=https://rails.sandbox.nash.io/api/v1 \
 // NASH_API_KEY=<key> \
 // NASH_API_SECRET=<full-secret> \
 // node integration-tests/rails-api-smoke.js

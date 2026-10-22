@@ -10,7 +10,7 @@ Every protected Rails REST request and every API-key-authenticated GraphQL HTTP 
 
 #### Scenario: Published interoperability vector
 
-- **WHEN** the request key is `01cbefdb07ad492f446edf947085503c1158a5a08262b974eb445de9045bf21a`, the timestamp is `1791907200`, the method is `GET`, the path is `/rails/api/v1/customers?limit=20`, and the customer and body are empty
+- **WHEN** the request key is `01cbefdb07ad492f446edf947085503c1158a5a08262b974eb445de9045bf21a`, the timestamp is `1791907200`, the method is `GET`, the path is `/api/v1/customers?limit=20`, and the customer and body are empty
 - **THEN** the canonical bytes end in two newline characters after the path and the signature is `8c3f8c0d4346640135f61fee37f9bb9f762491f49fe11409ec9ce70d39fb73387a7da053a383e2e5ec2fcb8b1635fe8be17635ba9a8db2cd959be1481bf8d0d5`
 
 #### Scenario: Request field integrity

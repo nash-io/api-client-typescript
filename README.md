@@ -86,7 +86,7 @@ import {
 
 const client = new Client({
   ...EnvironmentConfiguration.dev1,
-  railsApiUrl: 'https://rails.sandbox.nash.io/rails/api/v1'
+  railsApiUrl: 'https://rails.sandbox.nash.io/api/v1'
 })
 
 await client.login({
