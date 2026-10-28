@@ -141,6 +141,26 @@ After each document upload, the test verifies the request left `requirements` an
 
 After observing `pending_review`, the test POSTs `{partner_id, customer_id, flow: "approve_compliance_documents"}` to `NASH_E2E_ADMIN_URL` (default `https://admin.arm-dev1.nash.io/_admin/api/e2e/run_flow`). The latest live run passed the full flow: `tier_1`, all terms accepted, document uploaded, pending review observed, administrator approval completed, and both `requirements` and `pendingReviews` empty.
 
+### Live fiat-ramp integration test
+
+Following the [fiat-ramp](https://rails.sandbox.nash.io/dashboard/guides/fiat-ramp), [external-wallet](https://rails.sandbox.nash.io/dashboard/guides/wallets), and [bank-account](https://rails.sandbox.nash.io/dashboard/guides/bank-accounts) guides:
+
+```sh
+yarn build
+node --env-file=.env integration-tests/rails-fiat-ramp.js
+```
+
+Use sandbox partner credentials with `customers`, `wallets_and_bank_accounts`, and `fiat_ramp` scopes. The Node version, Rails-only authentication, and E2E setup/admin URL options are the same as for the KYC test above. This is a manual live integration script, not part of `yarn test`.
+
+Each run reuses the full KYC integration flow to onboard **one fresh customer**, accept terms, and obtain compliance approval. It then generates an ephemeral ETH external wallet, signs the exact EIP-712 challenge, registers it, and verifies it appears in the customer's wallet list. It registers `NASH_NFR_IBAN` (default: the OpenAPI example `DE29100100100987654321`) and requires both the verification outcome and the listed payment method to be `approved`; pending review or ownership-proof requirements fail the test.
+
+The same customer, verified wallet, and approved payout method are used for two independent order scenarios: buy ETH with `NASH_NFR_BUY_FIAT_AMOUNT` EUR (default `100.00`), and sell `NASH_NFR_SELL_CRYPTO_AMOUNT` ETH (default `0.05`) for EUR. Amounts are decimal strings. Each scenario creates a distinct `pending_user_confirmation` quote, confirms it through the SDK, checks its deposit instructions and funding deadline, and re-reads it to require `confirmed_waiting_for_payment`. A failure in either scenario fails the command, but does not prevent the other scenario from running.
+
+After confirmation, the test POSTs `{flow: "mark_fiat_ramp_order_as_paid", partner_id, customer_id, quote_id}` **without email** to `NASH_E2E_SETUP_URL` (default `https://app.arm-dev1.nash.io/api/e2e/account_setup`). It then polls SDK quote reads every two seconds for up to two minutes per order, accepts any required rate reconfirmation before its deadline, and requires both quote status and the matching customer-filtered order-history entry to be `completed`. Payment simulation acceptance or intermediate processing states do not pass the test; unsuccessful terminal states fail immediately.
+
+Only the E2E endpoint simulates funding; never send real bank or crypto funds. The generated wallet key is not retained. Customer, wallet, bank-account, and quote records remain in sandbox, and created quote IDs are logged for inspection. If confirmation fails, the paid endpoint is not called for that quote.
+
+
 ## Nodejs usage
 
 Using the client in node can be done like below. See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).

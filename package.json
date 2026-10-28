@@ -82,6 +82,7 @@
     "websocket": "1.0.34"
   },
   "devDependencies": {
+    "@metamask/eth-sig-util": "4.0.1",
     "@types/jest": "24.0.11",
     "arraybuffer-loader": "1.0.7",
     "ava": "1.0.0-beta.7",

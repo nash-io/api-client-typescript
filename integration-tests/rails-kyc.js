@@ -29,7 +29,7 @@ function expectStep(snapshot, step) {
 const nextSigningSecond = () =>
   new Promise(resolve => setTimeout(resolve, 1010 - Date.now() % 1000))
 
-async function run() {
+async function run(afterOnboarding) {
   const credentials = {
     apiKey: required('NASH_API_KEY'),
     secret: required('NASH_API_SECRET')
@@ -273,16 +273,21 @@ async function run() {
       assert.deepStrictEqual(compliance.requirements, [])
       assert.deepStrictEqual(compliance.pendingReviews, [])
     })
+    if (afterOnboarding) await afterOnboarding({ client, customer, partner, e2eSetupUrl, step })
   } finally {
     client.disconnect()
   }
 }
 
-run().catch(error => {
-  console.error(
-    error instanceof Nash.RailsApiError
-      ? `KYC integration failed: Rails HTTP ${error.status} (${error.code || 'no code'})`
-      : `KYC integration failed: ${error instanceof Error ? error.stack : String(error)}`
-  )
-  process.exitCode = 1
-})
+module.exports = run
+
+if (require.main === module) {
+  run().catch(error => {
+    console.error(
+      error instanceof Nash.RailsApiError
+        ? `KYC integration failed: Rails HTTP ${error.status} (${error.code || 'no code'})`
+        : `KYC integration failed: ${error instanceof Error ? error.stack : String(error)}`
+    )
+    process.exitCode = 1
+  })
+}
