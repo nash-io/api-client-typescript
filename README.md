@@ -137,7 +137,9 @@ The test waits for a new Unix timestamp second between steps and repeated initia
 
 The personal-information fixture appends eight random lowercase letters independently to each first and last name. After KYC approval, the test reads every pending agreement using `getCustomerTerms(customerId)` and accepts its ID through `acceptCustomerTerms`. It uploads `integration-tests/fixtures/proof-of-address.pdf` for each outstanding proof-of-address request using `submitComplianceDocuments`. This PDF is clearly labeled synthetic sandbox data, not valid evidence; other document request types are refused by the test. Upload submission clears the customer's upload obligation, but does not prove administrator approval or removal of fiat restrictions.
 
-The test ends by calling `getComplianceRequirements(customerId)` (`GET /customers/:id/compliance/requirements`) and asserting `requirements` is exactly `[]`. The latest live run passed the entire flow: `tier_1`, all pending terms accepted, proof-of-address uploaded, and no outstanding compliance obligations.
+After each document upload, the test verifies the request left `requirements` and appears in `pendingReviews` with the same request ID, type, request type and fiat-blocking flag, and status `pending_review`. The API uses camelCase `pendingReviews`. The final assertion requires both `requirements` and `pendingReviews` to be exactly `[]`.
+
+After observing `pending_review`, the test POSTs `{partner_id, customer_id, flow: "approve_compliance_documents"}` to `NASH_E2E_ADMIN_URL` (default `https://admin.arm-dev1.nash.io/_admin/api/e2e/run_flow`). The latest live run passed the full flow: `tier_1`, all terms accepted, document uploaded, pending review observed, administrator approval completed, and both `requirements` and `pendingReviews` empty.
 
 ## Nodejs usage
 

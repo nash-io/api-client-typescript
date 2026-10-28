@@ -15,9 +15,20 @@ export interface RailsComplianceObligation {
   subject?: string | null
 }
 
+export interface RailsCompliancePendingReview {
+  type: 'document' | 'question'
+  id: string
+  status: 'pending_review'
+  blockFiatServices: boolean
+  requestType?: 'proof_of_address' | 'proof_of_funds' | 'proof_of_bank_account_ownership' | 'other'
+  question?: string | null
+  subject?: string | null
+}
+
 export interface RailsComplianceRequirements {
   environment: RailsEnvironment
   requirements: RailsComplianceObligation[]
+  pendingReviews: RailsCompliancePendingReview[]
 }
 
 export interface RailsAnswerComplianceRequest {

@@ -37,6 +37,7 @@ async function run() {
   const proofOfAddress = readFileSync(join(__dirname, 'fixtures', 'proof-of-address.pdf'))
   const railsApiUrl = process.env.NASH_RAILS_API_URL || 'https://rails.sandbox.nash.io/api/v1'
   const e2eSetupUrl = process.env.NASH_E2E_SETUP_URL || 'https://app.arm-dev1.nash.io/api/e2e/account_setup'
+  const e2eAdminUrl = process.env.NASH_E2E_ADMIN_URL || 'https://admin.arm-dev1.nash.io/_admin/api/e2e/run_flow'
   const isLocal = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(railsApiUrl)
   const client = new Nash.Client(
     {
@@ -225,12 +226,52 @@ async function run() {
         assert.strictEqual(uploaded.documents.length, 1)
         assert(uploaded.documents[0].id, 'Upload response is missing the document ID')
       })
+      await step('submitted document is pending administrator review', async () => {
+        const compliance = await client.rails.getComplianceRequirements(id)
+        assert.strictEqual(compliance.environment, 'sandbox')
+        assert.strictEqual(
+          compliance.requirements.some(requirement => requirement.id === obligation.id),
+          false,
+          'Submitted document must no longer require a customer action'
+        )
+        const review = compliance.pendingReviews.find(pending => pending.id === obligation.id)
+        assert(review, 'Submitted document is missing from pendingReviews')
+        assert.strictEqual(review.type, 'document')
+        assert.strictEqual(review.status, 'pending_review')
+        assert.strictEqual(review.requestType, obligation.requestType)
+        assert.strictEqual(review.blockFiatServices, obligation.blockFiatServices)
+      })
     }
+
+    await step('administrator approves submitted compliance documents', async () => {
+      const { default: fetch } = await import('node-fetch')
+      const AbortController = require('abort-controller')
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 30000)
+      try {
+        const response = await fetch(e2eAdminUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            partner_id: partner.id,
+            customer_id: id,
+            flow: 'approve_compliance_documents'
+          }),
+          redirect: 'error',
+          signal: controller.signal
+        })
+        assert(response.ok, `approve_compliance_documents returned HTTP ${response.status}`)
+        await response.text()
+      } finally {
+        clearTimeout(timer)
+      }
+    })
 
     await step('approved customer has no compliance obligations', async () => {
       const compliance = await client.rails.getComplianceRequirements(id)
       assert.strictEqual(compliance.environment, 'sandbox')
       assert.deepStrictEqual(compliance.requirements, [])
+      assert.deepStrictEqual(compliance.pendingReviews, [])
     })
   } finally {
     client.disconnect()
