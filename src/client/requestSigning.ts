@@ -14,6 +14,7 @@ const reservedHeaders: Record<string, true> = {
   'nash-timestamp': true,
   'nash-signature': true,
   'nash-customer-id': true,
+  'nash-act-as': true,
   'nash-content-sha256': true
 }
 
@@ -90,9 +91,10 @@ export function signRequest(
   method: string,
   url: URL,
   customerId = '',
+  actAs = '',
   body = ''
 ): string {
-  const canonical = [timestamp, method.toUpperCase(), url.pathname + url.search, customerId, body].join('\n')
+  const canonical = [timestamp, method.toUpperCase(), url.pathname + url.search, customerId, actAs, body].join('\n')
   return key.sign(createHash('sha256').update(canonical, 'utf8').digest()).toString('hex')
 }
 
@@ -104,7 +106,8 @@ export function authenticatedHeaders(
   body: string,
   customerId = '',
   headers: Record<string, string> = {},
-  contentDigest?: string
+  contentDigest?: string,
+  actAs = ''
 ): Record<string, string> {
   const result: Record<string, string> = {}
   for (const name of Object.keys(headers)) {
@@ -115,9 +118,12 @@ export function authenticatedHeaders(
   const timestamp = Math.floor(Date.now() / 1000).toString()
   result.Authorization = `Token ${credentials.apiKey}`
   result['nash-timestamp'] = timestamp
-  result['nash-signature'] = signRequest(credentials.requestKey, timestamp, method, url, customerId, body)
+  result['nash-signature'] = signRequest(credentials.requestKey, timestamp, method, url, customerId, actAs, body)
   if (customerId) {
     result['nash-customer-id'] = customerId
+  }
+  if (actAs) {
+    result['nash-act-as'] = actAs
   }
   if (contentDigest !== undefined) {
     result['nash-content-sha256'] = contentDigest

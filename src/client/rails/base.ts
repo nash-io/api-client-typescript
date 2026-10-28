@@ -41,6 +41,7 @@ const RESERVED_HEADERS: Record<string, true> = {
   'nash-timestamp': true,
   'nash-signature': true,
   'nash-customer-id': true,
+  'nash-act-as': true,
   'nash-content-sha256': true,
   'x-api-key': true,
   'api-key': true,
@@ -364,9 +365,10 @@ export class RailsBaseClient {
         route.method,
         url,
         canonicalBody,
-        args.customerId,
+        args.customerId ?? '',
         headers,
-        args.contentDigest
+        args.contentDigest,
+        args.customerId === null ? 'partner' : ''
       )
     }
 

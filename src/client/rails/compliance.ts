@@ -12,13 +12,13 @@ import {
   RailsSubmitSourceOfFundsRequest,
   RailsSubmitSourceOfFundsResponse
 } from '../../types/rails'
-import { CustomersClient } from './customers'
+import { RailsBaseClient } from './base'
 
 type MultipartFormData = FormData & {
   setBoundary(boundary: string): void
 }
 
-export class ComplianceClient extends CustomersClient {
+export class ComplianceClient extends RailsBaseClient {
   getComplianceRequirements(
     customerId: string
   ): Promise<RailsGetComplianceRequirementsResponse> {

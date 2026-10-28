@@ -19,18 +19,18 @@ import {
   RailsReconfirmQuoteResponse,
   RailsRequestOptions
 } from '../../types/rails'
-import { WalletsClient } from './wallets'
+import { RailsBaseClient } from './base'
 
-export class OrdersClient extends WalletsClient {
+export class OrdersClient extends RailsBaseClient {
   listQuotes(
-    customerId: string,
+    customerId: string | null,
     filters?: RailsListQuotesFilters
   ): Promise<RailsListQuotesResponse> {
     return this.request('listQuotes', { customerId, query: filters })
   }
 
   createQuote(
-    customerId: string,
+    customerId: string | null,
     body: RailsCreateQuoteRequest,
     options?: RailsRequestOptions
   ): Promise<RailsCreateQuoteResponse> {
@@ -38,7 +38,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   createDryQuote(
-    customerId: string,
+    customerId: string | null,
     body: RailsDryQuoteRequest,
     options?: RailsRequestOptions
   ): Promise<RailsDryQuoteResponse> {
@@ -46,7 +46,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   getQuote(
-    customerId: string,
+    customerId: string | null,
     quoteId: string
   ): Promise<RailsGetQuoteResponse> {
     return this.request('getQuote', {
@@ -56,7 +56,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   cancelQuote(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     options?: RailsRequestOptions
   ): Promise<RailsCancelQuoteResponse> {
@@ -68,7 +68,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   confirmBuy(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     body: RailsConfirmBuyRequest,
     options?: RailsRequestOptions
@@ -82,7 +82,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   confirmInstantBuy(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     body: RailsConfirmInstantBuyRequest,
     options?: RailsRequestOptions
@@ -96,7 +96,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   confirmSell(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     body: RailsConfirmSellRequest,
     options?: RailsRequestOptions
@@ -110,7 +110,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   recalculateQuote(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     options?: RailsRequestOptions
   ): Promise<RailsRecalculateQuoteResponse> {
@@ -122,7 +122,7 @@ export class OrdersClient extends WalletsClient {
   }
 
   reconfirmQuote(
-    customerId: string,
+    customerId: string | null,
     quoteId: string,
     options?: RailsRequestOptions
   ): Promise<RailsReconfirmQuoteResponse> {

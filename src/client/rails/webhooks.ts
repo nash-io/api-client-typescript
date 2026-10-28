@@ -9,9 +9,9 @@ import {
   RailsRequestOptions,
   RailsRotateWebhookSubscriptionResponse
 } from '../../types/rails'
-import { OrdersClient } from './orders'
+import { RailsBaseClient } from './base'
 
-export class RailsClient extends OrdersClient {
+export class WebhooksClient extends RailsBaseClient {
   listWebhookSubscriptions(): Promise<RailsListWebhookSubscriptionsResponse> {
     return this.request('listWebhookSubscriptions')
   }

@@ -75,6 +75,8 @@ run()
 
 ## Nash Rails API
 
+The public `RailsClient` facade lives in `src/client/rails/client.ts` and preserves the flat `client.rails.*` API. Customers, compliance, wallets, orders, and webhooks are independent domain clients sharing the `RailsBaseClient` transport implementation; no domain inherits from another. Every domain receives the same configuration, headers, and live credential getter.
+
 `client.rails` talks to the Rails REST service separately from GraphQL and websockets. Configure `railsApiUrl` with the complete versioned base path for the same deployment; the SDK does not infer it from the GraphQL host:
 
 ```typescript
@@ -114,9 +116,28 @@ MPC Rails requests require an API-key login and a registered `request_signing_ke
 
 Rails API keys need the scopes required by each operation. `getOpenApi()` is public. Partner operations such as `getPartner()` and `listCustomers()` use partner authorization; customer-resource methods send that resource's ID in `nash-customer-id`. A `customer_id` filter on `listOrders()` is a filter, not an authorization context.
 
+Account operations (wallet challenge and registration, bank-account verification, payment methods, quotes and their lifecycle) act for exactly one account. Pass the customer id to act for that customer (`nash-customer-id`), or `null` to act as the partner itself (`nash-act-as: partner`); the header is part of the signed request and cannot be supplied through `RailsRequestOptions.headers`.
+
 For document uploads, call `submitComplianceDocuments(customerId, requestId, documents)` with `Buffer` data, filenames, and optional MIME types. The SDK buffers the multipart body to sign its exact bytes and SHA-256 digest. State-changing calls accept `RailsRequestOptions.idempotencyKey`, forwarded as `Idempotency-Key`; reusing the same key for the same request replays the prior result, while changing request data may be rejected by the backend. Monetary inputs and wire amounts are decimal strings, not JavaScript numbers. `RailsApiError` exposes HTTP `status`, stable `code`, `backendMessage`, and sanitized `details`; its `.message` does not echo arbitrary backend text.
 
+### Live customer KYC integration test
 
+Following the [customer onboarding guide](https://rails.sandbox.nash.io/dashboard/guides/customers):
+
+```sh
+yarn build
+node --env-file=.env integration-tests/rails-kyc.js
+```
+
+The env-file flag requires Node 20.6+; on older supported Node versions, export the variables and run `node integration-tests/rails-kyc.js`. Set `NASH_API_KEY` and `NASH_API_SECRET` to sandbox partner credentials with the `customers` scope. Optional `NASH_RAILS_ONLY=1` skips GraphQL initialization using the same private-field setup as `rails-flows.js`.
+
+The test creates a unique `sdk-kyc-*-e2e@nash.io` customer, checks initiation idempotency, submits personal information and source-of-funds answers through the SDK, and checks wizard case reuse and token renewal. It reads the authenticated partner ID using `getPartner()`, then POSTs `{partner_id, customer_id, flow: "complete_kyc_scan"}` to `NASH_E2E_SETUP_URL` (default `https://app.arm-dev1.nash.io/api/e2e/account_setup`) and polls the SDK KYC snapshot for up to two minutes, requiring `tier_1` and no outstanding onboarding steps. No wizard tokens or API secrets are logged. Customer records remain after each run; there is no customer deletion route.
+
+The test waits for a new Unix timestamp second between steps and repeated initiations: identical requests signed within one second have identical signatures and are rejected as `replay_detected`, even when the operation itself is idempotent.
+
+The personal-information fixture appends eight random lowercase letters independently to each first and last name. After KYC approval, the test reads every pending agreement using `getCustomerTerms(customerId)` and accepts its ID through `acceptCustomerTerms`. It uploads `integration-tests/fixtures/proof-of-address.pdf` for each outstanding proof-of-address request using `submitComplianceDocuments`. This PDF is clearly labeled synthetic sandbox data, not valid evidence; other document request types are refused by the test. Upload submission clears the customer's upload obligation, but does not prove administrator approval or removal of fiat restrictions.
+
+The test ends by calling `getComplianceRequirements(customerId)` (`GET /customers/:id/compliance/requirements`) and asserting `requirements` is exactly `[]`. The latest live run passed the entire flow: `tier_1`, all pending terms accepted, proof-of-address uploaded, and no outstanding compliance obligations.
 
 ## Nodejs usage
 

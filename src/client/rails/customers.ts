@@ -5,6 +5,7 @@ import {
   RailsCreateCustomerResponse,
   RailsGetCustomerKycResponse,
   RailsGetCustomerResponse,
+  RailsGetCustomerTermsResponse,
   RailsInitiateCustomerKycResponse,
   RailsListCustomersFilters,
   RailsListCustomersResponse,
@@ -48,6 +49,13 @@ export class CustomersClient extends RailsBaseClient {
       segments: { customer_id: customerId },
       customerId,
       options
+    })
+  }
+
+  getCustomerTerms(customerId: string): Promise<RailsGetCustomerTermsResponse> {
+    return this.request('getCustomerTerms', {
+      segments: { customer_id: customerId },
+      customerId
     })
   }
 

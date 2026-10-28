@@ -17,6 +17,7 @@ export const RAILS_ROUTES = {
     method: 'POST',
     path: '/customers/{customer_id}/kyc/initiate'
   },
+  getCustomerTerms: { method: 'GET', path: '/customers/{customer_id}/terms' },
   acceptCustomerTerms: { method: 'POST', path: '/customers/{customer_id}/terms' },
   getComplianceRequirements: {
     method: 'GET',
@@ -99,7 +100,8 @@ export type RailsOperationName = keyof typeof RAILS_ROUTES
 export interface DispatchOptions {
   segments?: Record<string, string>
   query?: object
-  customerId?: string
+  /** Customer id, or null to act as the partner itself (nash-act-as: partner). */
+  customerId?: string | null
   body?: unknown
   rawBody?: Buffer
   contentType?: string

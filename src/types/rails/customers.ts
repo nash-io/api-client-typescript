@@ -73,6 +73,18 @@ export interface RailsListCustomersFilters {
   limit?: number
 }
 
+export interface RailsPendingAgreement {
+  id: string
+  type: string
+  version: string
+  link: string
+}
+
+export interface RailsGetCustomerTermsResponse {
+  environment: RailsEnvironment
+  agreements: RailsPendingAgreement[]
+}
+
 export type RailsListCustomersResponse = RailsCustomerPage
 export type RailsCreateCustomerRequest = RailsCustomerCreation
 export type RailsCreateCustomerResponse = RailsCreatedCustomer

@@ -55,7 +55,7 @@ function verify(url: string, request: CapturedRequest): boolean {
   const target = new URL(url)
   const body = headers['nash-content-sha256'] || (request.body ? request.body.toString() : '')
   const canonical = [headers['nash-timestamp'], request.method.toUpperCase(), target.pathname + target.search,
-  headers['nash-customer-id'] || '', body].join('\n')
+  headers['nash-customer-id'] || '', headers['nash-act-as'] || '', body].join('\n')
   return publicKey.verify(createHash('sha256').update(canonical).digest(), Buffer.from(headers['nash-signature'], 'hex'))
 }
 
@@ -71,11 +71,11 @@ beforeEach(() => {
 })
 afterEach(() => jest.restoreAllMocks())
 
-it('matches the published compact signature and binds all five canonical fields', () => {
+it('matches the published compact signature and binds all six canonical fields', () => {
   const url = new URL('https://rails.example/api/v1/customers?limit=20')
   const signature = signRequest(pair, '1791907200', 'GET', url)
-  expect(signature).toBe('8c3f8c0d4346640135f61fee37f9bb9f762491f49fe11409ec9ce70d39fb73387a7da053a383e2e5ec2fcb8b1635fe8be17635ba9a8db2cd959be1481bf8d0d5')
-  const fields = ['1791907200', 'GET', '/api/v1/customers?limit=20', '', '']
+  expect(signature).toBe('478f8bb61194d6e6671c626825659061504605adce6ad9c3096d4ae0bac84a0c5d45ebe28e1f9e11405948324405ce6b727649b685ba65294ef21b2a569219e1')
+  const fields = ['1791907200', 'GET', '/api/v1/customers?limit=20', '', '', '']
   fields.forEach((_, index) => {
     const changed = [...fields]
     changed[index] += 'x'
@@ -150,6 +150,22 @@ it('leaves anonymous and full-secret HTTP unsigned and websocket operations on t
   send.mockClear()
   await expect(sdk.listMarkets()).rejects.toThrow('websocket branch reached')
   expect(send).not.toHaveBeenCalled()
+})
+
+it('signs the acting account: partner selector or customer id, never both', async () => {
+  const sdk = client()
+  await sdk.login({ apiKey: 'registered', secret: encode(secret) })
+  send.mockClear()
+  await sdk.rails.listPaymentMethods(null)
+  const [partnerUrl, partnerRequest] = calls()[0]
+  expect(partnerRequest.headers['nash-act-as']).toBe('partner')
+  expect(partnerRequest.headers['nash-customer-id']).toBeUndefined()
+  expect(verify(partnerUrl, partnerRequest)).toBe(true)
+  await sdk.rails.listPaymentMethods('customer')
+  const [customerUrl, customerRequest] = calls()[1]
+  expect(customerRequest.headers['nash-act-as']).toBeUndefined()
+  expect(customerRequest.headers['nash-customer-id']).toBe('customer')
+  expect(verify(customerUrl, customerRequest)).toBe(true)
 })
 
 it('isolates concurrent customers and keeps partner filters separate from authorization', async () => {
