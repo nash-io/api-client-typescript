@@ -401,7 +401,8 @@ export class Client {
     this.rails = new RailsClient(
       this.opts,
       () => this.mode === ClientMode.MPC ? this.requestCredentials : undefined,
-      this.clientOpts.headers
+      this.clientOpts.headers,
+      () => this.mode === ClientMode.MPC ? this.apiKey : undefined
     )
 
     if (!opts.host || (opts.host.indexOf('.') === -1 && !opts.isLocal)) {

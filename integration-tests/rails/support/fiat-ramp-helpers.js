@@ -49,8 +49,8 @@ async function markPaid(url, partnerId, customerId, quoteId) {
 }
 
 // customerId null acts as the partner; ordersFilter narrows GET /orders.
-async function waitForCompleted(client, customerId, created, ordersFilter) {
-  const deadline = Date.now() + 120000;
+async function waitForCompleted(client, customerId, created, ordersFilter, timeoutMs = 120000) {
+  const deadline = Date.now() + timeoutMs;
   let status;
   let orderStatus = 'not listed';
   do {

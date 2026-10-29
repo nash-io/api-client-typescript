@@ -1,3 +1,5 @@
+import { APIKey, PayloadAndKind, preSignPayload } from '@neon-exchange/nash-protocol'
+import { initializeMpcRuntime } from '../mpcRuntime'
 import { EnvironmentConfig } from '../environments'
 import { RequestCredentials } from '../requestSigning'
 import {
@@ -48,6 +50,7 @@ import {
   RailsReconfirmQuoteResponse,
   RailsRegisterWalletRequest,
   RailsRegisterWalletResponse,
+  RailsMpcSignedPayloadRequest,
   RailsRequestOptions,
   RailsRotateWebhookSubscriptionResponse,
   RailsSubmitComplianceDocumentsRequest,
@@ -75,7 +78,8 @@ export class RailsClient extends RailsBaseClient {
   constructor(
     opts: EnvironmentConfig,
     getCredentials: () => RequestCredentials | undefined,
-    headers: Record<string, string> = {}
+    headers: Record<string, string> = {},
+    private readonly getSigningKey: () => APIKey | undefined = () => undefined
   ) {
     super(opts, getCredentials, headers)
     this.customers = new CustomersClient(opts, getCredentials, headers)
@@ -83,6 +87,39 @@ export class RailsClient extends RailsBaseClient {
     this.wallets = new WalletsClient(opts, getCredentials, headers)
     this.orders = new OrdersClient(opts, getCredentials, headers)
     this.webhooks = new WebhooksClient(opts, getCredentials, headers)
+  }
+
+  /**
+   * Sign a transaction payload using the current MPC API-key session.
+   * Initializes the runtime and fills signing pools through Rails as needed.
+   * Does not submit the transaction. Uses protocol camelCase payload fields.
+   */
+  async signPayload(payloadAndKind: PayloadAndKind): Promise<RailsMpcSignedPayloadRequest> {
+    const secret = this.getSigningKey()
+    if (!secret) {
+      throw new Error('Rails payload signing requires an MPC API-key login.')
+    }
+    initializeMpcRuntime()
+    const result = await preSignPayload(secret, payloadAndKind, {
+      // Transaction payloads use neither; the type requires both.
+      assetData: {},
+      marketData: {},
+      fillPoolFn: async ({ blockchain, client_dh_publics }) => {
+        const response = await this.fillDhPool({ blockchain, dhPublics: client_dh_publics })
+        if (!Array.isArray(response.dhFillPool) ||
+            !response.dhFillPool.every(item => typeof item === 'string')) {
+          throw new Error('Invalid Rails DH pool response: expected string public keys.')
+        }
+        return response.dhFillPool as string[]
+      }
+    })
+    return {
+      payload: result.payload,
+      signature: {
+        publicKey: secret.payload_public_key,
+        signedDigest: result.signature
+      }
+    }
   }
 
   listCustomers(

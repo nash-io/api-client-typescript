@@ -161,7 +161,7 @@ node --env-file=.env integration-tests/rails/rails-fiat-ramp-for-partner.js
 
 `rails-fiat-ramp-for-partner.js` acts as the partner itself (`nash-act-as: partner`, no customer) and completes a buy and a sell with each of two wallets: the partner's Nash wallet discovered through `GET /wallets`, and a generated external ETH wallet verified through an EIP-712 challenge. It reuses an approved partner payout bank account, registering one only when needed. Funding is simulated through the sandbox E2E endpoint with `customer_id: null`; no signed transfer is sent. Reconciliation uses `GET /orders?partner_orders_only=true`.
 
-Run `yarn integration:rails` to build the SDK and execute every top-level script in `integration-tests/rails/` sequentially, stopping on the first failure. Requires Node 20.6+ and a `.env` containing `NASH_API_KEY` and `NASH_API_SECRET`. This live suite stays outside the default `yarn test` command.
+Run `yarn integration:rails` to build the SDK and execute the listed Rails smoke, fiat-ramp (including signed Nash-wallet sells), and flow scripts sequentially, stopping on the first failure. Requires Node 20.6+ and a `.env` containing `NASH_API_KEY` and `NASH_API_SECRET`. This live suite stays outside the default `yarn test` command.
 
 All Rails test clients use `integration-tests/rails/support/client-args.js` for constructor arguments, including the optional API-key creator in `rails-flows.js`. Defaults: `NASH_ENV=sandbox`, `NASH_HOST=app.arm-dev1.nash.io`, `NASH_RAILS_API_URL=https://rails.sandbox.nash.io/api/v1`, and HTTP requests rather than websockets. Environment variables override these defaults; unknown environments are rejected. Localhost HTTP Rails URLs enable local development transport. The support helper is outside the runner's top-level `*.js` glob.
 
@@ -174,6 +174,29 @@ The same customer, verified wallet, and approved payout method are used for two 
 After confirmation, the test POSTs `{flow: "mark_fiat_ramp_order_as_paid", partner_id, customer_id, quote_id}` **without email** to `NASH_E2E_SETUP_URL` (default `https://app.arm-dev1.nash.io/api/e2e/account_setup`). It then polls SDK quote reads every two seconds for up to two minutes per order, accepts any required rate reconfirmation before its deadline, and requires both quote status and the matching customer-filtered order-history entry to be `completed`. Payment simulation acceptance or intermediate processing states do not pass the test; unsuccessful terminal states fail immediately.
 
 Only the E2E endpoint simulates funding; never send real bank or crypto funds. The generated wallet key is not retained. Customer, wallet, bank-account, and quote records remain in sandbox, and created quote IDs are logged for inspection. If confirmation fails, the paid endpoint is not called for that quote.
+
+### Live signed BTC and ETH partner sells
+
+Following [Sign & Send Transactions](https://rails.sandbox.nash.io/dashboard/guides/sign-send-transactions):
+
+```sh
+yarn build
+node --env-file=.env integration-tests/rails/rails-sell-nash-wallet-for-partner.js
+```
+
+Two independent scenarios sell BTC and ETH from the partner's **funded Nash wallets**, using `nash-act-as: partner` throughout. Requires `wallets_and_bank_accounts`, `fiat_ramp`, and `blockchain_transactions` scopes, an approved partner payout bank account (or sandbox IBAN verification), and the partner's MPC signing credentials. Wallet selection uses Rails discovery; the test does not compare the secret's address metadata with Rails wallets. The script uses Rails-only authentication regardless of `NASH_RAILS_ONLY`; GraphQL login is unnecessary.
+
+Each scenario creates and confirms a deposit sell, fills the chain's DH pool, reads current medium fees, prepares the fixed decimal `cryptoAmount` from the quote request to `cryptoDepositInstructions.destinationAddress`, MPC-presigns all returned elements, and iterates until a transaction hash is returned. Confirmation must leave the quoted crypto amount unchanged. REST snake_case elements are mapped to the protocol's camelCase inputs. BTC uses native asset hash `00`; ETH uses the zero-address asset hash. No conversion from raw quote-response units or floating-point arithmetic is needed.
+
+Defaults: `NASH_NFR_SELL_BTC_AMOUNT=0.1` and `NASH_NFR_SELL_ETH_AMOUNT=0.1`; `NASH_NFR_IBAN` and the shared host/URL options above apply. **This sends actual sandbox crypto and consumes network fees on every run.** It never calls the simulated-payment E2E endpoint. Each test requires both the quote and its partner-only order-history entry to reach `completed` within 15 minutes, accepting required rate reconfirmation. Both scenarios run even if one fails; either failure makes the script fail. Quote IDs, prepared references and transaction hashes are retained in the output; records remain in sandbox.
+
+Failed `fillDhPool`, `prepareTransaction`, and `iterateTransaction` calls print the asset, operation, and full JSON request body before the existing error report. Successful calls do not print payloads. These diagnostics include signed transaction data; treat the output as sensitive. Authentication headers and private signing credentials are not printed.
+
+The Rails transaction surface exposes `fillDhPool`, `prepareTransaction`, `iterateTransaction`, and `cancelTransaction`; all SDK `/transactions/*` calls automatically sign `nash-act-as: partner`. Payload-signature completion and raw-transaction broadcast endpoints are no longer exposed by Rails; separate Exchange GraphQL operations are unchanged. The script reads Rails blockchain fees with the SDK request signer because there is no public Rails fee-reader method.
+
+`client.rails.signPayload({ kind, payload })` signs `SigningPayloadID.prepareTransactionPayload` / `iterateTransactionPayload` payloads with the logged-in MPC API key and returns a body for `prepareTransaction`/`iterateTransaction`. It lazily initializes the MPC runtime and fills DH pools through Rails `fillDhPool`; it submits nothing. On macOS ARM64 the SDK (`src/client/mpcRuntime.ts`) selects protocol 4.12.2's bundled WASM implementation, bypassing the Intel-only addon; other platforms use the native runtime. After building, run `node integration-tests/rails/support/mpc-runtime.js` for an offline check of the loader, DH key consistency, and invalid-curve rejection.
+
+The normal command now passes MPC initialization on Apple Silicon. Live verification still fails separately at BTC prepare (HTTP 400, `Cannot return null for non-nullable field`) and ETH iterate (HTTP 500, `Invalid signed transaction element (invalid_signature)`). Neither scenario has reached completion; wallet-address metadata is not a test gate.
 
 ## Nodejs usage
 

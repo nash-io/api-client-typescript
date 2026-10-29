@@ -6,10 +6,6 @@ import { EnvironmentConfig } from '../environments'
 import {
   RailsCancelTransactionRequest,
   RailsCancelTransactionResponse,
-  RailsCompleteBtcPayloadSignatureRequest,
-  RailsCompleteBtcPayloadSignatureResponse,
-  RailsCompletePayloadSignatureRequest,
-  RailsCompletePayloadSignatureResponse,
   RailsFillDhPoolRequest,
   RailsFillDhPoolResponse,
   RailsGetApiKeyResponse,
@@ -21,9 +17,7 @@ import {
   RailsPrepareTransactionRequest,
   RailsPrepareTransactionResponse,
   RailsRequestOptions,
-  RailsRevokeApiKeyResponse,
-  RailsSendRawTransactionRequest,
-  RailsSendRawTransactionResponse
+  RailsRevokeApiKeyResponse
 } from '../../types/rails'
 import {
   DispatchOptions,
@@ -244,27 +238,6 @@ export class RailsBaseClient {
     return this.request('fillDhPool', { body, options })
   }
 
-  completePayloadSignature(
-    body: RailsCompletePayloadSignatureRequest,
-    options?: RailsRequestOptions
-  ): Promise<RailsCompletePayloadSignatureResponse> {
-    return this.request('completePayloadSignature', { body, options })
-  }
-
-  completeBtcPayloadSignature(
-    body: RailsCompleteBtcPayloadSignatureRequest,
-    options?: RailsRequestOptions
-  ): Promise<RailsCompleteBtcPayloadSignatureResponse> {
-    return this.request('completeBtcPayloadSignature', { body, options })
-  }
-
-  sendRawTransaction(
-    body: RailsSendRawTransactionRequest,
-    options?: RailsRequestOptions
-  ): Promise<RailsSendRawTransactionResponse> {
-    return this.request('sendRawTransaction', { body, options })
-  }
-
   prepareTransaction(
     body: RailsPrepareTransactionRequest,
     options?: RailsRequestOptions
@@ -368,7 +341,9 @@ export class RailsBaseClient {
         args.customerId ?? '',
         headers,
         args.contentDigest,
-        args.customerId === null ? 'partner' : ''
+        route.path.startsWith('/transactions/') || args.customerId === null
+          ? 'partner'
+          : ''
       )
     }
 

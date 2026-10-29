@@ -6,7 +6,7 @@ Expose the complete documented Nash Rails REST surface through typed SDK calls t
 
 ### Requirement: Complete documented operation coverage
 
-The SDK SHALL expose a named public function for each of the following 46 operations from the [deployed OpenAPI document](https://rails.sandbox.nash.io/api/v1/openapi.json), inspected on 2026-10-20. Paths below are relative to the configured Rails API base URL. A generic raw request escape hatch SHALL NOT substitute for named operation coverage. No undocumented credential-creation or credential-rotation REST endpoint SHALL be invented.
+The SDK SHALL expose a named public function for each operation in the supported Rails REST inventory below, based on the [deployed OpenAPI document](https://rails.sandbox.nash.io/api/v1/openapi.json). Paths below are relative to the configured Rails API base URL. A generic raw request escape hatch SHALL NOT substitute for named operation coverage. No undocumented credential-creation or credential-rotation REST endpoint SHALL be invented.
 
 | Domain | Method | Relative path |
 | --- | --- | --- |
@@ -50,9 +50,6 @@ The SDK SHALL expose a named public function for each of the following 46 operat
 | API keys | GET | `/api-keys/{api_key_id}` |
 | API keys | DELETE | `/api-keys/{api_key_id}` |
 | Signing | POST | `/transactions/signatures/dh-pool` |
-| Signing | POST | `/transactions/signatures/payload` |
-| Signing | POST | `/transactions/signatures/btc-payload` |
-| Signing | POST | `/transactions/raw` |
 | Signing | POST | `/transactions/prepare` |
 | Signing | POST | `/transactions/iterate` |
 | Signing | POST | `/transactions/cancel` |

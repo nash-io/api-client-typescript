@@ -168,6 +168,22 @@ it('signs the acting account: partner selector or customer id, never both', asyn
   expect(verify(customerUrl, customerRequest)).toBe(true)
 })
 
+it('signs every transaction route as the partner, including DH pool registration', async () => {
+  const sdk = client({ 'Nash-Customer-Id': 'foreign', 'Nash-Act-As': 'customer' })
+  await sdk.login({ apiKey: 'registered', secret: encode(secret) })
+  send.mockClear()
+  const signed = { payload: { timestamp: 1791907200000 }, signature: { publicKey: secret.payload_public_key, signedDigest: '01' } }
+  await sdk.rails.fillDhPool({ blockchain: 'ETH', dhPublics: [] })
+  await sdk.rails.prepareTransaction(signed)
+  await sdk.rails.iterateTransaction(signed)
+  await sdk.rails.cancelTransaction(signed)
+  for (const [url, request] of calls()) {
+    expect(request.headers['nash-act-as']).toBe('partner')
+    expect(request.headers['nash-customer-id']).toBeUndefined()
+    expect(verify(url, request)).toBe(true)
+  }
+})
+
 it('isolates concurrent customers and keeps partner filters separate from authorization', async () => {
   const sdk = client()
   await sdk.login({ apiKey: 'registered', secret: encode(secret) })

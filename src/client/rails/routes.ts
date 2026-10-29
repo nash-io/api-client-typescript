@@ -81,15 +81,6 @@ export const RAILS_ROUTES = {
   getApiKey: { method: 'GET', path: '/api-keys/{api_key_id}' },
   revokeApiKey: { method: 'DELETE', path: '/api-keys/{api_key_id}' },
   fillDhPool: { method: 'POST', path: '/transactions/signatures/dh-pool' },
-  completePayloadSignature: {
-    method: 'POST',
-    path: '/transactions/signatures/payload'
-  },
-  completeBtcPayloadSignature: {
-    method: 'POST',
-    path: '/transactions/signatures/btc-payload'
-  },
-  sendRawTransaction: { method: 'POST', path: '/transactions/raw' },
   prepareTransaction: { method: 'POST', path: '/transactions/prepare' },
   iterateTransaction: { method: 'POST', path: '/transactions/iterate' },
   cancelTransaction: { method: 'POST', path: '/transactions/cancel' }
