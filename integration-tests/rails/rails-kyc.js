@@ -11,6 +11,8 @@ const { readFileSync } = require('fs');
 const { join } = require('path');
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
+const getClientArgs = require('./support/client-args');
+const formatError = require('./support/format-error');
 
 const required = name => {
   assert(process.env[name], `Set ${name}`);
@@ -35,33 +37,28 @@ async function run(afterOnboarding) {
     secret: required('NASH_API_SECRET')
   };
   const proofOfAddress = readFileSync(
-    join(__dirname, 'fixtures', 'proof-of-address.pdf')
+    join(__dirname, '..', 'fixtures', 'proof-of-address.pdf')
   );
-  const railsApiUrl =
-    process.env.NASH_RAILS_API_URL || 'https://rails.sandbox.nash.io/api/v1';
   const e2eSetupUrl =
     process.env.NASH_E2E_SETUP_URL ||
     'https://app.arm-dev1.nash.io/api/e2e/account_setup';
   const e2eAdminUrl =
     process.env.NASH_E2E_ADMIN_URL ||
     'https://admin.arm-dev1.nash.io/_admin/api/e2e/run_flow';
-  const isLocal = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(
-    railsApiUrl
-  );
-  const client = new Nash.Client(
-    {
-      ...Nash.EnvironmentConfiguration.sandbox,
-      isLocal,
-      railsApiUrl
-    },
-    { runRequestsOverWebsockets: false }
-  );
+  const client = new Nash.Client(...getClientArgs());
   const email = `sdk-kyc-${Date.now()}-${randomBytes(6).toString(
     'hex'
   )}-e2e@nash.io`;
   const step = async (name, fn) => {
     await nextSigningSecond();
-    const result = await fn();
+    let result;
+    try {
+      result = await fn();
+    } catch (error) {
+      console.log(`${name}: FAIL`);
+      if (error && typeof error === 'object' && !error.step) error.step = name;
+      throw error;
+    }
     console.log(`${name}: PASS`);
     return result;
   };
@@ -359,14 +356,7 @@ module.exports = run;
 
 if (require.main === module) {
   run().catch(error => {
-    console.error(
-      error instanceof Nash.RailsApiError
-        ? `KYC integration failed: Rails HTTP ${error.status} (${error.code ||
-            'no code'})`
-        : `KYC integration failed: ${
-            error instanceof Error ? error.stack : String(error)
-          }`
-    );
+    console.error(formatError('KYC integration', error));
     process.exitCode = 1;
   });
 }

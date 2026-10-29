@@ -158,6 +158,10 @@ yarn build
 node --env-file=.env integration-tests/rails/rails-fiat-ramp.js
 ```
 
+Run `yarn integration:rails` to build the SDK and execute every top-level script in `integration-tests/rails/` sequentially, stopping on the first failure. Requires Node 20.6+ and a `.env` containing `NASH_API_KEY` and `NASH_API_SECRET`. This live suite stays outside the default `yarn test` command.
+
+All Rails test clients use `integration-tests/rails/support/client-args.js` for constructor arguments, including the optional API-key creator in `rails-flows.js`. Defaults: `NASH_ENV=sandbox`, `NASH_HOST=app.arm-dev1.nash.io`, `NASH_RAILS_API_URL=https://rails.sandbox.nash.io/api/v1`, and HTTP requests rather than websockets. Environment variables override these defaults; unknown environments are rejected. Localhost HTTP Rails URLs enable local development transport. The support helper is outside the runner's top-level `*.js` glob.
+
 Use sandbox partner credentials with `customers`, `wallets_and_bank_accounts`, and `fiat_ramp` scopes. The Node version, Rails-only authentication, and E2E setup/admin URL options are the same as for the KYC test above. This is a manual live integration script, not part of `yarn test`.
 
 Each run reuses the full KYC integration flow to onboard **one fresh customer**, accept terms, and obtain compliance approval. It then generates an ephemeral ETH external wallet, signs the exact EIP-712 challenge, registers it, and verifies it appears in the customer's wallet list. It registers `NASH_NFR_IBAN` (default: the OpenAPI example `DE29100100100987654321`) and requires both the verification outcome and the listed payment method to be `approved`; pending review or ownership-proof requirements fail the test.

@@ -13,6 +13,7 @@ const {
 } = require('@metamask/eth-sig-util');
 const Nash = require('../../build/main');
 const onboardCustomer = require('./rails-kyc');
+const formatError = require('./support/format-error');
 
 const normalizeAddress = address => address.toLowerCase().replace(/^0x/, '');
 
@@ -298,14 +299,6 @@ async function waitForCompleted(client, customerId, created) {
 }
 
 onboardCustomer(fiatRamp).catch(error => {
-  console.error(
-    error instanceof Nash.RailsApiError
-      ? `Fiat-ramp integration failed: Rails HTTP ${
-          error.status
-        } (${error.code || 'no code'})`
-      : `Fiat-ramp integration failed: ${
-          error instanceof Error ? error.stack : String(error)
-        }`
-  );
+  console.error(formatError('Fiat-ramp integration', error));
   process.exitCode = 1;
 });

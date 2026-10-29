@@ -16,6 +16,7 @@
 const assert = require('assert');
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
+const getClientArgs = require('./support/client-args');
 
 const required = name => {
   if (!process.env[name]) throw new Error(`Set ${name}`);
@@ -23,16 +24,7 @@ const required = name => {
 };
 
 async function run() {
-  const environment =
-    Nash.EnvironmentConfiguration[process.env.NASH_ENV || 'sandbox'];
-  const config = {
-    ...environment,
-    host: process.env.NASH_HOST || 'app.arm-dev1.nash.io',
-    railsApiUrl:
-      process.env.NASH_RAILS_API_URL || 'https://rails.sandbox.nash.io/api/v1'
-  };
-  const opts = { runRequestsOverWebsockets: false };
-  const client = new Nash.Client(config, opts);
+  const client = new Nash.Client(...getClientArgs());
   let creator;
   let createdKeyId;
 
@@ -69,7 +61,7 @@ async function run() {
         arbitrum: 1,
         neo3: 1
       };
-      creator = new Nash.Client(config, opts);
+      creator = new Nash.Client(...getClientArgs());
       await creator.passwordLogin({
         email,
         password,
