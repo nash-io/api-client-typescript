@@ -159,7 +159,7 @@ node --env-file=.env integration-tests/rails/rails-fiat-ramp.js
 node --env-file=.env integration-tests/rails/rails-fiat-ramp-for-partner.js
 ```
 
-`rails-fiat-ramp-for-partner.js` acts as the partner itself (`nash-act-as: partner`, no customer) and completes a buy and a sell with the partner's Nash wallet, discovered through `GET /wallets`. Funding is simulated through the sandbox E2E endpoint with `customer_id: null`; no signed transfer is sent. Reconciliation uses `GET /orders?partner_orders_only=true`.
+`rails-fiat-ramp-for-partner.js` acts as the partner itself (`nash-act-as: partner`, no customer) and completes a buy and a sell with each of two wallets: the partner's Nash wallet discovered through `GET /wallets`, and a generated external ETH wallet verified through an EIP-712 challenge. It reuses an approved partner payout bank account, registering one only when needed. Funding is simulated through the sandbox E2E endpoint with `customer_id: null`; no signed transfer is sent. Reconciliation uses `GET /orders?partner_orders_only=true`.
 
 Run `yarn integration:rails` to build the SDK and execute every top-level script in `integration-tests/rails/` sequentially, stopping on the first failure. Requires Node 20.6+ and a `.env` containing `NASH_API_KEY` and `NASH_API_SECRET`. This live suite stays outside the default `yarn test` command.
 

@@ -7,6 +7,12 @@
 // (nash-act-as: partner, customerId null in the SDK); no customer is created.
 
 const assert = require('assert');
+const { createECDH } = require('crypto');
+const { keccak256 } = require('web3-utils');
+const {
+  signTypedData,
+  SignTypedDataVersion
+} = require('@metamask/eth-sig-util');
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
@@ -38,6 +44,12 @@ async function partnerOrders(
 ) {
   // Only a sell needs a payout account; a buy must not depend on it.
   const verifyPayout = async () => {
+    const existing = await client.rails.listPaymentMethods(null);
+    assert.strictEqual(existing.environment, 'sandbox');
+    const approved = existing.paymentMethods.find(
+      item => item.type === 'external_bank_account' && item.status === 'approved'
+    );
+    if (approved) return approved;
     const verified = await client.rails.verifyBankAccount(null, {
       iban: process.env.NASH_NFR_IBAN || 'DE29100100100987654321'
     });
@@ -188,7 +200,63 @@ async function run() {
       return found;
     });
     await partnerOrders(ctx, nashWallet, 'nash wallet');
-    console.log('Partner buy and sell orders completed with the Nash wallet.');
+    const externalWallet = await step(
+      'verify partner external EVM wallet ownership',
+      async () => {
+        const key = createECDH('secp256k1');
+        key.generateKeys();
+        const privateKey = Buffer.from(
+          key.getPrivateKey('hex').padStart(64, '0'),
+          'hex'
+        );
+        const address = `0x${keccak256(key.getPublicKey().slice(1)).slice(-40)}`;
+        try {
+          const challenge = await client.rails.createWalletChallenge(null, {
+            blockchain: BLOCKCHAIN,
+            address
+          });
+          assert.strictEqual(challenge.environment, 'sandbox');
+          assert.strictEqual(challenge.blockchain, BLOCKCHAIN);
+          assert.strictEqual(
+            normalizeAddress(challenge.address),
+            normalizeAddress(address)
+          );
+          const registered = await client.rails.registerWallet(null, {
+            blockchain: BLOCKCHAIN,
+            address,
+            challenge: challenge.challenge,
+            signature: signTypedData({
+              privateKey,
+              data: JSON.parse(challenge.challenge),
+              version: SignTypedDataVersion.V4
+            })
+          });
+          assert.strictEqual(registered.environment, 'sandbox');
+          assert.strictEqual(registered.wallet.blockchain, BLOCKCHAIN);
+          assert.strictEqual(
+            normalizeAddress(registered.wallet.address),
+            normalizeAddress(address)
+          );
+          const listed = await client.rails.listWallets(null);
+          assert.strictEqual(listed.environment, 'sandbox');
+          const stored = listed.wallets.find(
+            item =>
+              item.type === 'external' &&
+              item.blockchain === BLOCKCHAIN &&
+              item.address === registered.wallet.address
+          );
+          assert(stored, 'Verified external wallet is missing from partner wallets');
+          return stored;
+        } finally {
+          // Sandbox funding is simulated; this wallet never sends real assets.
+          privateKey.fill(0);
+        }
+      }
+    );
+    await partnerOrders(ctx, externalWallet, 'external wallet');
+    console.log(
+      'Partner buy and sell orders completed with Nash and external wallets.'
+    );
   } finally {
     client.disconnect();
   }
