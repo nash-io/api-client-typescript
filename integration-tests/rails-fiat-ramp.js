@@ -115,9 +115,13 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         blockchain: wallet.blockchain,
         cryptoAsset: 'eth',
         fiatAsset: 'eur',
+        walletAddress: wallet.address,
         ...(type === 'buy'
           ? { fiatAmount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00' }
-          : { cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.05' })
+          : {
+              cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.05',
+              transferMethod: 'deposit'
+            })
       });
       assert.strictEqual(created.environment, 'sandbox');
       const quote = created.quote;
@@ -131,6 +135,12 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
       assert.strictEqual(quote.type, type);
       assert.strictEqual(quote.blockchain, wallet.blockchain);
       assert.strictEqual(quote.fiatAsset, 'eur');
+      assert.strictEqual(
+        normalizeAddress(quote.walletAddress),
+        normalizeAddress(wallet.address)
+      );
+      assert.strictEqual(quote.transferMethod, type === 'sell' ? 'deposit' : null);
+      assert.strictEqual(quote.permitTransferDigest, null);
       assert.strictEqual(quote.status, 'pending_user_confirmation');
       assert(
         Date.parse(quote.confirmUntil) > Date.now(),
@@ -138,11 +148,8 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
       );
       const confirmed =
         type === 'buy'
-          ? await client.rails.confirmBuy(id, quote.id, {
-              settlementAddress: wallet.address
-            })
+          ? await client.rails.confirmBuy(id, quote.id, {})
           : await client.rails.confirmSell(id, quote.id, {
-              settlementAddress: wallet.address,
               paymentMethodId: paymentMethod.id
             });
       assert.strictEqual(confirmed.environment, 'sandbox');
@@ -201,7 +208,7 @@ function checkConfirmed(current, created, address) {
   assert.strictEqual(current.blockchain, created.blockchain);
   assert.strictEqual(current.status, 'confirmed_waiting_for_payment');
   assert.strictEqual(
-    normalizeAddress(current.settlementAddress),
+    normalizeAddress(current.walletAddress),
     normalizeAddress(address)
   );
   assert(

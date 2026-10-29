@@ -248,7 +248,9 @@ it('retains large monetary integers as strings and rejects numeric money inputs'
     type: 'buy',
     blockchain: 'eth',
     cryptoAsset: 'eth',
-    fiatAsset: 'eur'
+    fiatAsset: 'eur',
+    fiatAmount: '100.00',
+    walletAddress: '0x1234'
   })
   if (estimate.base === null || estimate.target === null) {
     throw new Error('dry quote currency values are missing')
@@ -272,6 +274,7 @@ it('retains large monetary integers as strings and rejects numeric money inputs'
     blockchain: 'eth',
     cryptoAsset: 'eth',
     fiatAsset: 'eur',
+    walletAddress: '0x1234',
     fiatAmount: 0.1
   })).rejects.toThrow('must be a decimal string')
 })

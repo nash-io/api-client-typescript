@@ -30,6 +30,9 @@ export interface RailsQuote {
   blockchain: string
   settlementType: string
   settlementAddress: string | null
+  walletAddress: string | null
+  transferMethod: 'deposit' | 'permit' | null
+  permitTransferDigest: string | null
   fiatAsset: string | null
   fiatAmount: string | null
   cryptoAmount: string | null
@@ -40,20 +43,19 @@ export interface RailsQuote {
   cryptoDepositInstructions: RailsCryptoDepositInstructions | null
 }
 
-export interface RailsQuoteRequest {
-  type: 'buy' | 'sell'
+export type RailsQuoteRequest = {
   blockchain: string
   cryptoAsset: string
   fiatAsset: string
-  capQuantityToMaximum?: boolean
+  /** Verified external wallet bound immutably when the quote is created. */
+  walletAddress: string
   cryptoAmount?: RailsMonetaryAmount
   fiatAmount?: RailsMonetaryAmount
-  gasLevel?: 'price_low' | 'price_medium' | 'price_high'
-  metaData?: Record<string, unknown>
-  settlementType?: 'personal_wallet'
   uniqueKey?: string
-  [key: string]: unknown
-}
+} & (
+  | { type: 'buy'; transferMethod?: never }
+  | { type: 'sell'; transferMethod?: 'deposit' | 'permit' }
+)
 
 export interface RailsQuoteResponse {
   environment: RailsEnvironment
@@ -84,12 +86,9 @@ export interface RailsQuoteHistoryResponse {
 }
 
 export interface RailsQuoteConfirmationRequest {
-  settlementAddress: string
   paymentMethodId?: string
   signatureForPermitTransfer?: string
-  sourceOfFunds?: Record<string, unknown>
-  userPlatform?: 'browser' | 'android' | 'ios'
-  [key: string]: unknown
+  sourceOfFunds?: string
 }
 
 export interface RailsInstantBuyConfirmationResponse {
@@ -136,7 +135,9 @@ export type RailsConfirmBuyRequest = RailsQuoteConfirmationRequest
 export type RailsConfirmBuyResponse = RailsQuoteResponse
 export type RailsConfirmInstantBuyRequest = RailsQuoteConfirmationRequest
 export type RailsConfirmInstantBuyResponse = RailsInstantBuyConfirmationResponse
-export type RailsConfirmSellRequest = RailsQuoteConfirmationRequest
+export type RailsConfirmSellRequest = RailsQuoteConfirmationRequest & {
+  paymentMethodId: string
+}
 export type RailsConfirmSellResponse = RailsQuoteResponse
 export type RailsRecalculateQuoteResponse = RailsQuoteResponse
 export type RailsReconfirmQuoteResponse = RailsQuoteResponse
