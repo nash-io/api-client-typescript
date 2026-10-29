@@ -26,23 +26,22 @@ Remember, API Keys contain sensitive infomation, if you are using version contro
 
 Versions 6 and above include a change to order placement logic. The previous order placement logic will no longer be compatible with the exchange, so it is highly recommended to upgrade to version 6 or higher as previous versions will be deprecated.
 
-
 ## Usage
 
 ```typescript
 import {
   Client,
   EnvironmentConfiguration
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript';
 
-const nash = new Client(EnvironmentConfiguration.sandbox)
+const nash = new Client(EnvironmentConfiguration.sandbox);
 
 const run = async () => {
-  const markets = await nash.listMarkets()
-  console.log(markets)
-}
+  const markets = await nash.listMarkets();
+  console.log(markets);
+};
 
-run()
+run();
 ```
 
 Note: You can use either `EnvironmentConfiguration.production` or `EnvironmentConfiguration.sandbox`.
@@ -56,21 +55,21 @@ import {
   Client,
   EnvironmentConfiguration,
   CryptoCurrency
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript';
 
-const nash = new Client(EnvironmentConfiguration.sandbox)
+const nash = new Client(EnvironmentConfiguration.sandbox);
 
 const run = async () => {
   try {
-    await nash.login(require('PATH_TO_KEY.json'))
-    const balance = await nash.getAccountBalance(CryptoCurrency.NEO)
-    console.log(balance)
+    await nash.login(require('PATH_TO_KEY.json'));
+    const balance = await nash.getAccountBalance(CryptoCurrency.NEO);
+    console.log(balance);
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
-}
+};
 
-run()
+run();
 ```
 
 ## Nash Rails API
@@ -84,30 +83,35 @@ import {
   Client,
   EnvironmentConfiguration,
   RailsApiError
-} from '@neon-exchange/api-client-typescript'
+} from '@neon-exchange/api-client-typescript';
 
 const client = new Client({
   ...EnvironmentConfiguration.dev1,
   railsApiUrl: 'https://rails.sandbox.nash.io/api/v1'
-})
+});
 
 await client.login({
   apiKey: process.env.NASH_API_KEY!,
   secret: process.env.NASH_API_SECRET!
-})
+});
 
-const openApi = await client.rails.getOpenApi()
+const openApi = await client.rails.getOpenApi();
 const customer = await client.rails.createCustomer(
   { email: 'customer@example.test', countryCode: 'NL' },
   { idempotencyKey: 'customer-create-1' }
-)
-await client.rails.getCustomer(customer.id)
+);
+await client.rails.getCustomer(customer.id);
 
 try {
-  await client.rails.getPartner()
+  await client.rails.getPartner();
 } catch (error) {
   if (error instanceof RailsApiError) {
-    console.error(error.status, error.code, error.backendMessage, error.details)
+    console.error(
+      error.status,
+      error.code,
+      error.backendMessage,
+      error.details
+    );
   }
 }
 ```
@@ -130,10 +134,10 @@ Following the [customer onboarding guide](https://rails.sandbox.nash.io/dashboar
 
 ```sh
 yarn build
-node --env-file=.env integration-tests/rails-kyc.js
+node --env-file=.env integration-tests/rails/rails-kyc.js
 ```
 
-The env-file flag requires Node 20.6+; on older supported Node versions, export the variables and run `node integration-tests/rails-kyc.js`. Set `NASH_API_KEY` and `NASH_API_SECRET` to sandbox partner credentials with the `customers` scope. Optional `NASH_RAILS_ONLY=1` skips GraphQL initialization using the same private-field setup as `rails-flows.js`.
+The env-file flag requires Node 20.6+; on older supported Node versions, export the variables and run `node integration-tests/rails/rails-kyc.js`. Set `NASH_API_KEY` and `NASH_API_SECRET` to sandbox partner credentials with the `customers` scope. Optional `NASH_RAILS_ONLY=1` skips GraphQL initialization using the same private-field setup as `rails-flows.js`.
 
 The test creates a unique `sdk-kyc-*-e2e@nash.io` customer, checks initiation idempotency, submits personal information and source-of-funds answers through the SDK, and checks wizard case reuse and token renewal. It reads the authenticated partner ID using `getPartner()`, then POSTs `{partner_id, customer_id, flow: "complete_kyc_scan"}` to `NASH_E2E_SETUP_URL` (default `https://app.arm-dev1.nash.io/api/e2e/account_setup`) and polls the SDK KYC snapshot for up to two minutes, requiring `tier_1` and no outstanding onboarding steps. No wizard tokens or API secrets are logged. Customer records remain after each run; there is no customer deletion route.
 
@@ -151,7 +155,7 @@ Following the [fiat-ramp](https://rails.sandbox.nash.io/dashboard/guides/fiat-ra
 
 ```sh
 yarn build
-node --env-file=.env integration-tests/rails-fiat-ramp.js
+node --env-file=.env integration-tests/rails/rails-fiat-ramp.js
 ```
 
 Use sandbox partner credentials with `customers`, `wallets_and_bank_accounts`, and `fiat_ramp` scopes. The Node version, Rails-only authentication, and E2E setup/admin URL options are the same as for the KYC test above. This is a manual live integration script, not part of `yarn test`.
@@ -164,30 +168,29 @@ After confirmation, the test POSTs `{flow: "mark_fiat_ramp_order_as_paid", partn
 
 Only the E2E endpoint simulates funding; never send real bank or crypto funds. The generated wallet key is not retained. Customer, wallet, bank-account, and quote records remain in sandbox, and created quote IDs are logged for inspection. If confirmation fails, the paid endpoint is not called for that quote.
 
-
 ## Nodejs usage
 
 Using the client in node can be done like below. See also the [nodejs example](https://github.com/nash-io/api-client-typescript/tree/master/examples/nodejs).
 
 ```javascript
-const Nash = require('@neon-exchange/api-client-typescript')
+const Nash = require('@neon-exchange/api-client-typescript');
 
-const client = new Nash.Client(Nash.EnvironmentConfiguration.production)
+const client = new Nash.Client(Nash.EnvironmentConfiguration.production);
 
 const apiKeys = {
   secret: 'your secret',
   apiKey: 'your key'
-}
+};
 
 const run = async () => {
   try {
-    await client.login(apiKeys)
+    await client.login(apiKeys);
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
-}
+};
 
-run()
+run();
 ```
 
 ## Websockets

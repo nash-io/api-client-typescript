@@ -1,7 +1,7 @@
 'use strict';
 
 // yarn build
-// node --env-file=.env integration-tests/rails-fiat-ramp.js
+// node --env-file=.env integration-tests/rails/rails-fiat-ramp.js
 // Sandbox only. Creates one customer and requires completed buy and sell orders.
 
 const assert = require('assert');
@@ -11,7 +11,7 @@ const {
   signTypedData,
   SignTypedDataVersion
 } = require('@metamask/eth-sig-util');
-const Nash = require('../build/main');
+const Nash = require('../../build/main');
 const onboardCustomer = require('./rails-kyc');
 
 const normalizeAddress = address => address.toLowerCase().replace(/^0x/, '');
@@ -139,7 +139,10 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         normalizeAddress(quote.walletAddress),
         normalizeAddress(wallet.address)
       );
-      assert.strictEqual(quote.transferMethod, type === 'sell' ? 'deposit' : null);
+      assert.strictEqual(
+        quote.transferMethod,
+        type === 'sell' ? 'deposit' : null
+      );
       assert.strictEqual(quote.permitTransferDigest, null);
       assert.strictEqual(quote.status, 'pending_user_confirmation');
       assert(

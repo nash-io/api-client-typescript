@@ -12,5 +12,6 @@ coverage
 
 package-lock.json
 docs/
+.DS_Store
 
 .env

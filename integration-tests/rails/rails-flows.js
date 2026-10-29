@@ -3,7 +3,7 @@
 // Live Rails flows: signed read-only operations against a real environment.
 //
 // yarn build
-// node --env-file=.env integration-tests/rails-flows.js
+// node --env-file=.env integration-tests/rails/rails-flows.js
 //
 // Credentials (.env is gitignored):
 //   NASH_API_KEY + NASH_API_SECRET  use an existing API key (never revoked here), or
@@ -14,8 +14,8 @@
 //   NASH_RAILS_API_URL (https://rails.sandbox.nash.io/api/v1)
 
 const assert = require('assert');
-const Nash = require('../build/main');
-const { decodeApiSecret } = require('../build/main/client/requestSigning');
+const Nash = require('../../build/main');
+const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 
 const required = name => {
   if (!process.env[name]) throw new Error(`Set ${name}`);
