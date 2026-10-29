@@ -120,6 +120,8 @@ export interface RailsListQuotesFilters {
 
 export interface RailsListOrdersFilters {
   customer_id?: string
+  /** List only the partner account's own orders; not combinable with customer_id. */
+  partner_orders_only?: boolean
   cursor?: string
   limit?: number
 }

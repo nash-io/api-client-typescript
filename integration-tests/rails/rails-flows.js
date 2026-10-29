@@ -124,8 +124,8 @@ async function run() {
       await step('signed GET /customers/:id/kyc', () =>
         client.rails.getCustomerKyc(id)
       );
-      await step('signed GET /customers/:id/wallets', () =>
-        client.rails.listCustomerWallets(id)
+      await step('signed GET /wallets (customer)', () =>
+        client.rails.listWallets(id)
       );
     }
 

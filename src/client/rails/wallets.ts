@@ -2,7 +2,7 @@ import {
   RailsCreateWalletChallengeRequest,
   RailsCreateWalletChallengeResponse,
   RailsListBlockchainsResponse,
-  RailsListCustomerWalletsResponse,
+  RailsListWalletsResponse,
   RailsListPaymentMethodsResponse,
   RailsRegisterWalletRequest,
   RailsRegisterWalletResponse,
@@ -33,13 +33,8 @@ export class WalletsClient extends RailsBaseClient {
     return this.request('registerWallet', { customerId, body, options })
   }
 
-  listCustomerWallets(
-    customerId: string
-  ): Promise<RailsListCustomerWalletsResponse> {
-    return this.request('listCustomerWallets', {
-      segments: { customer_id: customerId },
-      customerId
-    })
+  listWallets(customerId: string | null): Promise<RailsListWalletsResponse> {
+    return this.request('listWallets', { customerId })
   }
 
   verifyBankAccount(

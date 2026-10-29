@@ -42,7 +42,7 @@ export const RAILS_ROUTES = {
   listBlockchains: { method: 'GET', path: '/blockchains' },
   createWalletChallenge: { method: 'POST', path: '/wallets/challenge' },
   registerWallet: { method: 'POST', path: '/wallets' },
-  listCustomerWallets: { method: 'GET', path: '/customers/{customer_id}/wallets' },
+  listWallets: { method: 'GET', path: '/wallets' },
   verifyBankAccount: { method: 'POST', path: '/bank-accounts' },
   listPaymentMethods: { method: 'GET', path: '/payment-methods' },
   listQuotes: { method: 'GET', path: '/quotes' },
@@ -80,19 +80,19 @@ export const RAILS_ROUTES = {
   listApiKeys: { method: 'GET', path: '/api-keys' },
   getApiKey: { method: 'GET', path: '/api-keys/{api_key_id}' },
   revokeApiKey: { method: 'DELETE', path: '/api-keys/{api_key_id}' },
-  fillDhPool: { method: 'POST', path: '/signing/dh-pool' },
+  fillDhPool: { method: 'POST', path: '/transactions/signatures/dh-pool' },
   completePayloadSignature: {
     method: 'POST',
-    path: '/signing/payload-signatures'
+    path: '/transactions/signatures/payload'
   },
   completeBtcPayloadSignature: {
     method: 'POST',
-    path: '/signing/btc-payload-signatures'
+    path: '/transactions/signatures/btc-payload'
   },
-  sendRawTransaction: { method: 'POST', path: '/signing/raw-transactions' },
-  prepareTransaction: { method: 'POST', path: '/signing/transactions/prepare' },
-  iterateTransaction: { method: 'POST', path: '/signing/transactions/iterate' },
-  cancelTransaction: { method: 'POST', path: '/signing/transactions/cancel' }
+  sendRawTransaction: { method: 'POST', path: '/transactions/raw' },
+  prepareTransaction: { method: 'POST', path: '/transactions/prepare' },
+  iterateTransaction: { method: 'POST', path: '/transactions/iterate' },
+  cancelTransaction: { method: 'POST', path: '/transactions/cancel' }
 } as const
 
 export type RailsOperationName = keyof typeof RAILS_ROUTES

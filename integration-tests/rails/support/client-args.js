@@ -16,7 +16,9 @@ module.exports = function getClientArgs() {
       railsApiUrl,
       isLocal:
         environment.isLocal ||
-        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/.test(railsApiUrl)
+        /^http:\/\/(([a-z0-9-]+\.)*localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/.test(
+          railsApiUrl
+        )
     },
     { runRequestsOverWebsockets: false }
   ];

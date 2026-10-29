@@ -32,7 +32,7 @@ import {
   RailsGetQuoteResponse,
   RailsInitiateCustomerKycResponse,
   RailsListBlockchainsResponse,
-  RailsListCustomerWalletsResponse,
+  RailsListWalletsResponse,
   RailsListCustomersFilters,
   RailsListCustomersResponse,
   RailsListOrdersFilters,
@@ -185,10 +185,8 @@ export class RailsClient extends RailsBaseClient {
     return this.wallets.registerWallet(customerId, body, options)
   }
 
-  listCustomerWallets(
-    customerId: string
-  ): Promise<RailsListCustomerWalletsResponse> {
-    return this.wallets.listCustomerWallets(customerId)
+  listWallets(customerId: string | null): Promise<RailsListWalletsResponse> {
+    return this.wallets.listWallets(customerId)
   }
 
   verifyBankAccount(

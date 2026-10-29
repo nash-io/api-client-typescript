@@ -26,7 +26,7 @@ The SDK SHALL expose a named public function for each of the following 46 operat
 | Verification | GET | `/blockchains` |
 | Verification | POST | `/wallets/challenge` |
 | Verification | POST | `/wallets` |
-| Verification | GET | `/customers/{customer_id}/wallets` |
+| Verification | GET | `/wallets` |
 | Verification | POST | `/bank-accounts` |
 | Fiat ramp | GET | `/payment-methods` |
 | Fiat ramp | GET | `/quotes` |
@@ -49,13 +49,13 @@ The SDK SHALL expose a named public function for each of the following 46 operat
 | API keys | GET | `/api-keys` |
 | API keys | GET | `/api-keys/{api_key_id}` |
 | API keys | DELETE | `/api-keys/{api_key_id}` |
-| Signing | POST | `/signing/dh-pool` |
-| Signing | POST | `/signing/payload-signatures` |
-| Signing | POST | `/signing/btc-payload-signatures` |
-| Signing | POST | `/signing/raw-transactions` |
-| Signing | POST | `/signing/transactions/prepare` |
-| Signing | POST | `/signing/transactions/iterate` |
-| Signing | POST | `/signing/transactions/cancel` |
+| Signing | POST | `/transactions/signatures/dh-pool` |
+| Signing | POST | `/transactions/signatures/payload` |
+| Signing | POST | `/transactions/signatures/btc-payload` |
+| Signing | POST | `/transactions/raw` |
+| Signing | POST | `/transactions/prepare` |
+| Signing | POST | `/transactions/iterate` |
+| Signing | POST | `/transactions/cancel` |
 
 #### Scenario: Every documented operation is callable
 

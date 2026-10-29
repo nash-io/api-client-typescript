@@ -39,9 +39,13 @@ export interface RailsRegisteredWallet {
   wallet: RailsWallet
 }
 
-export interface RailsCustomerWalletsResponse {
+export interface RailsAccountWallet extends RailsWallet {
+  type: 'nash' | 'external'
+}
+
+export interface RailsAccountWalletsResponse {
   environment: RailsEnvironment
-  wallets: RailsWallet[]
+  wallets: RailsAccountWallet[]
 }
 
 export interface RailsIbanVerificationRequest {
@@ -94,7 +98,7 @@ export type RailsCreateWalletChallengeRequest = RailsWalletChallengeRequest
 export type RailsCreateWalletChallengeResponse = RailsWalletChallengeResponse
 export type RailsRegisterWalletRequest = RailsWalletRegistrationRequest
 export type RailsRegisterWalletResponse = RailsRegisteredWallet
-export type RailsListCustomerWalletsResponse = RailsCustomerWalletsResponse
+export type RailsListWalletsResponse = RailsAccountWalletsResponse
 export type RailsVerifyBankAccountRequest = RailsIbanVerificationRequest
 export type RailsVerifyBankAccountResponse = RailsIbanVerificationResponse
 export type RailsListPaymentMethodsResponse = RailsPaymentMethodsResponse
