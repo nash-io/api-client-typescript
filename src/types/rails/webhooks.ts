@@ -21,12 +21,12 @@ export type RailsWebhookEvent =
 export interface RailsWebhookSubscription {
   id: string
   url: string
-  events: string[]
+  events: RailsWebhookEvent[]
   environment: RailsEnvironment
   active: boolean
-  cancelled_at?: string
-  inserted_at?: string
-  updated_at?: string
+  cancelledAt?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface RailsIssuedWebhookSubscriptionResponse {
@@ -47,29 +47,29 @@ export interface RailsWebhookSubscriptionResponse {
 
 export interface RailsWebhookDeliveryAttempt {
   attempt: number
-  outcome: string
-  attempted_at: string
-  duration_ms?: number
+  outcome: 'delivered' | 'failed'
+  attemptedAt: string
+  durationMs?: number
   error?: string
-  response_status?: number
+  responseStatus?: number
 }
 
 export type RailsWebhookDeliveryStatus = 'pending' | 'delivered' | 'failed' | 'skipped'
 
 export interface RailsWebhookDelivery {
   id: string
-  subscription_id: string
+  subscriptionId: string
   sequence: number
-  event_id: string
-  event_type: string
+  eventId: string
+  eventType: RailsWebhookEvent
   environment: RailsEnvironment
   status: RailsWebhookDeliveryStatus
-  attempts_count: number
+  attemptsCount: number
   attempts: RailsWebhookDeliveryAttempt[]
-  delivered_at?: string
-  last_attempted_at?: string
-  last_error?: string
-  last_response_status?: number
+  deliveredAt?: string
+  lastAttemptedAt?: string
+  lastError?: string
+  lastResponseStatus?: number
 }
 
 export interface RailsWebhookDeliveriesResponse {

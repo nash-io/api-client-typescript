@@ -76,7 +76,8 @@ export interface RailsQuoteEstimationResponse {
 export interface RailsHistoryOrder {
   id: string
   status: string
-  inserted_at: string
+  createdAt: string
+  type?: never
 }
 
 export interface RailsQuoteHistoryResponse {

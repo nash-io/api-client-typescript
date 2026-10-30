@@ -13,7 +13,7 @@ export interface RailsCredential {
   name: string | null
   environment: RailsEnvironment | null
   scopes: RailsCredentialScope[]
-  insertedAt: string | null
+  createdAt: string | null
   expireAt: string | null
   lastUsedAt: string | null
 }

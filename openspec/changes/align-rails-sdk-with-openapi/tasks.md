@@ -11,11 +11,11 @@
 
 ## 3. Response field names
 
-- [ ] 3.1 `RailsCredential`: `insertedAt` -> `createdAt`.
-- [ ] 3.2 `RailsWebhookSubscription`: `cancelledAt`, `createdAt`, `updatedAt`; `events: RailsWebhookEvent[]`.
-- [ ] 3.3 `RailsWebhookDelivery` / `RailsWebhookDeliveryAttempt`: convert every key to camelCase (`subscriptionId`, `eventId`, `eventType: RailsWebhookEvent`, `attemptsCount`, `deliveredAt`, `lastAttemptedAt`, `lastError`, `lastResponseStatus`, `attemptedAt`, `durationMs`, `responseStatus`); `outcome: 'delivered' | 'failed'`. Keep `RailsListWebhookDeliveriesFilters` snake_case (query params).
-- [ ] 3.4 `RailsHistoryOrder`: `inserted_at` -> `createdAt`; add `type?: never` so `RailsQuote | RailsHistoryOrder` can be discriminated.
-- [ ] 3.5 Update README/integration-test readers of any renamed field (grep each old name).
+- [x] 3.1 `RailsCredential`: `insertedAt` -> `createdAt`.
+- [x] 3.2 `RailsWebhookSubscription`: `cancelledAt`, `createdAt`, `updatedAt`; `events: RailsWebhookEvent[]`.
+- [x] 3.3 `RailsWebhookDelivery` / `RailsWebhookDeliveryAttempt`: convert every key to camelCase (`subscriptionId`, `eventId`, `eventType: RailsWebhookEvent`, `attemptsCount`, `deliveredAt`, `lastAttemptedAt`, `lastError`, `lastResponseStatus`, `attemptedAt`, `durationMs`, `responseStatus`); `outcome: 'delivered' | 'failed'`. Keep `RailsListWebhookDeliveriesFilters` snake_case (query params).
+- [x] 3.4 `RailsHistoryOrder`: `inserted_at` -> `createdAt`; add `type?: never` so `RailsQuote | RailsHistoryOrder` can be discriminated.
+- [x] 3.5 Update README/integration-test readers of any renamed field (grep each old name).
 
 ## 4. Missing fields and wrong request shapes
 
