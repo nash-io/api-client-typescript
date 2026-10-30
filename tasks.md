@@ -11,7 +11,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
 - [x] Pin Node 24 for local development and use it in `.github/workflows/build-and-test.yml` and `.github/workflows/deploy-gh-pages.yml`.
 - [x] Update the old checkout and setup-node Actions to supported releases. Explicitly provision the pinned Yarn 1.22.22; do not assume Yarn is bundled with Node.
 - [ ] Perform a clean `yarn install --frozen-lockfile` on Node 24, including Linux CI and Apple Silicon development. Check native crypto installation and the macOS GMP prerequisite.
-- [ ] Keep existing dependencies and compiler settings unchanged for this first step unless a demonstrated compatibility failure requires a targeted fix.
+  - Apple Silicon: isolated clean install passed on Node 24.20.0 with Yarn 1.22.22; GMP header present. Optional fsevents 1.2.12 failed to compile against Node 24, but installation succeeded without it. Linux remains unverified: local Docker cannot start (`com.docker.cli` missing); the updated Linux CI workflow must run remotely.
+- [x] Keep existing dependencies and compiler settings unchanged for this first step unless a demonstrated compatibility failure requires a targeted fix.
 - [ ] Run lint, TypeScript checks for both build configurations, unit tests, coverage, both builds, and the existing documentation command. Inspect warnings and document any blockers rather than treating skipped checks as passing.
 - [ ] Exercise actual SDK request signing and protocol signing/key derivation on Node 24. Module loading alone is not proof that native crypto works.
 - [ ] Keep `engines.node` at its existing range only if the published SDK remains compatible. Verify the advertised minimum separately; if a required change drops that support, explicitly decide and document the new runtime floor and release impact.
