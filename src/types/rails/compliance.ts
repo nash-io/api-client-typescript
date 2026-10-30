@@ -16,7 +16,7 @@ export interface RailsComplianceObligation {
   id?: string
   question?: string | null
   requestType?: string
-  requirements?: Array<Record<string, unknown>>
+  requirements?: Array<{ field: string; type: string; mandatory: boolean; options?: string[] }>
   status?: string
   subject?: string | null
 }
@@ -49,8 +49,21 @@ export interface RailsAnswerComplianceResponse {
 }
 
 export interface RailsPersonalInformationRequest {
-  taxResidencyAndCountryOfResidenceMatch?: boolean
-  [key: string]: unknown
+  firstName: string
+  lastName: string
+  /** A past date, `YYYY-MM-DD`. */
+  birthdate: string
+  countryOfBirth: string
+  cityOfBirth: string
+  taxResidencyCountry: string
+  taxIdNumber: string
+  address: {
+    roadAddress: string
+    city: string
+    postalCode: string
+    /** ISO 3166-1 alpha-2. */
+    countryOfResidence: string
+  }
 }
 
 export interface RailsPersonalInformationResponse {

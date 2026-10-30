@@ -35,7 +35,9 @@ export interface RailsQuote {
   permitTransferDigest: string | null
   fiatAsset: string | null
   fiatAmount: string | null
+  cryptoAsset: string | null
   cryptoAmount: string | null
+  rate: string | null
   confirmUntil: string | null
   reconfirmUntil: string | null
   transferUntil: string | null
@@ -99,7 +101,9 @@ export interface RailsOrder {
   blockchain?: string
   completedAt?: string
   cryptoAmount?: string
+  cryptoAsset?: string
   fiatAmount?: string
+  fiatAsset?: string
   settlementAddress?: string
   type?: string
 }

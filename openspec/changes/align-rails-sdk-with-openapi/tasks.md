@@ -19,10 +19,10 @@
 
 ## 4. Missing fields and wrong request shapes
 
-- [ ] 4.1 `RailsQuote`: add `cryptoAsset: string | null`, `rate: string | null`. `RailsOrder`: add `cryptoAsset?`, `fiatAsset?`.
-- [ ] 4.2 `RailsKycSnapshot`, `RailsKycStatus`, `RailsKycInitiation`: add `revalidationStatus` (`pending_scanning | pending_approval | completed | completed_id_expiring_soon`); add nullable `wizard` to snapshot/status.
-- [ ] 4.3 `RailsPersonalInformationRequest`: replace with the schema's required fields (`firstName`, `lastName`, `birthdate`, `countryOfBirth`, `cityOfBirth`, `taxResidencyCountry`, `taxIdNumber`, `address{roadAddress, city, postalCode, countryOfResidence}`); remove the stale boolean.
-- [ ] 4.4 `RailsComplianceObligation.requirements`: type as `{ field: string; type: string; mandatory: boolean; options?: string[] }[]`.
+- [x] 4.1 `RailsQuote`: add `cryptoAsset: string | null`, `rate: string | null`. `RailsOrder`: add `cryptoAsset?`, `fiatAsset?`.
+- [x] 4.2 `RailsKycSnapshot`, `RailsKycStatus`, `RailsKycInitiation`: add `revalidationStatus` (`pending_scanning | pending_approval | completed | completed_id_expiring_soon`); add nullable `wizard` to snapshot/status.
+- [x] 4.3 `RailsPersonalInformationRequest`: replace with the schema's required fields (`firstName`, `lastName`, `birthdate`, `countryOfBirth`, `cityOfBirth`, `taxResidencyCountry`, `taxIdNumber`, `address{roadAddress, city, postalCode, countryOfResidence}`); remove the stale boolean.
+- [x] 4.4 `RailsComplianceObligation.requirements`: type as `{ field: string; type: string; mandatory: boolean; options?: string[] }[]`.
 
 ## 5. Enumerations as unions (from the OpenAPI enums)
 

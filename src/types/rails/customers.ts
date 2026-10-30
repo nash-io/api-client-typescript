@@ -41,10 +41,24 @@ export interface RailsKycRequirement {
   fields: RailsKycRequirementField[]
 }
 
+export type RailsKycRevalidationStatus =
+  | 'pending_scanning'
+  | 'pending_approval'
+  | 'completed'
+  | 'completed_id_expiring_soon'
+
+export interface RailsKycWizard {
+  url: string
+  caseId: string
+  mediaToken: string
+}
+
 export interface RailsKycSnapshot {
   status: string
+  revalidationStatus: RailsKycRevalidationStatus
   requirements: RailsKycRequirement[]
   failureDetail: string | null
+  wizard?: RailsKycWizard | null
 }
 
 export interface RailsCustomer {
@@ -56,20 +70,19 @@ export interface RailsCustomer {
 export interface RailsKycStatus {
   environment: RailsEnvironment
   status: string
+  revalidationStatus: RailsKycRevalidationStatus
   requirements: RailsKycRequirement[]
   failureDetail: string | null
+  wizard?: RailsKycWizard | null
 }
 
 export interface RailsKycInitiation {
   environment: RailsEnvironment
   status: string
+  revalidationStatus: RailsKycRevalidationStatus
   requirements: RailsKycRequirement[]
   failureDetail: string | null
-  wizard?: {
-    url: string
-    caseId: string
-    mediaToken: string
-  } | null
+  wizard?: RailsKycWizard | null
 }
 
 export interface RailsListCustomersFilters {
