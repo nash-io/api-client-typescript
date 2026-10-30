@@ -23,12 +23,6 @@ jobs:
     - run: yarn install --frozen-lockfile
     - run: yarn doc
 
-    # start: temporary fix for broken link on nash.io/developers
-    - run: mkdir -p website/.vitepress/dist/docs
-    - run: echo "<a href='https://nash-io.github.io/api-client-typescript/'>Please visit https://nash-io.github.io/api-client-typescript/</a>" > website/.vitepress/dist/docs/index.html
-    # end: temporary fix
-
-    - run: touch website/.vitepress/dist/.nojekyll
     - name: Deploy docs
       uses: JamesIves/github-pages-deploy-action@v4
       with:

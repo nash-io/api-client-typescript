@@ -37,7 +37,7 @@
     "version": "standard-version",
     "reset": "git clean -dfx && git reset --hard && yarn",
     "clean": "rm -rf build test",
-    "doc": "typedoc && vitepress build website",
+    "doc": "typedoc && vitepress build website && node scripts/docs-redirects.js",
     "doc:api": "typedoc",
     "doc:dev": "typedoc && vitepress dev website",
     "doc:preview": "vitepress preview website",
