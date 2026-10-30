@@ -91,11 +91,6 @@ export interface RailsQuoteConfirmationRequest {
   sourceOfFunds?: string
 }
 
-export interface RailsInstantBuyConfirmationResponse {
-  environment: RailsEnvironment
-  quote?: RailsQuote
-}
-
 export interface RailsOrder {
   id: string
   status: string
@@ -135,8 +130,6 @@ export type RailsGetQuoteResponse = RailsQuoteResponse
 export type RailsCancelQuoteResponse = RailsQuoteResponse
 export type RailsConfirmBuyRequest = RailsQuoteConfirmationRequest
 export type RailsConfirmBuyResponse = RailsQuoteResponse
-export type RailsConfirmInstantBuyRequest = RailsQuoteConfirmationRequest
-export type RailsConfirmInstantBuyResponse = RailsInstantBuyConfirmationResponse
 export type RailsConfirmSellRequest = RailsQuoteConfirmationRequest & {
   paymentMethodId: string
 }

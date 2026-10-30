@@ -11,8 +11,6 @@ import {
   RailsCancelWebhookSubscriptionResponse,
   RailsConfirmBuyRequest,
   RailsConfirmBuyResponse,
-  RailsConfirmInstantBuyRequest,
-  RailsConfirmInstantBuyResponse,
   RailsConfirmPersonalInformationRequest,
   RailsConfirmPersonalInformationResponse,
   RailsConfirmSellRequest,
@@ -285,15 +283,6 @@ export class RailsClient extends RailsBaseClient {
     options?: RailsRequestOptions
   ): Promise<RailsConfirmBuyResponse> {
     return this.orders.confirmBuy(customerId, quoteId, body, options)
-  }
-
-  confirmInstantBuy(
-    customerId: string | null,
-    quoteId: string,
-    body: RailsConfirmInstantBuyRequest,
-    options?: RailsRequestOptions
-  ): Promise<RailsConfirmInstantBuyResponse> {
-    return this.orders.confirmInstantBuy(customerId, quoteId, body, options)
   }
 
   confirmSell(

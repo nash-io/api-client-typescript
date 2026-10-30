@@ -35,7 +35,6 @@ The SDK SHALL expose a named public function for each operation in the supported
 | Fiat ramp | GET | `/quotes/{quote_id}` |
 | Fiat ramp | POST | `/quotes/{quote_id}/cancel` |
 | Fiat ramp | POST | `/quotes/{quote_id}/confirm-buy` |
-| Fiat ramp | POST | `/quotes/{quote_id}/confirm-instant-buy` |
 | Fiat ramp | POST | `/quotes/{quote_id}/confirm-sell` |
 | Fiat ramp | POST | `/quotes/{quote_id}/recalculate` |
 | Fiat ramp | POST | `/quotes/{quote_id}/reconfirm` |

@@ -2,8 +2,6 @@ import {
   RailsCancelQuoteResponse,
   RailsConfirmBuyRequest,
   RailsConfirmBuyResponse,
-  RailsConfirmInstantBuyRequest,
-  RailsConfirmInstantBuyResponse,
   RailsConfirmSellRequest,
   RailsConfirmSellResponse,
   RailsCreateQuoteRequest,
@@ -74,20 +72,6 @@ export class OrdersClient extends RailsBaseClient {
     options?: RailsRequestOptions
   ): Promise<RailsConfirmBuyResponse> {
     return this.request('confirmBuy', {
-      segments: { quote_id: quoteId },
-      customerId,
-      body,
-      options
-    })
-  }
-
-  confirmInstantBuy(
-    customerId: string | null,
-    quoteId: string,
-    body: RailsConfirmInstantBuyRequest,
-    options?: RailsRequestOptions
-  ): Promise<RailsConfirmInstantBuyResponse> {
-    return this.request('confirmInstantBuy', {
       segments: { quote_id: quoteId },
       customerId,
       body,

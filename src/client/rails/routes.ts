@@ -51,10 +51,6 @@ export const RAILS_ROUTES = {
   getQuote: { method: 'GET', path: '/quotes/{quote_id}' },
   cancelQuote: { method: 'POST', path: '/quotes/{quote_id}/cancel' },
   confirmBuy: { method: 'POST', path: '/quotes/{quote_id}/confirm-buy' },
-  confirmInstantBuy: {
-    method: 'POST',
-    path: '/quotes/{quote_id}/confirm-instant-buy'
-  },
   confirmSell: { method: 'POST', path: '/quotes/{quote_id}/confirm-sell' },
   recalculateQuote: { method: 'POST', path: '/quotes/{quote_id}/recalculate' },
   reconfirmQuote: { method: 'POST', path: '/quotes/{quote_id}/reconfirm' },
