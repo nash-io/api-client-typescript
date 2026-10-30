@@ -8,10 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
         node-version: '24'
+    - run: npm install --global yarn@1.22.22 --force
     - run: yarn install --frozen-lockfile
     # --level filters output, not Yarn's exit-code bitmask; Bash uses -e.
     - run: |

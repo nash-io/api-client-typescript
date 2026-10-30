@@ -9,7 +9,7 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
 ## 1. Upgrade the build environment
 
 - [x] Pin Node 24 for local development and use it in `.github/workflows/build-and-test.yml` and `.github/workflows/deploy-gh-pages.yml`.
-- [ ] Update the old checkout and setup-node Actions to supported releases. Explicitly provision the pinned Yarn 1.22.22; do not assume Yarn is bundled with Node.
+- [x] Update the old checkout and setup-node Actions to supported releases. Explicitly provision the pinned Yarn 1.22.22; do not assume Yarn is bundled with Node.
 - [ ] Perform a clean `yarn install --frozen-lockfile` on Node 24, including Linux CI and Apple Silicon development. Check native crypto installation and the macOS GMP prerequisite.
 - [ ] Keep existing dependencies and compiler settings unchanged for this first step unless a demonstrated compatibility failure requires a targeted fix.
 - [ ] Run lint, TypeScript checks for both build configurations, unit tests, coverage, both builds, and the existing documentation command. Inspect warnings and document any blockers rather than treating skipped checks as passing.
