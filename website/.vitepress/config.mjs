@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import apiSidebar from '../api/typedoc-sidebar.json'
 
 export default defineConfig({
+  base: '/api-client-typescript/',
   title: 'Nash TypeScript SDK',
   description: 'Guides and generated API reference for Nash Exchange and Nash Rails.',
   themeConfig: {

@@ -38,7 +38,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
   - Five guides cover all listed topics. All five TypeScript examples passed semantic checks against SDK source; the full site built with internal-link checking. Examples involving accounts/trades were not sent to a live backend.
 - [x] Add navigation between guides and API reference, generated API sidebar entries, and VitePress local search. Use the default theme rather than building a custom theme.
   - Production build passed with the generated sidebar and local-search index. VitePress warns about a >500 kB chunk; no custom chunking or warning suppression added. Interactive verification is recorded under the browser-preview task below.
-- [ ] Configure the GitHub Pages base path as `/api-client-typescript/`. Verify internal links, assets, source links, and generated type links under that prefix.
+- [x] Configure the GitHub Pages base path as `/api-client-typescript/`. Verify internal links, assets, source links, and generated type links under that prefix.
+  - Production preview passed in Chromium under the prefix; 240 built pages and 60,809 internal links/assets/anchors passed the emitted-site checker. Fixed an existing unclosed JSDoc code fence that hid later API methods, removed stale empty parameter tags, and corrected the cancellation example. TypeDoc now builds without warnings. API type/source links were inspected in the browser.
 
 ## 3. Deploy and verify
 

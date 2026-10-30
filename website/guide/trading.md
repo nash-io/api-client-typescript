@@ -33,7 +33,7 @@ export async function placeSandboxLimitOrder(
 }
 ```
 
-The client must already be logged into sandbox; the helper does not enforce the environment. Price is expressed in quote currency per base currency. The SDK normalizes order inputs using market precision, so inspect the actual market constraints before submitting. Track the returned order ID and status; use `cancelOrder(orderId)` to cancel an open order.
+The client must already be logged into sandbox; the helper does not enforce the environment. Price is expressed in quote currency per base currency. The SDK normalizes order inputs using market precision, so inspect the actual market constraints before submitting. Track the returned order ID and status; use `cancelOrder(orderId, marketName)` to cancel an open order.
 
 ## State signing
 

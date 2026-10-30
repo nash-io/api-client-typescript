@@ -909,8 +909,6 @@ export class Client {
    *
    * request.
    * @returns
-   * @param secret string
-   * @param apiKey string
    * @returns
    *
    * Example
@@ -961,9 +959,6 @@ export class Client {
    *  - depositToTradingContract
    *  - withdrawFromTradingContract
    *
-   * @param email string
-   * @param password string
-   * @param twoFaCode string
    * @returns
    *
    * Example
@@ -1322,9 +1317,6 @@ export class Client {
   /**
    * Get [[TradeHistory]] for the given market name.
    *
-   * @param marketName
-   * @param limit
-   * @param before
    * @returns
    *
    * Example
@@ -1409,10 +1401,6 @@ export class Client {
   /**
    * List a [[CandleRange]] for the given market.
    *
-   * @param marketName
-   * @param before
-   * @param interval
-   * @param limit
    * @returns
    *
    * Example
@@ -1421,7 +1409,7 @@ export class Client {
    *   marketName : 'neo_gas'
    * })
    * console.log(candleRange)
-   * ``
+   * ```
    */
 
   public async listCandles({
@@ -1480,14 +1468,6 @@ export class Client {
 
   /**
    * list available orders for the current authenticated account.
-   * @param before
-   * @param buyOrSell
-   * @param limit
-   * @param marketName
-   * @param rangeStart
-   * @param rangeStop
-   * @param status
-   * @param type
    * @returns
    *
    * Example
@@ -1567,9 +1547,6 @@ export class Client {
   /**
    * List available account transactions.
    *
-   * @param cursor
-   * @param fiatSymbol
-   * @param limit
    * @returns
    *
    * Example
@@ -1674,7 +1651,6 @@ export class Client {
    * Get the [[AccountPortfolio]] for the current authenticated account.
    *
    * @param fiatSymbol
-   * @param period
    * @returns
    *
    * Example
@@ -1795,9 +1771,6 @@ export class Client {
   /**
    * List all movements for the current authenticated account.
    *
-   * @param currency
-   * @param status
-   * @param type
    * @returns
    *
    * Example
@@ -2111,7 +2084,7 @@ export class Client {
    * @param allowTaker
    * @param amount
    * @param buyOrSell
-   * @param cancelationPolicy
+   * @param cancellationPolicy
    * @param limitPrice
    * @param marketName
    * @param cancelAt
@@ -3340,7 +3313,7 @@ export class Client {
   /**
    * Cancel a list of orders by ID.
    *
-   * @param orderID[]
+   * @param orderIDs
    * @returns
    *
    * Example
@@ -3461,7 +3434,7 @@ export class Client {
   /**
    * Cancel a list of orders by ID.
    *
-   * @param orderID[]
+   * @param orderIDs
    * @returns
    *
    * Example
