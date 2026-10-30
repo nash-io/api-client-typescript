@@ -56,7 +56,7 @@
 
 ## 9. Verification
 
-- [ ] 9.1 Extend `src/client/httpAuthentication.spec.ts` only for new behavior: `getBlockchainFees` signs `nash-act-as: partner` with the query in the signed path; the source-of-funds money check fires on camelCase keys; `RailsApiError.reason` is surfaced.
-- [ ] 9.2 Run `yarn build`, `yarn test:lint`, `yarn test:unit`, `yarn cov:check`. Report any gate skipped by the environment (`yarn` is not on PATH in the review shell; `npx jest --no-watchman` works).
-- [ ] 9.3 Re-run the OpenAPI diff: method/path set of `RAILS_ROUTES` must equal the live `/api/v1/openapi.json` paths exactly.
+- [x] 9.1 Extend `src/client/httpAuthentication.spec.ts` only for new behavior: `getBlockchainFees` signs `nash-act-as: partner` with the query in the signed path; the source-of-funds money check fires on camelCase keys; `RailsApiError.reason` is surfaced.
+- [ ] 9.2 (partial: tsc, tslint, jest pass; yarn build, cov:check not run, yarn not on PATH) Run `yarn build`, `yarn test:lint`, `yarn test:unit`, `yarn cov:check`. Report any gate skipped by the environment (`yarn` is not on PATH in the review shell; `npx jest --no-watchman` works).
+- [x] 9.3 Re-run the OpenAPI diff: method/path set of `RAILS_ROUTES` must equal the live `/api/v1/openapi.json` paths exactly.
 - [ ] 9.4 Live gate (separate, needs credentials): run `yarn integration:rails` against sandbox, and confirm the exchange GraphQL host accepts the six-field signature on API-key requests.
