@@ -36,7 +36,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
   - Generated output is isolated/ignored under `website/api/` and excluded from npm publication. A seeded stale page disappeared after `doc:api`, while the authored landing page survived.
 - [x] Create a concise landing page and guides for installation, authentication, a first request, trading, subscriptions, and Rails APIs. Reuse accurate existing documentation and examples; do not copy stale behavior without checking it.
   - Five guides cover all listed topics. All five TypeScript examples passed semantic checks against SDK source; the full site built with internal-link checking. Examples involving accounts/trades were not sent to a live backend.
-- [ ] Add navigation between guides and API reference, generated API sidebar entries, and VitePress local search. Use the default theme rather than building a custom theme.
+- [x] Add navigation between guides and API reference, generated API sidebar entries, and VitePress local search. Use the default theme rather than building a custom theme.
+  - Production build passed with the generated sidebar and local-search index. VitePress warns about a >500 kB chunk; no custom chunking or warning suppression added. Interactive verification is recorded under the browser-preview task below.
 - [ ] Configure the GitHub Pages base path as `/api-client-typescript/`. Verify internal links, assets, source links, and generated type links under that prefix.
 
 ## 3. Deploy and verify
