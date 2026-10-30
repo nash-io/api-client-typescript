@@ -2,10 +2,11 @@ import { RailsEnvironment } from './common'
 
 export type RailsCredentialScope =
   | 'customers'
-  | 'verification'
+  | 'wallets_and_bank_accounts'
   | 'fiat_ramp'
   | 'webhooks'
   | 'api_keys'
+  | 'blockchain_transactions'
 
 export interface RailsCredential {
   id: string

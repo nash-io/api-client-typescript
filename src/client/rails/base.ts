@@ -277,7 +277,10 @@ export class RailsBaseClient {
     if (url.username || url.password) {
       throw new Error('Rails API base URL must not contain credentials.')
     }
-    if (url.protocol !== 'https:' && !(this.opts.isLocal && url.protocol === 'http:')) {
+    const loopback = /(^|\.)localhost$/.test(url.hostname) ||
+      url.hostname === '127.0.0.1' || url.hostname === '[::1]'
+    if (url.protocol !== 'https:' &&
+        !(url.protocol === 'http:' && (this.opts.isLocal || loopback))) {
       throw new Error('Rails API base URL must use HTTPS outside local development.')
     }
 

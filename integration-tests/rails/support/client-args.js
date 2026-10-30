@@ -13,12 +13,7 @@ module.exports = function getClientArgs() {
     {
       ...environment,
       host: process.env.NASH_HOST || 'app.arm-dev1.nash.io',
-      railsApiUrl,
-      isLocal:
-        environment.isLocal ||
-        /^http:\/\/(([a-z0-9-]+\.)*localhost|127\.0\.0\.1)(:\d+)?(?:\/|$)/.test(
-          railsApiUrl
-        )
+      railsApiUrl
     },
     { runRequestsOverWebsockets: false }
   ];

@@ -71,6 +71,32 @@ beforeEach(() => {
 })
 afterEach(() => jest.restoreAllMocks())
 
+it('allows loopback Rails HTTP without downgrading GraphQL and rejects remote Rails HTTP', async () => {
+  for (const host of ['localhost', 'api.localhost', '127.0.0.1', '[::1]']) {
+    const railsApiUrl = `http://${host}:3000/api/v1`
+    const sdk = new Client({
+      host: 'exchange.example.test', isLocal: false, railsApiUrl
+    })
+    send.mockClear()
+    await sdk.listMarkets()
+    await sdk.rails.getOpenApi()
+    expect(calls().map(([url]) => url)).toEqual([
+      'https://exchange.example.test/api/graphql',
+      `${railsApiUrl}/openapi.json`
+    ])
+  }
+  for (const host of ['remote.example.test', 'localhost.example.test', '127.0.0.1.example.test']) {
+    const sdk = new Client({
+      host: 'exchange.example.test',
+      isLocal: false,
+      railsApiUrl: `http://${host}/api/v1`
+    })
+    send.mockClear()
+    await expect(sdk.rails.getOpenApi()).rejects.toThrow('must use HTTPS')
+    expect(send).not.toHaveBeenCalled()
+  }
+})
+
 it('matches the published compact signature and binds all six canonical fields', () => {
   const url = new URL('https://rails.example/api/v1/customers?limit=20')
   const signature = signRequest(pair, '1791907200', 'GET', url)

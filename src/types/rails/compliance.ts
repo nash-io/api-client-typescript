@@ -1,7 +1,13 @@
 import { RailsEnvironment, RailsMonetaryAmount } from './common'
 
 export interface RailsComplianceObligation {
-  type: 'annual_personal_information' | 'source_of_funds' | 'document' | 'question'
+  type:
+    | 'annual_personal_information'
+    | 'source_of_funds'
+    | 'document'
+    | 'question'
+    | 'identity_document_revalidation'
+    | 'pending_terms_acceptance'
   blockFiatServices?: boolean
   confirmedAt?: string | null
   description?: string | null

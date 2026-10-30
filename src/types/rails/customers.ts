@@ -37,7 +37,7 @@ export interface RailsKycRequirement {
   type: 'identity_verification'
   description: string
   required: boolean
-  step: 'face_scan' | 'document_scan' | 'complete'
+  step: 'personal_information' | 'source_of_funds' | 'identity_verification' | 'complete'
   fields: RailsKycRequirementField[]
 }
 
@@ -65,6 +65,11 @@ export interface RailsKycInitiation {
   status: string
   requirements: RailsKycRequirement[]
   failureDetail: string | null
+  wizard?: {
+    url: string
+    caseId: string
+    mediaToken: string
+  } | null
 }
 
 export interface RailsListCustomersFilters {
