@@ -6,6 +6,7 @@
   "out": "website/api",
   "docsRoot": "website",
   "readme": "none",
+  "cleanOutputDir": true,
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,

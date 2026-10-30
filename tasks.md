@@ -32,7 +32,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
   - `yarn doc` successfully generated Markdown and built VitePress; `doc:api`, `doc:dev`, and `doc:preview` are available. TypeDoc reported 23 stale parameter-comment warnings, with no errors.
 - [x] Generate documentation for the public SDK exports, covering `Client`, environments, Rails APIs, errors, options, and public request/response types. Exclude private/internal implementation details and external dependency internals.
   - TypeDoc JSON inventory matched all 230 non-internal exports from `src/index.ts`; environments/options are generated from a second entry point. Inspected `Client` and `RailsClient` signatures and linked response types. Existing `@internal` exports remain intentionally excluded.
-- [ ] Keep generated API pages separate from authored guides and regenerate them before every docs build; do not maintain signatures by hand or retain stale generated pages.
+- [x] Keep generated API pages separate from authored guides and regenerate them before every docs build; do not maintain signatures by hand or retain stale generated pages.
+  - Generated output is isolated/ignored under `website/api/` and excluded from npm publication. A seeded stale page disappeared after `doc:api`, while the authored landing page survived.
 - [ ] Create a concise landing page and guides for installation, authentication, a first request, trading, subscriptions, and Rails APIs. Reuse accurate existing documentation and examples; do not copy stale behavior without checking it.
 - [ ] Add navigation between guides and API reference, generated API sidebar entries, and VitePress local search. Use the default theme rather than building a custom theme.
 - [ ] Configure the GitHub Pages base path as `/api-client-typescript/`. Verify internal links, assets, source links, and generated type links under that prefix.
