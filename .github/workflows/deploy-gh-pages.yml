@@ -21,7 +21,8 @@ jobs:
         node-version: '24'
     - run: npm install --global yarn@1.22.22 --force
     - run: yarn install --frozen-lockfile
-    - run: yarn doc
+    - name: Build and validate documentation
+      run: yarn doc
 
     - name: Deploy docs
       uses: JamesIves/github-pages-deploy-action@v4
