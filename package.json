@@ -103,8 +103,11 @@
     "tslint": "5.11.0",
     "tslint-config-prettier": "1.17.0",
     "tslint-immutable": "5.0.0",
-    "typedoc": "0.17.3",
-    "typescript": "5.0.4"
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.14.1",
+    "typedoc-vitepress-theme": "1.1.4",
+    "typescript": "5.0.4",
+    "vitepress": "1.6.4"
   },
   "resolutions": {
     "secp256k1": "4.0.2",
