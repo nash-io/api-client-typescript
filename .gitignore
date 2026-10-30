@@ -12,9 +12,6 @@ coverage
 
 package-lock.json
 docs/
-website/api/
-website/.vitepress/cache/
-website/.vitepress/dist/
 .DS_Store
 
 .env

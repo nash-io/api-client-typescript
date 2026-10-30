@@ -1,22 +1,16 @@
+// Run after typedoc: keeps URLs from the old TypeDoc 0.17 site (and nash.io's /docs/ link) working.
 const fs = require('fs')
 const path = require('path')
-const out = path.resolve('website/.vitepress/dist')
-const base = '/api-client-typescript/'
 const redirects = {
-  'docs/index.html': '',
-  'globals.html': 'api/',
-  'classes/client.html': 'api/index/classes/Client.html',
-  'interfaces/clientoptions.html': 'api/client/environments/interfaces/ClientOptions.html',
-  'interfaces/environmentconfig.html': 'api/client/environments/interfaces/EnvironmentConfig.html'
+  'docs/index.html': '../index.html',
+  'globals.html': 'modules.html',
+  'classes/client.html': 'index.Client.html',
+  'interfaces/clientoptions.html': 'client_environments.ClientOptions.html',
+  'interfaces/environmentconfig.html': 'client_environments.EnvironmentConfig.html'
 }
 for (const [from, to] of Object.entries(redirects)) {
-  const target = base + to
-  const file = path.join(out, from)
-  const globals = from === 'globals.html'
-    ? `if (location.hash.startsWith('#environmentconfiguration')) target = ${JSON.stringify(base + 'api/client/environments/variables/EnvironmentConfiguration.html')}; else if (location.hash === '#unlimited_approval') target = ${JSON.stringify(base + 'api/index/variables/UNLIMITED_APPROVAL.html')};`
-    : ''
+  const file = path.join('docs', from)
   fs.mkdirSync(path.dirname(file), { recursive: true })
-  fs.writeFileSync(file, `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Documentation moved</title><meta http-equiv="refresh" content="0;url=${target}"><a href="${target}">Continue to the Nash SDK documentation</a><script>let target = ${JSON.stringify(target)};${globals}location.replace(target${from === 'globals.html' ? '' : ' + location.hash'});</script></html>\n`)
+  fs.writeFileSync(file, `<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${to}"><a href="${to}">Documentation moved</a><script>location.replace(${JSON.stringify(to)} + location.hash)</script>\n`)
 }
-fs.writeFileSync(path.join(out, '.nojekyll'), '')
-console.log('Preserved legacy docs, globals, Client, ClientOptions, and EnvironmentConfig URLs')
+console.log('Preserved legacy documentation URLs')

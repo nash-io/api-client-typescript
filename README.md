@@ -3,8 +3,7 @@
 Official TypeScript client for interacting with [Nash Rails](https://rails.sandbox.nash.io/dashboard/guides/quickstart) and the [Nash Exchange](https://nash.io/).
 
 - [Github repository](https://github.com/nash-io/api-client-typescript)
-- [Guides](https://nash-io.github.io/api-client-typescript/guide/getting-started.html)
-- [API reference](https://nash-io.github.io/api-client-typescript/api/)
+- [Documentation](https://nash-io.github.io/api-client-typescript/)
 - [Contributing](CONTRIBUTING.md)
 
 To test your integrations, Nash provides a public sandbox environment at [https://rails.sandbox.nash.io](https://rails.sandbox.nash.io) (Rails) and [https://app.sandbox.nash.io](https://app.sandbox.nash.io) (Exchange).

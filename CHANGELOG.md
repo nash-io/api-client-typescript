@@ -12,9 +12,9 @@ All notable changes to this project will be documented in this file. See [standa
 ### Documentation and build tooling
 
 - Use Node 24 for development and CI, retaining Yarn 1.22.22 and the published SDK's declared Node >=14.3 runtime range.
-- Replace standalone TypeDoc HTML with VitePress guides, generated API Markdown, local search, and public Rails/type documentation. Preserve published documentation entry URLs and GitHub Pages hosting.
+- Replace the legacy TypeDoc 0.17 site with current TypeDoc HTML (README as home page, generated API reference including Rails types). Preserve the old entry URLs and GitHub Pages hosting; fail the docs build on TypeDoc validation warnings.
 - Upgrade TypeScript to 5.0.4 for TypeDoc compatibility; update Jest/ts-jest only to resolve the old transformer's incompatible compiler API.
-- Validate generated documentation links, assets, and anchors in CI; add an offline request/protocol signing and key-derivation smoke command.
+- Add an offline request/protocol signing and key-derivation smoke command.
 
 
 
