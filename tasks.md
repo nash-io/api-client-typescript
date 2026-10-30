@@ -15,7 +15,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
 - [x] Keep existing dependencies and compiler settings unchanged for this first step unless a demonstrated compatibility failure requires a targeted fix.
 - [x] Run lint, TypeScript checks for both build configurations, unit tests, coverage, both builds, and the existing documentation command. Inspect warnings and document any blockers rather than treating skipped checks as passing.
   - Node 24.20.0: lint, both no-emit checks, 18 tests (3 suites), coverage generation, clean CommonJS/ESM builds, and legacy docs passed. Jest required `--watchman=false` locally because the sandbox blocks Watchman's state directory. A clean dependency reinstall removed stale Babel artifacts. Coverage is 56.46% lines, not the separate 100% `cov:check` threshold. Legacy TypeDoc emits circular-dependency warnings.
-- [ ] Exercise actual SDK request signing and protocol signing/key derivation on Node 24. Module loading alone is not proof that native crypto works.
+- [x] Exercise actual SDK request signing and protocol signing/key derivation on Node 24. Module loading alone is not proof that native crypto works.
+  - `node scripts/runtime-smoke.js` passed: request signature verification/tamper rejection, BIP-39 entropy/seed vectors, and verified protocol signature. Apple Silicon uses the SDK's existing WASM runtime adaptation, not the upstream macOS native binary.
 - [ ] Keep `engines.node` at its existing range only if the published SDK remains compatible. Verify the advertised minimum separately; if a required change drops that support, explicitly decide and document the new runtime floor and release impact.
 - [ ] Update contributor setup instructions with Node 24, Yarn 1.22.22, and native prerequisites.
 
