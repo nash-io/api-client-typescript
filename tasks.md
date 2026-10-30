@@ -23,7 +23,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
 
 ## 2. Replace the documentation site with VitePress + TypeDoc
 
-- [ ] Select mutually compatible versions of VitePress, TypeDoc, `typedoc-plugin-markdown`, and its VitePress integration. Verify their Node and TypeScript requirements before installation.
+- [x] Select mutually compatible versions of VitePress, TypeDoc, `typedoc-plugin-markdown`, and its VitePress integration. Verify their Node and TypeScript requirements before installation.
+  - Selected VitePress 1.6.4, TypeDoc 0.28.20, typedoc-plugin-markdown 4.14.1, and typedoc-vitepress-theme 1.1.4 from npm metadata. Plugins require Node >=18 and TypeDoc 0.28.x; TypeDoc accepts TypeScript 5.0.x–6.0.x. Start with TypeScript 5.0.4 (minimum supported major) and retain Node typings unless a compiler error requires otherwise.
 - [ ] Upgrade TypeScript only as required by the selected TypeDoc version. Check compatibility with ts-jest, TSLint, and existing declarations; update only tooling that demonstrably needs it. Do not blindly update `@types/node` or expose newer Node APIs to SDK consumers.
 - [ ] Use the root package and existing Yarn lockfile for documentation tooling. Generate lockfile changes with Yarn 1.22.22; do not add a nested package or lockfile.
 - [ ] Replace the legacy TypeDoc CLI flags in `yarn doc` with a pipeline that generates API Markdown and builds the VitePress site. Add development/preview commands for inspecting the actual site.
