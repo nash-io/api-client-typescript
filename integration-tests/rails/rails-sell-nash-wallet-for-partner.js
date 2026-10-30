@@ -147,6 +147,7 @@ async function run() {
   client.requestCredentials = credentials;
   client.apiKey = secret;
   try {
+    await nextSigningSecond();
     const partner = await client.rails.getPartner();
     assert.strictEqual(partner.environment, 'sandbox');
     const methods = await client.rails.listPaymentMethods(null);

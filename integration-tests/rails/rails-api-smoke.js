@@ -85,6 +85,8 @@ async function run() {
     }
 
     setStep('signed Rails partner read', `${railsUrl}/partner`);
+    // Avoid replaying the preceding script's partner read in the same second.
+    await new Promise(resolve => setTimeout(resolve, 1010 - (Date.now() % 1000)));
     await client.rails.getPartner();
     console.log('Signed Rails GET /partner: PASS');
 

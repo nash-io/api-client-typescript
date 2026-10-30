@@ -126,7 +126,7 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         ...(type === 'buy'
           ? { fiatAmount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00' }
           : {
-              cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.05',
+              cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.1',
               transferMethod: 'deposit'
             })
       });

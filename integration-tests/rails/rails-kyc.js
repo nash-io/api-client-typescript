@@ -75,6 +75,7 @@ async function run(afterOnboarding) {
       await client.login(credentials);
     }
 
+    await nextSigningSecond();
     const partner = await client.rails.getPartner();
     assert.strictEqual(partner.environment, 'sandbox');
     assert(partner.id, 'Partner ID is missing');
@@ -116,6 +117,10 @@ async function run(afterOnboarding) {
           String.fromCharCode(97 + (byte % 26))
         ).join('')}`,
         birthdate: '1990-01-02',
+        countryOfBirth: 'NL',
+        cityOfBirth: 'Amsterdam',
+        taxResidencyCountry: 'NL',
+        taxIdNumber: '123456789',
         address: {
           roadAddress: '1 House Street',
           city: 'Amsterdam',

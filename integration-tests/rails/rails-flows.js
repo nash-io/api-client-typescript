@@ -91,6 +91,8 @@ async function run() {
       console.log('signed GraphQL HTTP initialization: PASS');
     }
 
+    // Avoid replaying the preceding script's partner read in the same second.
+    await new Promise(resolve => setTimeout(resolve, 1010 - (Date.now() % 1000)));
     await step('signed GET /partner', () => client.rails.getPartner());
 
     const keys = await step('signed GET /api-keys', () =>

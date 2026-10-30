@@ -83,7 +83,7 @@ async function partnerOrders(
           ...(type === 'buy'
             ? { fiatAmount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00' }
             : {
-                cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.05',
+                cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.1',
                 transferMethod: 'deposit'
               })
         });
@@ -185,6 +185,7 @@ async function run() {
     } else {
       await client.login(credentials);
     }
+    await nextSigningSecond();
     const partner = await client.rails.getPartner();
     assert.strictEqual(partner.environment, 'sandbox');
     assert(partner.id, 'Partner ID is missing');
