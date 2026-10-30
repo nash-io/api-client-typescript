@@ -34,7 +34,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
   - TypeDoc JSON inventory matched all 230 non-internal exports from `src/index.ts`; environments/options are generated from a second entry point. Inspected `Client` and `RailsClient` signatures and linked response types. Existing `@internal` exports remain intentionally excluded.
 - [x] Keep generated API pages separate from authored guides and regenerate them before every docs build; do not maintain signatures by hand or retain stale generated pages.
   - Generated output is isolated/ignored under `website/api/` and excluded from npm publication. A seeded stale page disappeared after `doc:api`, while the authored landing page survived.
-- [ ] Create a concise landing page and guides for installation, authentication, a first request, trading, subscriptions, and Rails APIs. Reuse accurate existing documentation and examples; do not copy stale behavior without checking it.
+- [x] Create a concise landing page and guides for installation, authentication, a first request, trading, subscriptions, and Rails APIs. Reuse accurate existing documentation and examples; do not copy stale behavior without checking it.
+  - Five guides cover all listed topics. All five TypeScript examples passed semantic checks against SDK source; the full site built with internal-link checking. Examples involving accounts/trades were not sent to a live backend.
 - [ ] Add navigation between guides and API reference, generated API sidebar entries, and VitePress local search. Use the default theme rather than building a custom theme.
 - [ ] Configure the GitHub Pages base path as `/api-client-typescript/`. Verify internal links, assets, source links, and generated type links under that prefix.
 

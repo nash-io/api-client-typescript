@@ -6,6 +6,9 @@ hero:
   tagline: Typed requests, authenticated signing, and real-time market data.
   actions:
     - theme: brand
+      text: Get started
+      link: /guide/getting-started
+    - theme: alt
       text: API reference
       link: /api/
     - theme: alt
