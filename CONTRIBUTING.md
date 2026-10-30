@@ -37,3 +37,18 @@ For no-emit checks, run `yarn tsc --noEmit -p tsconfig.json` and `yarn tsc --noE
 The runtime smoke checks a request signature (including tamper rejection), BIP-39 vectors, and a protocol signature without credentials or a backend. Coverage generation is distinct from `yarn cov:check`, which requires 100% coverage. Yarn Classic's audit exit code is a severity bitmask: `--level critical` filters displayed findings, not the exit code; CI fails on critical findings or an audit execution error.
 
 Manual scripts under `integration-tests/` require real environment configuration and credentials. Local signing verification does not establish live backend acceptance. Never commit credentials.
+
+## Documentation
+
+The [published guides](https://nash-io.github.io/api-client-typescript/guide/getting-started.html) and [API reference](https://nash-io.github.io/api-client-typescript/api/) use VitePress's default theme and local search.
+
+```sh
+yarn doc          # Regenerate API Markdown, build, add legacy redirects, check output links
+yarn doc:dev      # Generate API Markdown once, then serve authored documentation
+yarn doc:api      # Regenerate API pages after SDK source/comment edits
+yarn doc:preview  # Serve the built site under /api-client-typescript/
+```
+
+Edit guides and the landing page in `website/`; never edit generated `website/api/` pages. TypeDoc reads the public SDK entry point and environments. The VitePress config imports its generated sidebar, so generate API pages before starting VitePress directly.
+
+`yarn doc` produces `website/.vitepress/dist`, including `.nojekyll` and legacy URL redirects. Every push builds and validates the site; `v*` release tags publish it to the existing `gh-pages` branch. A local preview is not evidence that a release deployment or live backend call succeeded.

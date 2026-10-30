@@ -3,7 +3,9 @@
 Official TypeScript client for interacting with the [Nash Exchange](https://nash.io/).
 
 - [Github repository](https://github.com/nash-io/api-client-typescript)
-- [Documentation](https://nash-io.github.io/api-client-typescript)
+- [Guides](https://nash-io.github.io/api-client-typescript/guide/getting-started.html)
+- [API reference](https://nash-io.github.io/api-client-typescript/api/)
+- [Contributing](CONTRIBUTING.md)
 
 To test your integrations, Nash provides a public sandbox environment at https://app.sandbox.nash.io.
 
@@ -11,7 +13,7 @@ NOTE: In sandbox, testnet funds are automatically sent to new accounts. The sand
 
 ## Installation
 
-Requires usage of Node 14 or greater.
+Published runtime requirement: Node >=14.3. Building this repository uses Node 24 and Yarn 1.22.22; see [Contributing](CONTRIBUTING.md).
 
 ```sh
 yarn add @neon-exchange/api-client-typescript

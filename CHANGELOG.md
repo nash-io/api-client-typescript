@@ -9,6 +9,13 @@ All notable changes to this project will be documented in this file. See [standa
 - MPC API-key secrets must now include a registered `request_signing_key`. Legacy secrets cannot authenticate API-key HTTP requests; create a replacement with `Client.createApiKey(...)` and migrate before separately revoking the old key. Never fabricate or manually insert a request key. The request-signing key is independent of the MPC payload-signing keys and Rails webhook signing secrets.
 - API-key-authenticated GraphQL HTTP and Rails REST requests now sign the exact transmitted request: Unix timestamp, uppercase method, encoded path and query, customer ID, and raw body or multipart SHA-256 digest. The server accepts timestamps within 30 seconds; identical requests in the same second produce the same signature and may be rejected as replays. The SDK does not retry or alter clock state. WebSocket signing behavior is unchanged.
 
+### Documentation and build tooling
+
+- Use Node 24 for development and CI, retaining Yarn 1.22.22 and the published SDK's declared Node >=14.3 runtime range.
+- Replace standalone TypeDoc HTML with VitePress guides, generated API Markdown, local search, and public Rails/type documentation. Preserve published documentation entry URLs and GitHub Pages hosting.
+- Upgrade TypeScript to 5.0.4 for TypeDoc compatibility; update Jest/ts-jest only to resolve the old transformer's incompatible compiler API.
+- Validate generated documentation links, assets, and anchors in CI; add an offline request/protocol signing and key-derivation smoke command.
+
 
 
 <a name="6.4.30"></a>
