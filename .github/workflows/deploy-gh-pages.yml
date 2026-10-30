@@ -7,6 +7,9 @@ on:
     tags:
       - v*
 
+permissions:
+  contents: write
+
 jobs:
   deploy_pages:
     runs-on: ubuntu-latest
@@ -21,14 +24,13 @@ jobs:
     - run: yarn doc
 
     # start: temporary fix for broken link on nash.io/developers
-    - run: mkdir docs/docs
-    - run: echo "<a href='https://nash-io.github.io/api-client-typescript/'>Please visit https://nash-io.github.io/api-client-typescript/</a>" > docs/docs/index.html
+    - run: mkdir -p website/.vitepress/dist/docs
+    - run: echo "<a href='https://nash-io.github.io/api-client-typescript/'>Please visit https://nash-io.github.io/api-client-typescript/</a>" > website/.vitepress/dist/docs/index.html
     # end: temporary fix
 
-    - run: touch docs/.nojekyll
-    - name: Deploy docs 🚀
-      uses: JamesIves/github-pages-deploy-action@releases/v3
+    - run: touch website/.vitepress/dist/.nojekyll
+    - name: Deploy docs
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: docs # The folder the action should deploy.
+        branch: gh-pages
+        folder: website/.vitepress/dist
