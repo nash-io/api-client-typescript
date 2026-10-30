@@ -34,8 +34,8 @@
 
 ## 6. Remove index signatures from closed request types
 
-- [ ] 6.1 Remove `[key: string]: unknown` from `RailsCustomerCreation`, `RailsAnswerComplianceRequest`, `RailsPersonalInformationRequest`, `RailsSourceOfFunds`, `RailsTermsAcceptanceRequest`, wallet challenge/registration, IBAN verification and webhook creation requests. Keep it on the MPC payload types (schemas are open there) only if a field list isn't documented.
-- [ ] 6.2 Run `tsc`; fix integration scripts that relied on extra keys.
+- [x] 6.1 Remove `[key: string]: unknown` from `RailsCustomerCreation`, `RailsAnswerComplianceRequest`, `RailsPersonalInformationRequest`, `RailsSourceOfFunds`, `RailsTermsAcceptanceRequest`, wallet challenge/registration, IBAN verification and webhook creation requests. Keep it on the MPC payload types (schemas are open there) only if a field list isn't documented.
+- [x] 6.2 Run `tsc`; fix integration scripts that relied on extra keys.
 
 ## 7. New and changed operations
 

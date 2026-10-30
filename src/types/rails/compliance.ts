@@ -54,7 +54,6 @@ export interface RailsComplianceRequirements {
 
 export interface RailsAnswerComplianceRequest {
   answer: string
-  [key: string]: unknown
 }
 
 export interface RailsAnswerComplianceResponse {
@@ -154,7 +153,6 @@ export interface RailsTermsAcceptanceRequest {
     | string[]
     | Array<{ id: string; version?: string }>
     | Record<string, string>
-  [key: string]: unknown
 }
 
 export interface RailsAcceptedAgreement {

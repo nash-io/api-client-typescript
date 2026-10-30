@@ -4,7 +4,6 @@ export interface RailsWebhookSubscriptionCreationRequest {
   url: string
   events: RailsWebhookEvent[]
   secret?: string
-  [key: string]: unknown
 }
 
 export type RailsWebhookEvent =

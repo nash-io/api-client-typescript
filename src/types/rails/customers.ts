@@ -83,7 +83,6 @@ export interface RailsCustomerCreation {
   countryCode: string
   offeringConsent?: boolean
   stateCode?: string
-  [key: string]: unknown
 }
 
 export interface RailsCreatedCustomer {

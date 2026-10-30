@@ -47,7 +47,6 @@ export interface RailsBlockchains {
 export interface RailsWalletChallengeRequest {
   blockchain: RailsBlockchain
   address: string
-  [key: string]: unknown
 }
 
 export interface RailsWalletChallengeResponse {
@@ -64,7 +63,6 @@ export interface RailsWalletRegistrationRequest {
   challenge?: string
   publicKey?: string
   salt?: string
-  [key: string]: unknown
 }
 
 export interface RailsWallet {
@@ -90,7 +88,6 @@ export interface RailsAccountWalletsResponse {
 
 export interface RailsIbanVerificationRequest {
   iban: string
-  [key: string]: unknown
 }
 
 export interface RailsPaymentMethod {

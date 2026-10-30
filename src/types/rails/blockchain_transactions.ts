@@ -3,19 +3,16 @@ import { RailsEnvironment } from './common'
 export interface RailsMpcPayloadSignature {
   publicKey: string
   signedDigest: string
-  [key: string]: unknown
 }
 
 export interface RailsMpcSignedPayloadRequest {
   payload: Record<string, unknown>
   signature: RailsMpcPayloadSignature
-  [key: string]: unknown
 }
 
 export interface RailsDhPoolRequest {
   dhPublics: string[]
   blockchain: string
-  [key: string]: unknown
 }
 
 export interface RailsDhPoolResponse {
