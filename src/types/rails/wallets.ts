@@ -1,25 +1,64 @@
 import { RailsEnvironment } from './common'
 
+export type RailsBlockchain =
+  | 'eth'
+  | 'avaxc'
+  | 'polygon'
+  | 'arbitrum'
+  | 'neo_x'
+  | 'bnb'
+  | 'base'
+  | 'mantle'
+  | 'optimism'
+  | 'btc'
+  | 'solana'
+  | 'neo3'
+
+export type RailsAccountWalletBlockchain =
+  | 'eth'
+  | 'avaxc'
+  | 'polygon'
+  | 'arbitrum'
+  | 'neo_x'
+  | 'bnb'
+  | 'base'
+  | 'mantle'
+  | 'optimism'
+  | 'neo'
+  | 'neo3'
+  | 'btc'
+  | 'solana'
+
+export type RailsPaymentMethodType =
+  | 'external_bank_account'
+  | 'nash_bank_account'
+  | 'card'
+
+export type RailsPaymentMethodStatus =
+  | 'pending_review'
+  | 'rejected'
+  | 'approved'
+
 export interface RailsBlockchains {
   environment: RailsEnvironment
-  blockchains: string[]
+  blockchains: RailsBlockchain[]
 }
 
 export interface RailsWalletChallengeRequest {
-  blockchain: string
+  blockchain: RailsBlockchain
   address: string
   [key: string]: unknown
 }
 
 export interface RailsWalletChallengeResponse {
   environment: RailsEnvironment
-  blockchain: string
+  blockchain: RailsBlockchain
   address: string
   challenge: string
 }
 
 export interface RailsWalletRegistrationRequest {
-  blockchain: string
+  blockchain: RailsBlockchain
   address: string
   signature: string
   challenge?: string
@@ -29,7 +68,7 @@ export interface RailsWalletRegistrationRequest {
 }
 
 export interface RailsWallet {
-  blockchain: string
+  blockchain: RailsBlockchain
   address: string
   createdAt: string
 }
@@ -39,7 +78,8 @@ export interface RailsRegisteredWallet {
   wallet: RailsWallet
 }
 
-export interface RailsAccountWallet extends RailsWallet {
+export interface RailsAccountWallet extends Omit<RailsWallet, 'blockchain'> {
+  blockchain: RailsAccountWalletBlockchain
   type: 'nash' | 'external'
 }
 
@@ -55,11 +95,11 @@ export interface RailsIbanVerificationRequest {
 
 export interface RailsPaymentMethod {
   id: string
-  type: string | null
+  type: RailsPaymentMethodType | null
   iban: string | null
   currency: string | null
   nameVerified: boolean | null
-  status: string | null
+  status: RailsPaymentMethodStatus | null
   payeeVerificationId: string | null
 }
 
@@ -76,8 +116,8 @@ export interface RailsIbanVerificationResponse {
 
 export interface RailsPaymentMethodSummary {
   id: string
-  type: string | null
-  status: string | null
+  type: RailsPaymentMethodType | null
+  status: RailsPaymentMethodStatus | null
   currency: string | null
   description: string | null
   nameVerified: boolean | null

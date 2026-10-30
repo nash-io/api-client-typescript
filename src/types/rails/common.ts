@@ -1,3 +1,5 @@
+import type { RailsCredentialScope } from './credentials'
+
 export interface RailsRequestOptions {
   idempotencyKey?: string
   headers?: Record<string, string>
@@ -11,7 +13,7 @@ export interface RailsPartner {
   environment: RailsEnvironment
   id: string
   kybStatus: 'not_applied' | 'pending_kyc' | 'approved'
-  scopes: string[]
+  scopes: RailsCredentialScope[]
 }
 
 export interface RailsCurrency {

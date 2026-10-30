@@ -1,4 +1,19 @@
 import { RailsEnvironment, RailsMonetaryAmount } from './common'
+import { RailsAgreementType, RailsKycStatusValue } from './customers'
+
+export type RailsComplianceObligationStatus =
+  | 'missing'
+  | 'expired'
+  | 'rejected'
+  | 'pending_upload'
+  | 'pending_scanning'
+  | 'pending_approval'
+
+export type RailsComplianceRequestType =
+  | 'proof_of_address'
+  | 'proof_of_funds'
+  | 'proof_of_bank_account_ownership'
+  | 'other'
 
 export interface RailsComplianceObligation {
   type:
@@ -15,9 +30,9 @@ export interface RailsComplianceObligation {
   iban?: string | null
   id?: string
   question?: string | null
-  requestType?: string
+  requestType?: RailsComplianceRequestType
   requirements?: Array<{ field: string; type: string; mandatory: boolean; options?: string[] }>
-  status?: string
+  status?: RailsComplianceObligationStatus
   subject?: string | null
 }
 
@@ -26,7 +41,7 @@ export interface RailsCompliancePendingReview {
   id: string
   status: 'pending_review'
   blockFiatServices: boolean
-  requestType?: 'proof_of_address' | 'proof_of_funds' | 'proof_of_bank_account_ownership' | 'other'
+  requestType?: RailsComplianceRequestType
   question?: string | null
   subject?: string | null
 }
@@ -69,7 +84,7 @@ export interface RailsPersonalInformationRequest {
 export interface RailsPersonalInformationResponse {
   environment: RailsEnvironment
   id: string
-  kycStatus: string
+  kycStatus: RailsKycStatusValue
 }
 
 
@@ -144,7 +159,7 @@ export interface RailsTermsAcceptanceRequest {
 
 export interface RailsAcceptedAgreement {
   id: string
-  type: string
+  type: RailsAgreementType
   version: string
 }
 

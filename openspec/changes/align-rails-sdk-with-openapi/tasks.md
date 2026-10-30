@@ -26,10 +26,10 @@
 
 ## 5. Enumerations as unions (from the OpenAPI enums)
 
-- [ ] 5.1 Quote/order: `status` (25 values; `HistoryOrder.status` 11), `blockchain`, `settlementType`.
-- [ ] 5.2 Wallets: `blockchain` for challenge/registration/`RailsBlockchains`; `neo` only in the `GET /wallets` response type. Payment methods: `type`, `status`.
-- [ ] 5.3 KYC: `status`/`kycStatus` (11 values), `failureDetail` (45), requirement field `field`/`type`, agreement `type`. Compliance obligation `status` and `requestType`.
-- [ ] 5.4 `RailsPartner.scopes: RailsCredentialScope[]` (type-only import; check for cycles).
+- [x] 5.1 Quote/order: `status` (25 values; `HistoryOrder.status` 11), `blockchain`, `settlementType`.
+- [x] 5.2 Wallets: `blockchain` for challenge/registration/`RailsBlockchains`; `neo` only in the `GET /wallets` response type. Payment methods: `type`, `status`.
+- [x] 5.3 KYC: `status`/`kycStatus` (11 values), `failureDetail` (45), requirement field `field`/`type`, agreement `type`. Compliance obligation `status` and `requestType`.
+- [x] 5.4 `RailsPartner.scopes: RailsCredentialScope[]` (type-only import; check for cycles).
 - [x] 5.5 Source-of-funds enums (`jobStatus`, `sourceOfIncome`, `accountPurposes[]`, `industry`).
 
 ## 6. Remove index signatures from closed request types
