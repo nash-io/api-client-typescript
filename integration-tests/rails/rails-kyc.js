@@ -135,13 +135,13 @@ async function run(afterOnboarding) {
       'source of funds advances to identity verification',
       async () => {
         await client.rails.submitSourceOfFunds(id, {
-          job_status: 'employed',
-          job_title: 'Engineer',
+          jobStatus: 'employed',
+          jobTitle: 'Engineer',
           industry: 'technology',
-          gross_annual_income: '50000 eur',
-          source_of_income: 'salary',
-          annual_intended_volume: '10000 eur',
-          account_purposes: ['crypto_exchange', 'investment']
+          grossAnnualIncome: '50000 eur',
+          sourceOfIncome: 'salary',
+          annualIntendedVolume: '10000 eur',
+          accountPurposes: ['crypto_exchange', 'investment']
         });
         expectStep(
           await client.rails.getCustomerKyc(id),

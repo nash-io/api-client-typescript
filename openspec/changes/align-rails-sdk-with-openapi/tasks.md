@@ -5,9 +5,9 @@
 
 ## 2. Source-of-funds wire contract
 
-- [ ] 2.1 Rewrite `RailsSourceOfFunds` (`src/types/rails/compliance.ts`) with the OpenAPI camelCase keys (`accountPurposes`, `annualIntendedVolume`, `confirm`, `donorName`, `giftAmount`, `grossAnnualIncome`, `inFullTimeEducation`, `incomeDetails`, `industry`, `investmentType`, `jobStatus`, `jobTitle`, `offeringConsent`, `otherAccountPurpose`, `otherIndustry`, `sourceOfIncome`); drop the `*_local` fields and the index signature; type the enum fields.
-- [ ] 2.2 Update the money-key regex in `validateMoneyInputs` (`src/client/rails/base.ts`) to `annualIntendedVolume|giftAmount|grossAnnualIncome`. Reject `{unit, amount, scale}` objects for these keys if the spec's "reject structured-number money inputs" is kept; otherwise amend the spec (see 8.3).
-- [ ] 2.3 Update `integration-tests/rails/rails-kyc.js:141-144` to camelCase keys and the README snippets. Confirm against sandbox whether snake_case was also being accepted.
+- [x] 2.1 Rewrite `RailsSourceOfFunds` (`src/types/rails/compliance.ts`) with the OpenAPI camelCase keys (`accountPurposes`, `annualIntendedVolume`, `confirm`, `donorName`, `giftAmount`, `grossAnnualIncome`, `inFullTimeEducation`, `incomeDetails`, `industry`, `investmentType`, `jobStatus`, `jobTitle`, `offeringConsent`, `otherAccountPurpose`, `otherIndustry`, `sourceOfIncome`); drop the `*_local` fields and the index signature; type the enum fields.
+- [x] 2.2 Update the money-key regex in `validateMoneyInputs` (`src/client/rails/base.ts`) to `annualIntendedVolume|giftAmount|grossAnnualIncome`. Current string-only behavior kept (no structured-object rejection added); spec wording amended in 8.3.
+- [x] 2.3 Update `integration-tests/rails/rails-kyc.js:141-144` to camelCase keys and the README snippets. NOT DONE: sandbox confirmation of whether snake_case was also accepted (no credentials available).
 
 ## 3. Response field names
 
@@ -30,7 +30,7 @@
 - [ ] 5.2 Wallets: `blockchain` for challenge/registration/`RailsBlockchains`; `neo` only in the `GET /wallets` response type. Payment methods: `type`, `status`.
 - [ ] 5.3 KYC: `status`/`kycStatus` (11 values), `failureDetail` (45), requirement field `field`/`type`, agreement `type`. Compliance obligation `status` and `requestType`.
 - [ ] 5.4 `RailsPartner.scopes: RailsCredentialScope[]` (type-only import; check for cycles).
-- [ ] 5.5 Source-of-funds enums (`jobStatus`, `sourceOfIncome`, `accountPurposes[]`, `industry`).
+- [x] 5.5 Source-of-funds enums (`jobStatus`, `sourceOfIncome`, `accountPurposes[]`, `industry`).
 
 ## 6. Remove index signatures from closed request types
 

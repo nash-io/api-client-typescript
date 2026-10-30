@@ -143,7 +143,7 @@ function validateMoneyInputs(value: unknown): void {
   Object.keys(value).forEach(key => {
     const field = value[key]
     if (
-      /^(amount|cryptoAmount|fiatAmount|annual_intended_volume|gift_amount|gift_amount_local|gross_annual_income|gross_annual_income_local)$/.test(key) &&
+      /^(amount|cryptoAmount|fiatAmount|annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
       field !== undefined &&
       typeof field !== 'string'
     ) {

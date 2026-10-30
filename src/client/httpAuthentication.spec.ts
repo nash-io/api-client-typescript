@@ -319,6 +319,11 @@ it('retains large monetary integers as strings and rejects numeric money inputs'
     walletAddress: '0x1234',
     fiatAmount: 0.1
   })).rejects.toThrow('must be a decimal string')
+  send.mockClear()
+  await expect(sdk.rails.submitSourceOfFunds('customer', {
+    grossAnnualIncome: 50000 as unknown as string
+  })).rejects.toThrow('must be a decimal string')
+  expect(send).not.toHaveBeenCalled()
 })
 
 it('registers fresh request public keys and exports only matching local private keys without changing MPC material', async () => {

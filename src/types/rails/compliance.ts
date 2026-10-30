@@ -60,27 +60,58 @@ export interface RailsPersonalInformationResponse {
 }
 
 
+export type RailsAccountPurpose =
+  | 'investment'
+  | 'crypto_exchange'
+  | 'saving'
+  | 'staking'
+  | 'cash_out_crypto'
+  | 'other'
+
+export type RailsIndustry =
+  | 'services'
+  | 'transportation'
+  | 'hospitality'
+  | 'retail'
+  | 'health_care'
+  | 'finance'
+  | 'technology'
+  | 'media'
+  | 'entertainment'
+  | 'real_state'
+  | 'public_sector'
+  | 'other'
+
+export type RailsJobStatus =
+  | 'employed'
+  | 'self_employed'
+  | 'unemployed'
+  | 'retired'
+
+export type RailsSourceOfIncome =
+  | 'salary'
+  | 'investment'
+  | 'gift_scholarship'
+  | 'other'
+
 export interface RailsSourceOfFunds {
-  account_purposes?: string[]
-  annual_intended_volume?: RailsMonetaryAmount
+  accountPurposes?: RailsAccountPurpose[]
+  annualIntendedVolume?: RailsMonetaryAmount
   confirm?: boolean
-  donor_name?: string
-  gift_amount?: RailsMonetaryAmount
-  gift_amount_local?: RailsMonetaryAmount
-  gross_annual_income?: RailsMonetaryAmount
-  gross_annual_income_local?: RailsMonetaryAmount
-  in_full_time_education?: boolean
-  income_details?: string
-  industry?: string
-  investment_type?: string
-  job_status?: string
-  job_title?: string
-  offering_consent?: boolean
-  other_account_purpose?: string
-  other_industry?: string
-  source_of_income?: string
+  donorName?: string
+  giftAmount?: RailsMonetaryAmount
+  grossAnnualIncome?: RailsMonetaryAmount
+  inFullTimeEducation?: boolean
+  incomeDetails?: string
+  industry?: RailsIndustry
+  investmentType?: string
+  jobStatus?: RailsJobStatus
+  jobTitle?: string
+  offeringConsent?: boolean
+  otherAccountPurpose?: string
+  otherIndustry?: string
+  sourceOfIncome?: RailsSourceOfIncome
   sourceOfFunds?: RailsSourceOfFunds
-  [key: string]: unknown
 }
 
 export type RailsSubmitSourceOfFundsRequest = RailsSourceOfFunds
