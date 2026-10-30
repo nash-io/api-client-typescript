@@ -9,6 +9,7 @@ import {
   RailsFillDhPoolRequest,
   RailsFillDhPoolResponse,
   RailsGetApiKeyResponse,
+  RailsGetBlockchainFeesResponse,
   RailsGetPartnerResponse,
   RailsIterateTransactionRequest,
   RailsIterateTransactionResponse,
@@ -157,7 +158,7 @@ function parseRailsResponse(text: string, operation: RailsOperationName): unknow
   const exactMoney = operation === 'getOpenApi'
     ? text
     : text.replace(
-        /("(?:amount|cryptoAmount|fiatAmount)"\s*:\s*)(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)(?=\s*[,}\]])/g,
+        /("(?:amount|cryptoAmount|fiatAmount|price(?:Low|Medium|High)|baseFeePerGas|maxFeePerGas(?:Low|Medium|High)|maxPriorityFeePerGas(?:Low|Medium|High))"\s*:\s*)(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)(?=\s*[,}\]])/g,
         '$1"$2"'
       )
   return JSON.parse(exactMoney) as unknown
@@ -243,6 +244,10 @@ export class RailsBaseClient {
     options?: RailsRequestOptions
   ): Promise<RailsPrepareTransactionResponse> {
     return this.request('prepareTransaction', { body, options })
+  }
+
+  getBlockchainFees(blockchain: string): Promise<RailsGetBlockchainFeesResponse> {
+    return this.request('getBlockchainFees', { query: { blockchain } })
   }
 
   iterateTransaction(
@@ -386,6 +391,7 @@ export class RailsBaseClient {
     }
 
     let code: string | undefined
+    let reason: string | undefined
     let backendMessage: string | undefined
     if (isRecord(parsed) && isRecord(parsed.error)) {
       if (typeof parsed.error.code === 'string') {
@@ -393,6 +399,9 @@ export class RailsBaseClient {
       }
       if (typeof parsed.error.message === 'string') {
         backendMessage = parsed.error.message
+      }
+      if (typeof parsed.error.reason === 'string') {
+        reason = parsed.error.reason
       }
     }
 
@@ -406,6 +415,6 @@ export class RailsBaseClient {
     } else {
       details = { response: 'JSON response contained no structured details' }
     }
-    return new RailsApiError(status, code, backendMessage, details)
+    return new RailsApiError(status, code, backendMessage, details, reason)
   }
 }

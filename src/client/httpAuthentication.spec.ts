@@ -277,6 +277,39 @@ it('retrieves OpenAPI without credentials and propagates structured, replay, and
   }
 })
 
+it('signs blockchain fees as partner with the query and keeps fee integers exact', async () => {
+  const sdk = client()
+  await sdk.login({ apiKey: 'registered', secret: encode(secret) })
+  send.mockClear()
+  send.mockImplementationOnce(async () => ({
+    status: 200,
+    ok: true,
+    text: async () =>
+      '{"environment":"sandbox","getBlockchainFees":{"blockchain":"ETH","index":7,"priceMedium":9007199254740993,"priceLow":null}}'
+  }))
+  const result = await sdk.rails.getBlockchainFees('ETH')
+  const [url, request] = calls()[0]
+  expect(new URL(url).pathname + new URL(url).search).toBe('/api/v1/transactions/blockchain-fees?blockchain=ETH')
+  expect(request.method).toBe('GET')
+  expect(request.body).toBeUndefined()
+  expect(request.headers['nash-act-as']).toBe('partner')
+  expect(verify(url, request)).toBe(true)
+  expect(result.getBlockchainFees.priceMedium).toBe('9007199254740993')
+  expect(result.getBlockchainFees.priceLow).toBeNull()
+  expect(result.getBlockchainFees.index).toBe(7)
+})
+
+it('exposes the backend error reason', async () => {
+  const sdk = client()
+  await sdk.login({ apiKey: 'registered', secret: encode(secret) })
+  send.mockImplementationOnce(async () => ({
+    status: 422,
+    ok: false,
+    text: async () => JSON.stringify({ error: { code: 'invalid_request', message: 'Rejected', reason: 'quote_expired' } })
+  }))
+  await expect(sdk.rails.getPartner()).rejects.toMatchObject({ status: 422, code: 'invalid_request', reason: 'quote_expired' })
+})
+
 it('retains large monetary integers as strings and rejects numeric money inputs', async () => {
   const sdk = client()
   await sdk.login({ apiKey: 'registered', secret: encode(secret) })

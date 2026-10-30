@@ -76,6 +76,7 @@ export const RAILS_ROUTES = {
   listApiKeys: { method: 'GET', path: '/api-keys' },
   getApiKey: { method: 'GET', path: '/api-keys/{api_key_id}' },
   revokeApiKey: { method: 'DELETE', path: '/api-keys/{api_key_id}' },
+  getBlockchainFees: { method: 'GET', path: '/transactions/blockchain-fees' },
   fillDhPool: { method: 'POST', path: '/transactions/signatures/dh-pool' },
   prepareTransaction: { method: 'POST', path: '/transactions/prepare' },
   iterateTransaction: { method: 'POST', path: '/transactions/iterate' },

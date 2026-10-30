@@ -20,6 +20,26 @@ export interface RailsDhPoolResponse {
   dhFillPool: Array<unknown>
 }
 
+export interface RailsBlockchainFees {
+  blockchain: string
+  index: number
+  baseFeePerGas?: string | null
+  maxFeePerGasHigh?: string | null
+  maxFeePerGasLow?: string | null
+  maxFeePerGasMedium?: string | null
+  maxPriorityFeePerGasHigh?: string | null
+  maxPriorityFeePerGasLow?: string | null
+  maxPriorityFeePerGasMedium?: string | null
+  priceHigh?: string | null
+  priceLow?: string | null
+  priceMedium?: string | null
+}
+
+export interface RailsGetBlockchainFeesResponse {
+  environment: RailsEnvironment
+  getBlockchainFees: RailsBlockchainFees
+}
+
 export interface RailsPrepareTransactionResponse {
   environment: RailsEnvironment
   prepareTransaction: Record<string, unknown>

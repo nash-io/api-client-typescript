@@ -39,11 +39,11 @@
 
 ## 7. New and changed operations
 
-- [ ] 7.1 Add `getBlockchainFees(blockchain)`: route `GET /transactions/blockchain-fees` with `query: { blockchain }` (acts as partner via the existing `/transactions/` rule), response type with nullable integer `price*`, `baseFeePerGas`, `maxFeePerGas*`, `maxPriorityFeePerGas*`.
-- [ ] 7.2 Decide fee-integer handling: add these keys to the response stringifying regex in `parseRailsResponse` (preferred, matches the spec's exact-money rule) or document the 2^53 limit. Update the response type accordingly.
-- [ ] 7.3 Replace the hand-built fee request in `integration-tests/rails/rails-sell-nash-wallet-for-partner.js:69-80` with the new method; update the README lines that say no fee reader exists (~69, ~200).
-- [ ] 7.4 `RailsApiError`: add `readonly reason?: string` from `error.reason`; export a `RailsErrorCode` union if desired.
-- [ ] 7.5 Check against the live server whether `cancelQuote`, `recalculateQuote`, `reconfirmQuote` need a `{}` body (the fiat-ramp guide sends one; OpenAPI defines none). Change only if the server requires it.
+- [x] 7.1 Add `getBlockchainFees(blockchain)`: route `GET /transactions/blockchain-fees` with `query: { blockchain }` (acts as partner via the existing `/transactions/` rule), response type with nullable integer `price*`, `baseFeePerGas`, `maxFeePerGas*`, `maxPriorityFeePerGas*`.
+- [x] 7.2 Decide fee-integer handling: add these keys to the response stringifying regex in `parseRailsResponse` (preferred, matches the spec's exact-money rule) or document the 2^53 limit. Update the response type accordingly.
+- [x] 7.3 Replace the hand-built fee request in `integration-tests/rails/rails-sell-nash-wallet-for-partner.js:69-80` with the new method; update the README lines that say no fee reader exists (~69, ~200).
+- [x] 7.4 `RailsApiError`: add `readonly reason?: string` from `error.reason`; export a `RailsErrorCode` union if desired.
+- [ ] 7.5 (not verifiable without credentials: cancel/recalculate/reconfirm return 401 unauthenticated; left unchanged) Check against the live server whether `cancelQuote`, `recalculateQuote`, `reconfirmQuote` need a `{}` body (the fiat-ramp guide sends one; OpenAPI defines none). Change only if the server requires it.
 
 ## 8. Specs and docs
 

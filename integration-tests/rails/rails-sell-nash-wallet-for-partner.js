@@ -8,10 +8,7 @@ const {
   SigningPayloadID
 } = require('@neon-exchange/nash-protocol');
 const Nash = require('../../build/main');
-const {
-  authenticatedHeaders,
-  decodeApiSecret
-} = require('../../build/main/client/requestSigning');
+const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
 const formatError = require('./support/format-error');
 const {
@@ -27,7 +24,7 @@ const required = name => {
 const nextSigningSecond = () =>
   new Promise(resolve => setTimeout(resolve, 1010 - (Date.now() % 1000)));
 
-async function sell(client, config, credentials, paymentMethodId, scenario) {
+async function sell(client, config, paymentMethodId, scenario) {
   const { asset, blockchain, assetHash, amount } = scenario;
   const transactionRequest = async (operation, body) => {
     try {
@@ -66,26 +63,25 @@ async function sell(client, config, credentials, paymentMethodId, scenario) {
   const quantity = amount;
 
 
-  // The SDK has no public Rails fee reader; reuse its request signer for the documented GET.
-  const feeUrl = new URL(`${config.railsApiUrl.replace(/\/$/, '')}/transactions/blockchain-fees`);
-  feeUrl.searchParams.set('blockchain', blockchain);
-  const response = await fetch(feeUrl, {
-    headers: authenticatedHeaders(credentials, 'GET', feeUrl, '', '', {}, undefined, 'partner'),
-    redirect: 'error', signal: AbortSignal.timeout(30000)
-  });
-  assert(response.ok, `${asset} blockchain-fees returned HTTP ${response.status}`);
-  const feeResponse = await response.json();
+  const feeResponse = await client.rails.getBlockchainFees(blockchain);
   assert.strictEqual(feeResponse.environment, 'sandbox');
   const fees = feeResponse.getBlockchainFees;
   assert(fees && fees.priceMedium != null, 'Missing medium blockchain fee');
+  // Fees arrive as exact decimal strings; the signed payload takes JSON numbers.
+  const feeNumber = value => {
+    if (value == null) return value;
+    const number = Number(value);
+    assert(Number.isSafeInteger(number), `Blockchain fee ${value} exceeds 2^53`);
+    return number;
+  };
   assert(Date.parse(confirmed.quote.transferUntil) > Date.now(), 'Sell funding deadline passed');
   const prepared = await transactionRequest('prepareTransaction', await client.rails.signPayload({
     kind: SigningPayloadID.prepareTransactionPayload,
     payload: {
       timestamp: Date.now(), blockchain, address: wallet.address,
-      gasPrice: fees.priceMedium,
-      maxFeePerGas: fees.maxFeePerGasMedium,
-      maxPriorityFeePerGas: fees.maxPriorityFeePerGasMedium,
+      gasPrice: feeNumber(fees.priceMedium),
+      maxFeePerGas: feeNumber(fees.maxFeePerGasMedium),
+      maxPriorityFeePerGas: feeNumber(fees.maxPriorityFeePerGasMedium),
       transfer: {
         quantity: { amount: quantity, assetHash, blockchain },
         targetAddress, capQuantityToMaximum: false
@@ -173,7 +169,7 @@ async function run() {
         amount: process.env.NASH_NFR_SELL_ETH_AMOUNT || '0.1' }
     ]) {
       try {
-        await sell(client, args[0], credentials, payout.id, scenario);
+        await sell(client, args[0], payout.id, scenario);
       } catch (error) {
         failures.push(scenario.asset);
         console.error(formatError(`${scenario.asset} Nash-wallet sell`, error));
