@@ -18,6 +18,7 @@ The SDK SHALL expose a named public function for each operation in the supported
 | Customers | GET | `/customers/{customer_id}/kyc` |
 | Customers | POST | `/customers/{customer_id}/kyc/initiate` |
 | Customers | POST | `/customers/{customer_id}/terms` |
+| Customers | GET | `/customers/{customer_id}/terms` |
 | Compliance | GET | `/customers/{customer_id}/compliance/requirements` |
 | Compliance | POST | `/customers/{customer_id}/compliance/personal-information` |
 | Compliance | POST | `/customers/{customer_id}/compliance/source-of-funds` |
@@ -48,6 +49,7 @@ The SDK SHALL expose a named public function for each operation in the supported
 | API keys | GET | `/api-keys` |
 | API keys | GET | `/api-keys/{api_key_id}` |
 | API keys | DELETE | `/api-keys/{api_key_id}` |
+| Signing | GET | `/transactions/blockchain-fees` |
 | Signing | POST | `/transactions/signatures/dh-pool` |
 | Signing | POST | `/transactions/prepare` |
 | Signing | POST | `/transactions/iterate` |
@@ -65,12 +67,17 @@ The SDK SHALL expose a named public function for each operation in the supported
 
 ### Requirement: Explicit Rails base URL and transport separation
 
-The SDK SHALL support a Rails API base URL independent of the exchange GraphQL host, preserving any configured path prefix. The inspected development deployment SHALL be usable with `https://rails.sandbox.nash.io/api/v1`. The SDK SHALL NOT silently substitute `/api/v1` for `/api/v1`, duplicate the prefix, or derive an unverified Rails host from the exchange host. A missing Rails base URL SHALL reject a Rails operation clearly without breaking existing exchange-only construction. Remote signed traffic SHALL require HTTPS; the existing explicit local-development mode SHALL permit HTTP. Rails calls SHALL always use HTTP regardless of the exchange websocket option.
+The SDK SHALL support a Rails API base URL independent of the exchange GraphQL host, preserving any configured path prefix. The Rails base URL SHALL include its full prefix (for example `https://rails.sandbox.nash.io/api/v1`), and the SDK SHALL NOT add or duplicate `/api/v1` or derive an unverified Rails host from the exchange host. A missing Rails base URL SHALL reject a Rails operation clearly without breaking existing exchange-only construction. Signed traffic SHALL require HTTPS, except that plain HTTP is permitted when the explicit local-development mode is enabled or the host is a loopback host (`localhost` or a `*.localhost` name, `127.0.0.1`, `[::1]`). Rails calls SHALL always use HTTP regardless of the exchange websocket option.
 
 #### Scenario: Custom prefixed environment
 
-- **WHEN** a client is configured with the inspected development base URL and lists customers
-- **THEN** the outgoing path begins with `/api/v1/customers` and that exact path is signed
+- **WHEN** a client is configured with `https://rails.sandbox.nash.io/api/v1` and lists customers
+- **THEN** the outgoing path begins with `/api/v1/customers` exactly once and that exact path is signed
+
+#### Scenario: Plain HTTP base URL
+
+- **WHEN** the Rails base URL uses `http:` with a non-loopback host outside the explicit local-development mode
+- **THEN** the operation is rejected before any request is sent
 
 #### Scenario: Exchange-only client
 
@@ -85,7 +92,7 @@ The SDK SHALL support a Rails API base URL independent of the exchange GraphQL h
 
 ### Requirement: Typed inputs and complete backend responses
 
-Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. All monetary inputs SHALL be decimal strings; the SDK SHALL reject numeric or structured-number money inputs rather than converting them through JavaScript floating-point values. All monetary responses SHALL expose numeric wire amounts as exact strings, preserving raw asset-precision integers and fixed-point scale fields without precision loss. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata, except for converting numeric money representations to strings. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
+Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. Monetary inputs (`amount`, `cryptoAmount`, `fiatAmount`, `annualIntendedVolume`, `giftAmount`, `grossAnnualIncome`) SHALL be decimal strings; the SDK SHALL reject numeric money inputs rather than converting them through JavaScript floating-point values. A structured `{unit, amount, scale}` object nested in a request SHALL be accepted only when its `amount` is a string. All monetary responses SHALL expose numeric wire amounts as exact strings, preserving raw asset-precision integers and fixed-point scale fields without precision loss. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata, except for converting numeric money representations to strings. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
 
 #### Scenario: Exact monetary representation
 
@@ -118,7 +125,7 @@ Customer-scoped functions SHALL require customer context as described in the aut
 
 ### Requirement: Structured error and authentication behavior
 
-Protected Rails calls SHALL reject locally when API-key authentication is not initialized; public OpenAPI retrieval SHALL be callable without credentials and SHALL NOT attach credential material. Non-success responses SHALL reject with the HTTP status, backend `error.code`, backend `error.message`, and available response details without parsing human-readable messages into codes. Empty or non-JSON failure bodies SHALL still produce a useful status-bearing error. Backend scope, environment, revocation, replay, rate-limit, and domain failures SHALL remain distinguishable. The SDK SHALL NOT log request secrets, webhook secrets, or uploaded document contents in diagnostics.
+Protected Rails calls SHALL reject locally when API-key authentication is not initialized; public OpenAPI retrieval SHALL be callable without credentials and SHALL NOT attach credential material. Non-success responses SHALL reject with the HTTP status, backend `error.code`, backend `error.message`, the optional backend `error.reason` (exposed as `reason`), and available response details without parsing human-readable messages into codes. Empty or non-JSON failure bodies SHALL still produce a useful status-bearing error. Backend scope, environment, revocation, replay, rate-limit, and domain failures SHALL remain distinguishable. The SDK SHALL NOT log request secrets, webhook secrets, or uploaded document contents in diagnostics.
 
 #### Scenario: Public API description
 

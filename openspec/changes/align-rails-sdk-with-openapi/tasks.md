@@ -47,12 +47,12 @@
 
 ## 8. Specs and docs
 
-- [ ] 8.1 Update `openspec/specs/authenticated-http-requests/spec.md` to the six-field canonical request (`timestamp, METHOD, path, customer_id, act_as, body`), the new interoperability vector (`478f8bb6...19e1`, three newlines after the path), and add requirements and scenarios for `nash-act-as: partner`: exactly one selector, `null` customer id, `/transactions/*` always partner, no override via caller headers.
-- [ ] 8.2 `openspec/specs/nash-rails-api/spec.md`: add `GET /customers/{customer_id}/terms` and `GET /transactions/blockchain-fees` to the table; fix the garbled `/api/v1` sentence at line 69; allow HTTP to loopback hosts as `base.ts` does, or tighten the code.
-- [ ] 8.3 Reconcile the money-input requirement with behavior (see 2.2).
-- [ ] 8.4 Fix the credential migration text in `README.md:120` and `CHANGELOG.md:9`: `Client.createApiKey` only grants `SIGNING`/`TRADING` scopes; Rails-scoped credentials come from the dashboard with a registered request key.
-- [ ] 8.5 `CHANGELOG.md:10`: describe the six-field request including `nash-act-as`.
-- [ ] 8.6 Remove the blank-line gaps in `src/client/rails/base.ts` (29-30, 192-193, 209-213).
+- [x] 8.1 Update `openspec/specs/authenticated-http-requests/spec.md` to the six-field canonical request (`timestamp, METHOD, path, customer_id, act_as, body`), the new interoperability vector (`478f8bb6...19e1`, three newlines after the path), and add requirements and scenarios for `nash-act-as: partner`: exactly one selector, `null` customer id, `/transactions/*` always partner, no override via caller headers.
+- [x] 8.2 `openspec/specs/nash-rails-api/spec.md`: add `GET /customers/{customer_id}/terms` and `GET /transactions/blockchain-fees` to the table; fix the garbled `/api/v1` sentence at line 69; allow HTTP to loopback hosts as `base.ts` does, or tighten the code.
+- [x] 8.3 Reconcile the money-input requirement with behavior (see 2.2).
+- [x] 8.4 Fix the credential migration text in `README.md:120` and `CHANGELOG.md:9`: `Client.createApiKey` only grants `SIGNING`/`TRADING` scopes; Rails-scoped credentials come from the dashboard with a registered request key.
+- [x] 8.5 `CHANGELOG.md:10`: describe the six-field request including `nash-act-as`.
+- [x] 8.6 Remove the blank-line gaps in `src/client/rails/base.ts` (29-30, 192-193, 209-213).
 
 ## 9. Verification
 

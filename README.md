@@ -117,7 +117,7 @@ try {
 }
 ```
 
-MPC Rails requests require an API-key login and a registered `request_signing_key`. Create replacement credentials with `Client.createApiKey(...)` before migrating; its secret includes the matching key registered during creation. Existing secrets without that key are rejected before network traffic. Do not edit a legacy secret to add an arbitrary private key. Keep the new secret private and revoke the old API key separately after migration.
+MPC Rails requests require an API-key login and a registered `request_signing_key`. `Client.createApiKey(...)` creates `SIGNING`/`TRADING` keys and registers a matching request key; its secret includes that key. Rails-scoped partner credentials are created in the Nash Rails dashboard, which registers the request key for them. Existing exports without `request_signing_key` are rejected before network traffic. Do not edit a legacy secret to add an arbitrary private key. Keep new secrets private and revoke the old API key separately after migration.
 
 Rails API keys need the scopes required by each operation. `getOpenApi()` is public. Partner operations such as `getPartner()` and `listCustomers()` use partner authorization; customer-resource methods send that resource's ID in `nash-customer-id`. A `customer_id` filter on `listOrders()` is a filter, not an authorization context.
 

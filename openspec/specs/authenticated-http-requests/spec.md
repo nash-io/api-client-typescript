@@ -6,16 +6,21 @@ Authenticate API-key HTTP traffic with signatures bound to the exact transmitted
 
 ### Requirement: Canonical digest and compact signature
 
-Every protected Rails REST request and every API-key-authenticated GraphQL HTTP request SHALL send `Authorization: Token <credential_id>`, `nash-timestamp` containing current Unix seconds, and `nash-signature` containing the hexadecimal compact 64-byte secp256k1 ECDSA signature over SHA-256 of the UTF-8 canonical request. The canonical request SHALL join exactly five fields with single newline separators and no appended terminator: timestamp, uppercase HTTP method, exact URL pathname including its encoded query string, customer identifier or empty string, and raw body or empty string. Requests without customer context and body SHALL retain both empty final fields. Signatures SHALL use the secret's request key, not MPC payload keys or webhook HMAC secrets.
+Every protected Rails REST request and every API-key-authenticated GraphQL HTTP request SHALL send `Authorization: Token <credential_id>`, `nash-timestamp` containing current Unix seconds, and `nash-signature` containing the hexadecimal compact 64-byte secp256k1 ECDSA signature over SHA-256 of the UTF-8 canonical request. The canonical request SHALL join exactly six fields with single newline separators and no appended terminator: timestamp, uppercase HTTP method, exact URL pathname including its encoded query string, customer identifier or empty string, act-as value (`partner`) or empty string, and raw body or empty string. Requests without customer context, act-as value, and body SHALL retain all three empty final fields. Signatures SHALL use the secret's request key, not MPC payload keys or webhook HMAC secrets.
 
 #### Scenario: Published interoperability vector
 
-- **WHEN** the request key is `01cbefdb07ad492f446edf947085503c1158a5a08262b974eb445de9045bf21a`, the timestamp is `1791907200`, the method is `GET`, the path is `/api/v1/customers?limit=20`, and the customer and body are empty
-- **THEN** the canonical bytes end in two newline characters after the path and the signature is `8c3f8c0d4346640135f61fee37f9bb9f762491f49fe11409ec9ce70d39fb73387a7da053a383e2e5ec2fcb8b1635fe8be17635ba9a8db2cd959be1481bf8d0d5`
+- **WHEN** the request key is `01cbefdb07ad492f446edf947085503c1158a5a08262b974eb445de9045bf21a`, the timestamp is `1791907200`, the method is `GET`, the path is `/api/v1/customers?limit=20`, and the customer, act-as, and body are empty
+- **THEN** the canonical bytes end in three newline characters after the path and the signature is `478f8bb61194d6e6671c626825659061504605adce6ad9c3096d4ae0bac84a0c5d45ebe28e1f9e11405948324405ce6b727649b685ba65294ef21b2a569219e1`
 
 #### Scenario: Request field integrity
 
 - **WHEN** the method, path, encoded query, customer identifier, or transmitted body changes
+- **THEN** the original signature no longer verifies for the changed canonical request
+
+#### Scenario: Act-as field integrity
+
+- **WHEN** the act-as value of a signed request is added, removed, or changed
 - **THEN** the original signature no longer verifies for the changed canonical request
 
 ### Requirement: Sign the bytes actually transmitted
@@ -50,6 +55,25 @@ Customer-scoped Rails calls SHALL accept an explicit customer identifier, send i
 
 - **WHEN** a partner-scoped request follows a customer-scoped request
 - **THEN** it omits `nash-customer-id` and signs an empty customer field
+
+### Requirement: Partner act-as selector
+
+Account-scoped Rails calls SHALL act for exactly one account: a customer (`nash-customer-id`, with the customer identifier signed in the customer field) or the partner itself (`nash-act-as: partner`, with `partner` signed in the act-as field and an empty customer field). A caller selects the partner by passing a `null` customer identifier. Requests under `/transactions/` SHALL always act as the partner. The SDK SHALL NOT send both selectors, and caller-supplied headers SHALL NOT set or override `nash-act-as`.
+
+#### Scenario: Explicit partner selection
+
+- **WHEN** an account-scoped call is made with a `null` customer identifier
+- **THEN** the request carries `nash-act-as: partner`, omits `nash-customer-id`, and signs an empty customer field and `partner` as the act-as field
+
+#### Scenario: Transactions endpoints
+
+- **WHEN** any `/transactions/*` operation is called
+- **THEN** the request carries `nash-act-as: partner` and signs it
+
+#### Scenario: Caller header override
+
+- **WHEN** caller headers include `nash-act-as` or `nash-customer-id`
+- **THEN** those headers are discarded and the SDK-controlled selector is sent
 
 ### Requirement: Multipart content digest
 

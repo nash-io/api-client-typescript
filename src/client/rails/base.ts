@@ -27,8 +27,6 @@ import {
   RailsRoute
 } from './routes'
 
-
-
 const RESERVED_HEADERS: Record<string, true> = {
   authorization: true,
   cookie: true,
@@ -191,7 +189,6 @@ function addQuery(url: URL, query?: object): void {
   }
 }
 
-
 export class RailsBaseClient {
   constructor(
     private readonly opts: EnvironmentConfig,
@@ -206,11 +203,6 @@ export class RailsBaseClient {
   getPartner(): Promise<RailsGetPartnerResponse> {
     return this.request('getPartner')
   }
-
-
-
-
-
 
   listApiKeys(): Promise<RailsListApiKeysResponse> {
     return this.request('listApiKeys')
