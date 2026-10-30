@@ -18,7 +18,8 @@ Keep Yarn 1.22.22, the existing CommonJS/ESM outputs, and the SDK's current mini
 - [x] Exercise actual SDK request signing and protocol signing/key derivation on Node 24. Module loading alone is not proof that native crypto works.
   - `node scripts/runtime-smoke.js` passed: request signature verification/tamper rejection, BIP-39 entropy/seed vectors, and verified protocol signature. Apple Silicon uses the SDK's existing WASM runtime adaptation, not the upstream macOS native binary.
 - [ ] Keep `engines.node` at its existing range only if the published SDK remains compatible. Verify the advertised minimum separately; if a required change drops that support, explicitly decide and document the new runtime floor and release impact.
-- [ ] Update contributor setup instructions with Node 24, Yarn 1.22.22, and native prerequisites.
+  - Runtime range remains unchanged. Minimum-version smoke is blocked locally: the official Node 14.3 macOS x64 binary downloaded successfully but cannot execute (`Failed to open libRosettaRuntime`); Node 14.3 has no macOS ARM64 binary. Recheck the final published build on a compatible x64/Linux runner before claiming minimum-runtime compatibility.
+- [x] Update contributor setup instructions with Node 24, Yarn 1.22.22, and native prerequisites.
 
 ## 2. Replace the documentation site with VitePress + TypeDoc
 
