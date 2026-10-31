@@ -8,6 +8,8 @@ import {
 
 export interface EnvironmentConfig {
   host: string
+  /** Explicit Rails REST base URL, including its complete versioned path prefix. */
+  railsApiUrl?: string
   maxEthCostPrTransaction?: string
   debug?: boolean
   neoScan?: string

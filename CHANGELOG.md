@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Unreleased
+
+### Breaking changes
+
+- MPC API-key secrets must now include a registered `request_signing_key`. Legacy exports without it are rejected and cannot authenticate API-key HTTP requests. `Client.createApiKey(...)` creates `SIGNING`/`TRADING` keys with a registered request key; Rails-scoped partner credentials are created in the Nash Rails dashboard, which registers the key. Migrate before separately revoking the old key. Never fabricate or manually insert a request key. The request-signing key is independent of the MPC payload-signing keys and Rails webhook signing secrets.
+- API-key-authenticated GraphQL HTTP and Rails REST requests now sign the exact transmitted request as six newline-joined fields: Unix timestamp, uppercase method, encoded path and query, customer ID, `nash-act-as` value (`partner` or empty), and raw body or multipart SHA-256 digest. The server accepts timestamps within 30 seconds; identical requests in the same second produce the same signature and may be rejected as replays. The SDK does not retry or alter clock state. WebSocket signing behavior is unchanged.
+
+### Documentation and build tooling
+
+- Use Node 24 for development and CI, retaining Yarn 1.22.22 and the published SDK's declared Node >=14.3 runtime range.
+- Replace the legacy TypeDoc 0.17 site with current TypeDoc HTML (README as home page, generated API reference including Rails types). Preserve the old entry URLs and GitHub Pages hosting; fail the docs build on TypeDoc validation warnings.
+- Upgrade TypeScript to 5.0.4 for TypeDoc compatibility; update Jest/ts-jest only to resolve the old transformer's incompatible compiler API.
+- Add an offline request/protocol signing and key-derivation smoke command.
+
+
+
 <a name="6.4.30"></a>
 ## [6.4.30](https://github.com/nash-io/api-client-typescript/compare/v6.4.29...v6.4.30) (2025-11-21)
 

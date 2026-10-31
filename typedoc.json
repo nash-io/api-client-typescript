@@ -1,0 +1,17 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts", "src/client/environments.ts"],
+  "tsconfig": "tsconfig.json",
+  "readme": "README.md",
+  "out": "docs",
+  "cleanOutputDir": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "githubPages": true,
+  "navigation": { "includeCategories": false, "includeGroups": true },
+  "validation": { "notExported": false },
+  "treatValidationWarningsAsErrors": true
+}

@@ -8,13 +8,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
-        node-version: '14'
+        node-version: '24'
+    - run: npm install --global yarn@1.22.22 --force
     - run: yarn install --frozen-lockfile
+    # --level filters output, not Yarn's exit-code bitmask; Bash uses -e.
+    - run: |
+        audit_status=0
+        yarn audit --level=critical || audit_status=$?
+        # Fail on critical findings (bit 16) or an audit execution error (1).
+        if [[ $audit_status -eq 1 || $audit_status -ge 16 ]]; then
+          exit 1
+        fi
+      shell: bash
     - run: yarn test:lint
     - run: yarn test:unit
     - run: yarn test:unit:cov
     - run: yarn build
-    - run: yarn doc
+    - name: Build and validate documentation
+      run: yarn doc
