@@ -8,7 +8,7 @@
 // Credentials (.env is gitignored):
 //   NASH_API_KEY + NASH_API_SECRET  use an existing API key (never revoked here), or
 //   NASH_RAILS_EMAIL + NASH_RAILS_PASSWORD  create a fresh key and revoke it at the end.
-// NASH_RAILS_ONLY=1 skips client.login() (GraphQL) and injects the API-key credentials
+// NASH_RAILS_ONLY=1 by default skips client.login() (GraphQL) and injects the API-key credentials
 //   directly via private Client fields (requestCredentials, mode); needs NASH_API_KEY.
 // Optional: NASH_ENV (sandbox), NASH_HOST (app.arm-dev1.nash.io),
 //   NASH_RAILS_API_URL (https://rails.sandbox.nash.io/api/v1)
@@ -17,6 +17,7 @@ const assert = require('assert');
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
+const railsOnly = require('./support/rails-only');
 
 const required = name => {
   if (!process.env[name]) throw new Error(`Set ${name}`);
@@ -78,7 +79,7 @@ async function run() {
       console.log('create API key with request_signing_key: PASS');
     }
 
-    if (process.env.NASH_RAILS_ONLY) {
+    if (railsOnly()) {
       assert(process.env.NASH_API_KEY, 'NASH_RAILS_ONLY requires NASH_API_KEY');
       // ponytail: relies on private fields; replace with a public API if the SDK adds one
       client.mode = Nash.ClientMode.MPC;

@@ -16,6 +16,7 @@ const {
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
+const railsOnly = require('./support/rails-only');
 const formatError = require('./support/format-error');
 const {
   normalizeAddress,
@@ -175,7 +176,7 @@ async function run() {
   };
 
   try {
-    if (process.env.NASH_RAILS_ONLY === '1') {
+    if (railsOnly()) {
       // ponytail: private fields match rails-kyc.js; use public Rails-only login if added.
       client.mode = Nash.ClientMode.MPC;
       client.requestCredentials = {

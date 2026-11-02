@@ -11,12 +11,13 @@
 // node integration-tests/rails/rails-api-smoke.js
 // Optional: NASH_TEST_CUSTOMER_ID=<owned-customer-id> checks a customer-scoped GET.
 // Optional: NASH_ENV defaults to sandbox.
-// Optional: NASH_RAILS_ONLY=1 skips client.login() (GraphQL) and signs Rails requests only.
+// NASH_RAILS_ONLY=1 by default (Rails-only auth); set NASH_RAILS_ONLY=0 to run client.login() (GraphQL).
 
 const assert = require('assert');
 const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
+const railsOnly = require('./support/rails-only');
 
 const context = {
   step: 'configuration',
@@ -65,7 +66,7 @@ async function run() {
     );
     console.log(`Public Rails OpenAPI: PASS (${operations.length} operations)`);
 
-    if (process.env.NASH_RAILS_ONLY === '1') {
+    if (railsOnly()) {
       // ponytail: private fields match rails-flows.js; use public Rails-only login if added.
       client.mode = Nash.ClientMode.MPC;
       client.requestCredentials = {
