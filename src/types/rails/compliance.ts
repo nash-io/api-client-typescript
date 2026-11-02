@@ -1,4 +1,4 @@
-import { RailsEnvironment, RailsMonetaryAmount } from './common'
+import { RailsCurrency, RailsEnvironment, RailsMonetaryAmount } from './common'
 import { RailsAgreementType, RailsKycStatusValue } from './customers'
 
 export type RailsComplianceObligationStatus =
@@ -123,11 +123,11 @@ export type RailsSourceOfIncome =
 
 export interface RailsSourceOfFunds {
   accountPurposes?: RailsAccountPurpose[]
-  annualIntendedVolume?: RailsMonetaryAmount
+  annualIntendedVolume?: RailsMonetaryAmount | RailsCurrency
   confirm?: boolean
   donorName?: string
-  giftAmount?: RailsMonetaryAmount
-  grossAnnualIncome?: RailsMonetaryAmount
+  giftAmount?: RailsMonetaryAmount | RailsCurrency
+  grossAnnualIncome?: RailsMonetaryAmount | RailsCurrency
   inFullTimeEducation?: boolean
   incomeDetails?: string
   industry?: RailsIndustry

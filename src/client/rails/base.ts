@@ -141,10 +141,15 @@ function validateMoneyInputs(value: unknown): void {
   }
   Object.keys(value).forEach(key => {
     const field = value[key]
+    const structured =
+      /^(annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
+      isRecord(field) &&
+      typeof field.amount === 'string'
     if (
       /^(amount|cryptoAmount|fiatAmount|annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
       field !== undefined &&
-      typeof field !== 'string'
+      typeof field !== 'string' &&
+      !structured
     ) {
       throw new Error(`Rails monetary input '${key}' must be a decimal string.`)
     }

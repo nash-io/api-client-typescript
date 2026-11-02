@@ -359,6 +359,19 @@ it('retains large monetary integers as strings and rejects numeric money inputs'
   expect(send).not.toHaveBeenCalled()
 })
 
+it('accepts structured source-of-funds currencies only with a string amount', async () => {
+  const sdk = client()
+  await sdk.login({ apiKey: 'registered', secret: encode(secret) })
+  send.mockClear()
+  const income = { unit: 'eur', amount: '200000', scale: 2 }
+  await sdk.rails.submitSourceOfFunds('customer', { grossAnnualIncome: income, sourceOfFunds: { giftAmount: income } })
+  expect(JSON.parse(calls()[0][1].body as string)).toEqual({ grossAnnualIncome: income, sourceOfFunds: { giftAmount: income } })
+  await expect(sdk.rails.submitSourceOfFunds('customer', {
+    annualIntendedVolume: { unit: 'eur', amount: 200000 as unknown as string, scale: 2 }
+  })).rejects.toThrow('must be a decimal string')
+  expect(send).toHaveBeenCalledTimes(1)
+})
+
 it('registers fresh request public keys and exports only matching local private keys without changing MPC material', async () => {
   // These cryptographic account-creation boundaries are mocked; request-key generation remains real.
   const hkdf = getHKDFKeysFromPassword as unknown as jest.Mock
