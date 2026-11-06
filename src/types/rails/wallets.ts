@@ -1,43 +1,43 @@
 import { RailsEnvironment } from './common'
 
 export type RailsBlockchain =
-  | 'eth'
-  | 'avaxc'
-  | 'polygon'
-  | 'arbitrum'
-  | 'neo_x'
-  | 'bnb'
-  | 'base'
-  | 'mantle'
-  | 'optimism'
-  | 'btc'
-  | 'solana'
-  | 'neo3'
+  | 'ETH'
+  | 'AVAXC'
+  | 'POLYGON'
+  | 'ARBITRUM'
+  | 'NEO_X'
+  | 'BNB'
+  | 'BASE'
+  | 'MANTLE'
+  | 'OPTIMISM'
+  | 'BTC'
+  | 'SOLANA'
+  | 'NEO3'
 
 export type RailsAccountWalletBlockchain =
-  | 'eth'
-  | 'avaxc'
-  | 'polygon'
-  | 'arbitrum'
-  | 'neo_x'
-  | 'bnb'
-  | 'base'
-  | 'mantle'
-  | 'optimism'
-  | 'neo'
-  | 'neo3'
-  | 'btc'
-  | 'solana'
+  | 'ETH'
+  | 'AVAXC'
+  | 'POLYGON'
+  | 'ARBITRUM'
+  | 'NEO_X'
+  | 'BNB'
+  | 'BASE'
+  | 'MANTLE'
+  | 'OPTIMISM'
+  | 'NEO'
+  | 'NEO3'
+  | 'BTC'
+  | 'SOLANA'
 
 export type RailsPaymentMethodType =
-  | 'external_bank_account'
-  | 'nash_bank_account'
-  | 'card'
+  | 'EXTERNAL_BANK_ACCOUNT'
+  | 'NASH_BANK_ACCOUNT'
+  | 'CARD'
 
 export type RailsPaymentMethodStatus =
-  | 'pending_review'
-  | 'rejected'
-  | 'approved'
+  | 'PENDING_REVIEW'
+  | 'REJECTED'
+  | 'APPROVED'
 
 export interface RailsBlockchains {
   environment: RailsEnvironment
@@ -78,7 +78,7 @@ export interface RailsRegisteredWallet {
 
 export interface RailsAccountWallet extends Omit<RailsWallet, 'blockchain'> {
   blockchain: RailsAccountWalletBlockchain
-  type: 'nash' | 'external'
+  type: 'NASH' | 'EXTERNAL'
 }
 
 export interface RailsAccountWalletsResponse {
@@ -101,9 +101,9 @@ export interface RailsPaymentMethod {
 }
 
 export type RailsIbanVerificationStatus =
-  | 'approved'
-  | 'pending_review'
-  | 'proof_of_bank_account_ownership_required'
+  | 'APPROVED'
+  | 'PENDING_REVIEW'
+  | 'PROOF_OF_BANK_ACCOUNT_OWNERSHIP_REQUIRED'
 
 export interface RailsIbanVerificationResponse {
   environment: RailsEnvironment

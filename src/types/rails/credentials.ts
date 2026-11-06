@@ -1,12 +1,12 @@
 import { RailsEnvironment } from './common'
 
 export type RailsCredentialScope =
-  | 'customers'
-  | 'wallets_and_bank_accounts'
-  | 'fiat_ramp'
-  | 'webhooks'
-  | 'api_keys'
-  | 'blockchain_transactions'
+  | 'CUSTOMERS'
+  | 'WALLETS_AND_BANK_ACCOUNTS'
+  | 'FIAT_RAMP'
+  | 'WEBHOOKS'
+  | 'API_KEYS'
+  | 'BLOCKCHAIN_TRANSACTIONS'
 
 export interface RailsCredential {
   id: string
@@ -14,7 +14,7 @@ export interface RailsCredential {
   environment: RailsEnvironment | null
   scopes: RailsCredentialScope[]
   createdAt: string | null
-  expireAt: string | null
+  expiresAt: string | null
   lastUsedAt: string | null
 }
 

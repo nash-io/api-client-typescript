@@ -5,65 +5,52 @@ import {
   RailsFiatQuantity,
   RailsRate
 } from './common'
-
-export type RailsQuoteBlockchain =
-  | 'eth'
-  | 'avaxc'
-  | 'polygon'
-  | 'arbitrum'
-  | 'neo_x'
-  | 'bnb'
-  | 'base'
-  | 'mantle'
-  | 'optimism'
-  | 'neo3'
-  | 'btc'
-  | 'solana'
+import { RailsBlockchain } from './wallets'
 
 export type RailsSettlementType =
-  | 'channels'
-  | 'personal_wallet'
-  | 'savings_contract'
+  | 'CHANNELS'
+  | 'PERSONAL_WALLET'
+  | 'SAVINGS_CONTRACT'
 
 export type RailsOrderStatus =
-  | 'cancelled_by_user'
-  | 'cancelled_by_admin'
-  | 'pending_user_confirmation'
-  | 'confirmed_waiting_for_payment'
-  | 'pending_admin_approval'
-  | 'pending_recalculation'
-  | 'processing_payment'
-  | 'sourcing_tokens'
-  | 'processing_settlement'
-  | 'pending_user_rate_reconfirmation'
-  | 'reconfirmation_rejected'
-  | 'reconfirmation_expired'
-  | 'completed'
-  | 'pending_refund'
-  | 'rejected_pending_refund'
-  | 'refunded'
-  | 'rejected_refunded'
-  | 'failed_expired_on_confirmation'
-  | 'failed_expired_on_bank_transfer'
-  | 'failed_expired_on_crypto_transfer'
-  | 'pending_deposit_verification'
-  | 'payment_received'
-  | 'recalculation_completed'
-  | 'order_derisked'
-  | 'approved'
+  | 'CANCELLED_BY_USER'
+  | 'CANCELLED_BY_ADMIN'
+  | 'PENDING_USER_CONFIRMATION'
+  | 'CONFIRMED_WAITING_FOR_PAYMENT'
+  | 'PENDING_ADMIN_APPROVAL'
+  | 'PENDING_RECALCULATION'
+  | 'PROCESSING_PAYMENT'
+  | 'SOURCING_TOKENS'
+  | 'PROCESSING_SETTLEMENT'
+  | 'PENDING_USER_RATE_RECONFIRMATION'
+  | 'RECONFIRMATION_REJECTED'
+  | 'RECONFIRMATION_EXPIRED'
+  | 'COMPLETED'
+  | 'PENDING_REFUND'
+  | 'REJECTED_PENDING_REFUND'
+  | 'REFUNDED'
+  | 'REJECTED_REFUNDED'
+  | 'FAILED_EXPIRED_ON_CONFIRMATION'
+  | 'FAILED_EXPIRED_ON_BANK_TRANSFER'
+  | 'FAILED_EXPIRED_ON_CRYPTO_TRANSFER'
+  | 'PENDING_DEPOSIT_VERIFICATION'
+  | 'PAYMENT_RECEIVED'
+  | 'RECALCULATION_COMPLETED'
+  | 'ORDER_DERISKED'
+  | 'APPROVED'
 
 export type RailsHistoryOrderStatus =
-  | 'pending_user_confirmation'
-  | 'confirmed_waiting_for_payment'
-  | 'failed_expired_on_confirmation'
-  | 'failed_expired_on_bank_transfer'
-  | 'pending_admin_approval'
-  | 'pending_recalculation'
-  | 'sourcing_tokens'
-  | 'processing_settlement'
-  | 'completed'
-  | 'rejected_pending_refund'
-  | 'rejected_refunded'
+  | 'PENDING_USER_CONFIRMATION'
+  | 'CONFIRMED_WAITING_FOR_PAYMENT'
+  | 'FAILED_EXPIRED_ON_CONFIRMATION'
+  | 'FAILED_EXPIRED_ON_BANK_TRANSFER'
+  | 'PENDING_ADMIN_APPROVAL'
+  | 'PENDING_RECALCULATION'
+  | 'SOURCING_TOKENS'
+  | 'PROCESSING_SETTLEMENT'
+  | 'COMPLETED'
+  | 'REJECTED_PENDING_REFUND'
+  | 'REJECTED_REFUNDED'
 
 export interface RailsBankDepositInstructions {
   recipientName: string | null
@@ -86,13 +73,13 @@ export interface RailsCryptoDepositInstructions {
 
 export interface RailsQuote {
   id: string
-  type: 'buy' | 'sell'
+  type: 'BUY' | 'SELL'
   status: RailsOrderStatus
-  blockchain: RailsQuoteBlockchain
+  blockchain: RailsBlockchain
   settlementType: RailsSettlementType
   settlementAddress: string | null
   walletAddress: string | null
-  transferMethod: 'deposit' | 'permit' | null
+  transferMethod: 'DEPOSIT' | 'PERMIT' | null
   permitTransferDigest: string | null
   fiatAsset: string | null
   fiatAmount: RailsFiatQuantity
@@ -107,7 +94,7 @@ export interface RailsQuote {
 }
 
 export type RailsQuoteRequest = {
-  blockchain: RailsQuoteBlockchain
+  blockchain: RailsBlockchain
   cryptoAsset: string
   fiatAsset: string
   /** Verified external wallet bound immutably when the quote is created. */
@@ -116,8 +103,8 @@ export type RailsQuoteRequest = {
   fiatAmount?: RailsFiatQuantity
   uniqueKey?: string
 } & (
-  | { type: 'buy'; transferMethod?: never }
-  | { type: 'sell'; transferMethod?: 'deposit' | 'permit' }
+  | { type: 'BUY'; transferMethod?: never }
+  | { type: 'SELL'; transferMethod?: 'DEPOSIT' | 'PERMIT' }
 )
 
 export interface RailsQuoteResponse {
@@ -127,7 +114,7 @@ export interface RailsQuoteResponse {
 
 export interface RailsQuoteEstimationResponse {
   environment: RailsEnvironment
-  type: 'buy' | 'sell'
+  type: 'BUY' | 'SELL'
   fixedValue: 'FIAT' | 'CRYPTO'
   fiatAmount: RailsFiatQuantity
   cryptoAmount: RailsCryptoQuantity
@@ -159,14 +146,14 @@ export interface RailsOrder {
   id: string
   status: RailsOrderStatus
   createdAt: string
-  blockchain?: RailsQuoteBlockchain
+  blockchain?: RailsBlockchain
   completedAt?: string
   cryptoAmount?: string
   cryptoAsset?: string
   fiatAmount?: string
   fiatAsset?: string
   settlementAddress?: string
-  type?: 'buy' | 'sell'
+  type?: 'BUY' | 'SELL'
 }
 
 export interface RailsOrderPage {
@@ -214,7 +201,7 @@ export interface RailsAssetRateSide {
 
 export interface RailsAssetRate {
   assetHash: string
-  blockchain: RailsQuoteBlockchain
+  blockchain: RailsBlockchain
   blockchainPrecision: number
   name: string
   symbol: string

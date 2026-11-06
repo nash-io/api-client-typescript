@@ -1,28 +1,66 @@
 import { RailsEnvironment, RailsFiatQuantity } from './common'
 import { RailsAgreementType, RailsKycStatusValue } from './customers'
 
+export type RailsComplianceFieldName =
+  | 'FIRST_NAME'
+  | 'LAST_NAME'
+  | 'BIRTHDATE'
+  | 'COUNTRY_OF_BIRTH'
+  | 'CITY_OF_BIRTH'
+  | 'TAX_RESIDENCY_COUNTRY'
+  | 'TAX_ID_NUMBER'
+  | 'ROAD_ADDRESS'
+  | 'CITY'
+  | 'POSTAL_CODE'
+  | 'COUNTRY_OF_RESIDENCE'
+  | 'JOB_STATUS'
+  | 'GROSS_ANNUAL_INCOME'
+  | 'INDUSTRY'
+  | 'OTHER_INDUSTRY'
+  | 'JOB_TITLE'
+  | 'IN_FULL_TIME_EDUCATION'
+  | 'SOURCE_OF_INCOME'
+  | 'INCOME_DETAILS'
+  | 'INVESTMENT_TYPE'
+  | 'DONOR_NAME'
+  | 'GIFT_AMOUNT'
+  | 'ACCOUNT_PURPOSES'
+  | 'OTHER_ACCOUNT_PURPOSE'
+  | 'FILE'
+  | 'DESCRIPTION'
+  | 'IBAN'
+  | 'ANSWER'
+
+export interface RailsComplianceRequirementField {
+  field: RailsComplianceFieldName
+  key: string
+  mandatory: boolean
+  options?: string[]
+  type: 'STRING' | 'DATE' | 'ENUM' | 'CURRENCY' | 'BOOLEAN' | 'ENUM_LIST' | 'UPLOAD' | 'IBAN'
+}
+
 export type RailsComplianceObligationStatus =
-  | 'missing'
-  | 'expired'
-  | 'rejected'
-  | 'pending_upload'
-  | 'pending_scanning'
-  | 'pending_approval'
+  | 'MISSING'
+  | 'EXPIRED'
+  | 'REJECTED'
+  | 'PENDING_UPLOAD'
+  | 'PENDING_SCANNING'
+  | 'PENDING_APPROVAL'
 
 export type RailsComplianceRequestType =
-  | 'proof_of_address'
-  | 'proof_of_funds'
-  | 'proof_of_bank_account_ownership'
-  | 'other'
+  | 'PROOF_OF_ADDRESS'
+  | 'PROOF_OF_FUNDS'
+  | 'PROOF_OF_BANK_ACCOUNT_OWNERSHIP'
+  | 'OTHER'
 
 export interface RailsComplianceObligation {
   type:
-    | 'annual_personal_information'
-    | 'source_of_funds'
-    | 'document'
-    | 'question'
-    | 'identity_document_revalidation'
-    | 'pending_terms_acceptance'
+    | 'ANNUAL_PERSONAL_INFORMATION'
+    | 'SOURCE_OF_FUNDS'
+    | 'DOCUMENT'
+    | 'QUESTION'
+    | 'IDENTITY_DOCUMENT_REVALIDATION'
+    | 'PENDING_TERMS_ACCEPTANCE'
   blockFiatServices?: boolean
   confirmedAt?: string | null
   description?: string | null
@@ -31,15 +69,15 @@ export interface RailsComplianceObligation {
   id?: string
   question?: string | null
   requestType?: RailsComplianceRequestType
-  requirements?: Array<{ field: string; type: string; mandatory: boolean; options?: string[] }>
+  requirements?: RailsComplianceRequirementField[]
   status?: RailsComplianceObligationStatus
   subject?: string | null
 }
 
 export interface RailsCompliancePendingReview {
-  type: 'document' | 'question'
+  type: 'DOCUMENT' | 'QUESTION'
   id: string
-  status: 'pending_review'
+  status: 'PENDING_REVIEW'
   blockFiatServices: boolean
   requestType?: RailsComplianceRequestType
   question?: string | null
@@ -88,38 +126,38 @@ export interface RailsPersonalInformationResponse {
 
 
 export type RailsAccountPurpose =
-  | 'investment'
-  | 'crypto_exchange'
-  | 'saving'
-  | 'staking'
-  | 'cash_out_crypto'
-  | 'other'
+  | 'INVESTMENT'
+  | 'CRYPTO_EXCHANGE'
+  | 'SAVING'
+  | 'STAKING'
+  | 'CASH_OUT_CRYPTO'
+  | 'OTHER'
 
 export type RailsIndustry =
-  | 'services'
-  | 'transportation'
-  | 'hospitality'
-  | 'retail'
-  | 'health_care'
-  | 'finance'
-  | 'technology'
-  | 'media'
-  | 'entertainment'
-  | 'real_state'
-  | 'public_sector'
-  | 'other'
+  | 'SERVICES'
+  | 'TRANSPORTATION'
+  | 'HOSPITALITY'
+  | 'RETAIL'
+  | 'HEALTH_CARE'
+  | 'FINANCE'
+  | 'TECHNOLOGY'
+  | 'MEDIA'
+  | 'ENTERTAINMENT'
+  | 'REAL_STATE'
+  | 'PUBLIC_SECTOR'
+  | 'OTHER'
 
 export type RailsJobStatus =
-  | 'employed'
-  | 'self_employed'
-  | 'unemployed'
-  | 'retired'
+  | 'EMPLOYED'
+  | 'SELF_EMPLOYED'
+  | 'UNEMPLOYED'
+  | 'RETIRED'
 
 export type RailsSourceOfIncome =
-  | 'salary'
-  | 'investment'
-  | 'gift_scholarship'
-  | 'other'
+  | 'SALARY'
+  | 'INVESTMENT'
+  | 'GIFT_SCHOLARSHIP'
+  | 'OTHER'
 
 export interface RailsSourceOfFunds {
   accountPurposes?: RailsAccountPurpose[]
