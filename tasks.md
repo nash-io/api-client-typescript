@@ -101,30 +101,30 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 9. Integration tests (`integration-tests/rails/`)
 
-- [ ] 9.1 Across all scripts and `support/fiat-ramp-helpers.js`, uppercase the asserted enums:
+- [x] 9.1 Across all scripts and `support/fiat-ramp-helpers.js`, uppercase the asserted enums:
   - `environment`: `'SANDBOX'`.
   - Statuses: `'PENDING_USER_CONFIRMATION'`, `'CONFIRMED_WAITING_FOR_PAYMENT'`, `'COMPLETED'`, `'PENDING_USER_RATE_RECONFIRMATION'`, `'APPROVED'`, `'TIER_1'`, `'REJECTED'`, `'FAILED_LOCATION_VERIFICATION'`.
   - Types: `'EXTERNAL_BANK_ACCOUNT'`, wallet `'NASH'`/`'EXTERNAL'`, quote `'BUY'`/`'SELL'`, `'DEPOSIT'`.
   - KYC steps: `'PERSONAL_INFORMATION'`, `'SOURCE_OF_FUNDS'`, `'IDENTITY_VERIFICATION'`, `'COMPLETE'`.
   - Compliance values: `'DOCUMENT'`, `'PROOF_OF_ADDRESS'`, `'PENDING_REVIEW'`.
   - Uppercase the unsuccessful-state regex in `waitForCompleted`.
-- [ ] 9.2 Blockchain identifiers must be split from asset symbols:
+- [x] 9.2 Blockchain identifiers must be split from asset symbols:
   - `rails-fiat-ramp.js` and `rails-fiat-ramp-for-partner.js`: set `blockchain`/`BLOCKCHAIN = 'ETH'` and keep `cryptoAsset: 'eth'`.
   - `rails-sell-nash-wallet-for-partner.js`: wallet lookup and `createQuote.blockchain` must use `scenario.blockchain` (`'BTC'`/`'ETH'`), with `cryptoAsset: asset` staying lowercase.
-- [ ] 9.3 Quote request amounts in all three fiat-ramp scripts:
+- [x] 9.3 Quote request amounts in all three fiat-ramp scripts:
   - Buy: `fiatAmount: { amount, currency: 'eur' }`.
   - Sell: `cryptoAmount: { amount, blockchain, assetHash }`. Resolve `assetHash` from `client.rails.getAssetRates()` by matching `symbol` and `blockchain`, instead of hard-coding it. The sell script's `scenario.assetHash` can then be removed.
-- [ ] 9.4 `rails-sell-nash-wallet-for-partner.js`, transaction flow:
+- [x] 9.4 `rails-sell-nash-wallet-for-partner.js`, transaction flow:
   - Compare `confirmed.quote.cryptoAmount.amount` with `quote.cryptoAmount.amount`.
   - Read fees from `feeResponse.blockchainFees`.
   - Read `prepared.preparedTransaction` and `iterated.iteratedTransaction`.
   - Switch element and hash fields to camelCase (`transactionElements`, `payloadHash`, `payloadHashFunction`, `signatureFunction`, `transactionHash`) and delete the snake_case-to-camelCase remap comment and code.
   - `limit: 100` in `waitForCompleted` is clamped to 20 by the server. Set it to 20 explicitly.
-- [ ] 9.5 `rails-kyc.js`:
+- [x] 9.5 `rails-kyc.js`:
   - `submitSourceOfFunds` sends `grossAnnualIncome: { amount: '50000', currency: 'eur' }` and `annualIntendedVolume: { amount: '10000', currency: 'eur' }`, plus uppercase `jobStatus`, `industry`, `sourceOfIncome`, and `accountPurposes`.
   - Assert `created.existing === false` on the fresh customer.
-- [ ] 9.6 `rails-flows.js`: add read-only steps `signed GET /asset-rates` (`getAssetRates()`) and `signed GET /payment-methods` (`listPaymentMethods(null, { limit: 1 })`).
-- [ ] 9.7 `rails-api-smoke.js`: no shape change needed. Optionally assert that `operations` includes `GET /asset-rates`.
+- [x] 9.6 `rails-flows.js`: add read-only steps `signed GET /asset-rates` (`getAssetRates()`) and `signed GET /payment-methods` (`listPaymentMethods(null, { limit: 1 })`).
+- [x] 9.7 `rails-api-smoke.js`: no shape change needed. Optionally assert that `operations` includes `GET /asset-rates`.
 
 ## 10. Docs
 

@@ -136,6 +136,13 @@ async function run() {
     await step('signed GET /orders', () =>
       client.rails.listOrders({ limit: 1 })
     );
+    await step('signed GET /asset-rates', async () => {
+      const { rates } = await client.rails.getAssetRates();
+      assert(Array.isArray(rates) && rates.length > 0, 'No asset rates');
+    });
+    await step('signed GET /payment-methods', () =>
+      client.rails.listPaymentMethods(null, { limit: 1 })
+    );
     await step('signed GET /webhooks/subscriptions', () =>
       client.rails.listWebhookSubscriptions()
     );

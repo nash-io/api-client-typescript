@@ -25,7 +25,7 @@ const nextSigningSecond = () =>
   new Promise(resolve => setTimeout(resolve, 1010 - (Date.now() % 1000)));
 
 async function sell(client, config, paymentMethodId, scenario) {
-  const { asset, blockchain, assetHash, amount } = scenario;
+  const { asset, blockchain, amount } = scenario;
   const transactionRequest = async (operation, body) => {
     try {
       return await client.rails[operation](body);
@@ -39,31 +39,37 @@ async function sell(client, config, paymentMethodId, scenario) {
   };
   await nextSigningSecond();
   const listed = await client.rails.listWallets(null);
-  assert.strictEqual(listed.environment, 'sandbox');
+  assert.strictEqual(listed.environment, 'SANDBOX');
   const wallet = listed.wallets.find(
-    item => item.type === 'nash' && item.blockchain === asset
+    item => item.type === 'NASH' && item.blockchain === blockchain
   );
   assert(wallet, `Partner has no Nash ${asset} wallet`);
+  const { rates } = await client.rails.getAssetRates();
+  const rate = rates.find(
+    item => item.symbol === asset && item.blockchain === blockchain
+  );
+  assert(rate, `No asset rate for ${asset} on ${blockchain}`);
+  const assetHash = rate.assetHash;
   const created = await client.rails.createQuote(null, {
-    type: 'sell',
-    blockchain: asset,
+    type: 'SELL',
+    blockchain,
     cryptoAsset: asset,
     fiatAsset: 'eur',
-    cryptoAmount: amount,
+    cryptoAmount: { amount, blockchain, assetHash },
     walletAddress: wallet.address,
-    transferMethod: 'deposit'
+    transferMethod: 'DEPOSIT'
   });
-  assert.strictEqual(created.environment, 'sandbox');
+  assert.strictEqual(created.environment, 'SANDBOX');
   const quote = created.quote;
   assert(quote.id, 'Sell quote has no ID');
   console.log(`${asset} sell quote retained: ${quote.id}`);
-  assert.strictEqual(quote.type, 'sell');
-  assert.strictEqual(quote.blockchain, asset);
-  assert.strictEqual(quote.status, 'pending_user_confirmation');
+  assert.strictEqual(quote.type, 'SELL');
+  assert.strictEqual(quote.blockchain, blockchain);
+  assert.strictEqual(quote.status, 'PENDING_USER_CONFIRMATION');
   const confirmed = await client.rails.confirmSell(null, quote.id, {
     paymentMethodId
   });
-  assert.strictEqual(confirmed.environment, 'sandbox');
+  assert.strictEqual(confirmed.environment, 'SANDBOX');
   checkConfirmed(confirmed.quote, quote, wallet.address);
   const instructions = confirmed.quote.cryptoDepositInstructions;
   assert(
@@ -75,18 +81,18 @@ async function sell(client, config, paymentMethodId, scenario) {
     normalizeAddress(targetAddress),
     normalizeAddress(wallet.address)
   );
-  // cryptoAmount fixes the sell quantity; reuse its decimal request units, not raw response units.
+  // cryptoAmount fixes the sell quantity; reuse its decimal request amount.
   assert(quote.cryptoAmount, 'Sell quote has no crypto amount');
   assert.strictEqual(
-    confirmed.quote.cryptoAmount,
-    quote.cryptoAmount,
+    confirmed.quote.cryptoAmount.amount,
+    quote.cryptoAmount.amount,
     'Confirmation changed the fixed sell quantity'
   );
   const quantity = amount;
 
   const feeResponse = await client.rails.getBlockchainFees(blockchain);
-  assert.strictEqual(feeResponse.environment, 'sandbox');
-  const fees = feeResponse.getBlockchainFees;
+  assert.strictEqual(feeResponse.environment, 'SANDBOX');
+  const fees = feeResponse.blockchainFees;
   assert(fees && fees.priceMedium != null, 'Missing medium blockchain fee');
   // Fees arrive as exact decimal strings; the signed payload takes JSON numbers.
   const feeNumber = value => {
@@ -121,29 +127,29 @@ async function sell(client, config, paymentMethodId, scenario) {
       }
     })
   );
-  assert.strictEqual(prepared.environment, 'sandbox');
-  const reference = prepared.prepareTransaction.reference;
+  assert.strictEqual(prepared.environment, 'SANDBOX');
+  const reference = prepared.preparedTransaction.reference;
   assert(reference, 'Prepare returned no transaction reference');
   console.log(`${asset} transaction reference retained: ${reference}`);
-  let transaction = prepared.prepareTransaction;
+  let transaction = prepared.preparedTransaction;
   const deadline = Date.now() + 120000;
-  while (!transaction.transaction_hash) {
+  while (!transaction.transactionHash) {
     assert(Date.now() < deadline, 'Transaction iteration timed out');
-    const elements = transaction.transaction_elements;
+    const elements = transaction.transactionElements;
     assert(
       Array.isArray(elements) && elements.length > 0,
       'Transaction has neither a hash nor signing elements'
     );
-    // REST uses snake_case; the protocol presigner consumes GraphQL-style camelCase.
+    // Pass only the fields the protocol presigner consumes.
     const transactionElements = elements.map(element => {
       assert.strictEqual(element.blockchain, blockchain);
-      assert(element.payload_hash, 'Transaction element has no payload hash');
+      assert(element.payloadHash, 'Transaction element has no payload hash');
       return {
         blockchain: element.blockchain,
         payload: element.payload,
-        payloadHash: element.payload_hash,
-        payloadHashFunction: element.payload_hash_function,
-        signatureFunction: element.signature_function
+        payloadHash: element.payloadHash,
+        payloadHashFunction: element.payloadHashFunction,
+        signatureFunction: element.signatureFunction
       };
     });
     const body = await client.rails.signPayload({
@@ -161,23 +167,23 @@ async function sell(client, config, paymentMethodId, scenario) {
       );
     });
     const iterated = await transactionRequest('iterateTransaction', body);
-    assert.strictEqual(iterated.environment, 'sandbox');
-    transaction = iterated.iterateTransaction;
+    assert.strictEqual(iterated.environment, 'SANDBOX');
+    transaction = iterated.iteratedTransaction;
   }
   assert(
     blockchain === Blockchain.ETH
-      ? /^0x[0-9a-f]{64}$/i.test(transaction.transaction_hash)
-      : /^(0x)?[0-9a-f]{64}$/i.test(transaction.transaction_hash),
+      ? /^0x[0-9a-f]{64}$/i.test(transaction.transactionHash)
+      : /^(0x)?[0-9a-f]{64}$/i.test(transaction.transactionHash),
     'Iterate returned an invalid transaction hash'
   );
   console.log(
-    `${asset} transaction broadcast: ${transaction.transaction_hash}`
+    `${asset} transaction broadcast: ${transaction.transactionHash}`
   );
   await waitForCompleted(
     client,
     null,
     quote,
-    { partner_orders_only: true, limit: 100 },
+    { partner_orders_only: true, limit: 20 },
     900000
   );
   console.log(
@@ -203,19 +209,19 @@ async function run() {
   try {
     await nextSigningSecond();
     const partner = await client.rails.getPartner();
-    assert.strictEqual(partner.environment, 'sandbox');
+    assert.strictEqual(partner.environment, 'SANDBOX');
     const methods = await client.rails.listPaymentMethods(null);
-    assert.strictEqual(methods.environment, 'sandbox');
+    assert.strictEqual(methods.environment, 'SANDBOX');
     let payout = methods.paymentMethods.find(
       item =>
-        item.type === 'external_bank_account' && item.status === 'approved'
+        item.type === 'EXTERNAL_BANK_ACCOUNT' && item.status === 'APPROVED'
     );
     if (!payout) {
       const verified = await client.rails.verifyBankAccount(null, {
         iban: process.env.NASH_NFR_IBAN || 'DE29100100100987654321'
       });
-      assert.strictEqual(verified.environment, 'sandbox');
-      assert.strictEqual(verified.status, 'approved');
+      assert.strictEqual(verified.environment, 'SANDBOX');
+      assert.strictEqual(verified.status, 'APPROVED');
       payout = verified.paymentMethod;
     }
     const failures = [];
@@ -223,13 +229,11 @@ async function run() {
       {
         asset: 'btc',
         blockchain: Blockchain.BTC,
-        assetHash: '00',
         amount: process.env.NASH_NFR_SELL_BTC_AMOUNT || '0.01'
       },
       {
         asset: 'eth',
         blockchain: Blockchain.ETH,
-        assetHash: '0000000000000000000000000000000000000000',
         amount: process.env.NASH_NFR_SELL_ETH_AMOUNT || '0.1'
       }
     ]) {

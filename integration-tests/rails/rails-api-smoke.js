@@ -64,6 +64,10 @@ async function run() {
       operations.includes('GET /customers'),
       'OpenAPI is missing GET /customers'
     );
+    assert(
+      operations.includes('GET /asset-rates'),
+      'OpenAPI is missing GET /asset-rates'
+    );
     console.log(`Public Rails OpenAPI: PASS (${operations.length} operations)`);
 
     if (railsOnly()) {

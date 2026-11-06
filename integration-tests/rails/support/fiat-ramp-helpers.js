@@ -8,7 +8,7 @@ function checkConfirmed(current, created, address) {
   assert.strictEqual(current.id, created.id);
   assert.strictEqual(current.type, created.type);
   assert.strictEqual(current.blockchain, created.blockchain);
-  assert.strictEqual(current.status, 'confirmed_waiting_for_payment');
+  assert.strictEqual(current.status, 'CONFIRMED_WAITING_FOR_PAYMENT');
   assert.strictEqual(
     normalizeAddress(current.walletAddress),
     normalizeAddress(address)
@@ -57,17 +57,17 @@ async function waitForCompleted(client, customerId, created, ordersFilter, timeo
     // Space signed reads to avoid replay detection within a timestamp second.
     await new Promise(resolve => setTimeout(resolve, 2000));
     const current = await client.rails.getQuote(customerId, created.id);
-    assert.strictEqual(current.environment, 'sandbox');
+    assert.strictEqual(current.environment, 'SANDBOX');
     assert.strictEqual(current.quote.id, created.id);
     assert.strictEqual(current.quote.type, created.type);
     status = current.quote.status;
     assert(
-      !/^(failed_|cancelled_|rejected_|pending_refund$|refunded$|reconfirmation_expired$)/.test(
+      !/^(FAILED_|CANCELLED_|REJECTED_|PENDING_REFUND$|REFUNDED$|RECONFIRMATION_EXPIRED$)/.test(
         status
       ),
       `${created.type} quote ${created.id} entered unsuccessful state ${status}`
     );
-    if (status === 'pending_user_rate_reconfirmation') {
+    if (status === 'PENDING_USER_RATE_RECONFIRMATION') {
       assert(
         Date.parse(current.quote.reconfirmUntil) > Date.now(),
         'Rate reconfirmation deadline has passed'
@@ -76,15 +76,15 @@ async function waitForCompleted(client, customerId, created, ordersFilter, timeo
         customerId,
         created.id
       );
-      assert.strictEqual(reconfirmed.environment, 'sandbox');
+      assert.strictEqual(reconfirmed.environment, 'SANDBOX');
       assert.strictEqual(reconfirmed.quote.id, created.id);
     }
-    if (status === 'completed') {
+    if (status === 'COMPLETED') {
       const history = await client.rails.listOrders(ordersFilter);
-      assert.strictEqual(history.environment, 'sandbox');
+      assert.strictEqual(history.environment, 'SANDBOX');
       const order = history.orders.find(item => item.id === created.id);
       orderStatus = order ? order.status : 'not listed';
-      if (orderStatus === 'completed') return;
+      if (orderStatus === 'COMPLETED') return;
     }
   } while (Date.now() < deadline);
   assert.fail(
@@ -94,9 +94,35 @@ async function waitForCompleted(client, customerId, created, ordersFilter, timeo
   );
 }
 
+// Quote request amounts: buys fix fiat, sells fix a crypto quantity whose assetHash
+// comes from GET /asset-rates (matched by symbol and blockchain).
+async function quoteAmounts(client, type, { symbol, blockchain }) {
+  if (type === 'BUY') {
+    return {
+      fiatAmount: {
+        amount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00',
+        currency: 'eur'
+      }
+    };
+  }
+  const { rates } = await client.rails.getAssetRates();
+  const rate = rates.find(
+    item => item.symbol === symbol && item.blockchain === blockchain
+  );
+  assert(rate, `No asset rate for ${symbol} on ${blockchain}`);
+  return {
+    cryptoAmount: {
+      amount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.1',
+      blockchain,
+      assetHash: rate.assetHash
+    }
+  };
+}
+
 module.exports = {
   normalizeAddress,
   checkConfirmed,
   markPaid,
+  quoteAmounts,
   waitForCompleted
 };

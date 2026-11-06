@@ -19,12 +19,13 @@ const {
   normalizeAddress,
   checkConfirmed,
   markPaid,
+  quoteAmounts,
   waitForCompleted
 } = require('./support/fiat-ramp-helpers');
 
 async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
   const id = customer.id;
-  const blockchain = 'eth';
+  const blockchain = 'ETH';
   const walletKey = createECDH('secp256k1');
   walletKey.generateKeys();
   const privateKey = Buffer.from(
@@ -38,7 +39,7 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
     'verify external EVM wallet ownership',
     async () => {
       const available = await client.rails.listBlockchains();
-      assert.strictEqual(available.environment, 'sandbox');
+      assert.strictEqual(available.environment, 'SANDBOX');
       assert(
         available.blockchains.includes(blockchain),
         'ETH wallet verification is unavailable'
@@ -47,7 +48,7 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         blockchain,
         address
       });
-      assert.strictEqual(challenge.environment, 'sandbox');
+      assert.strictEqual(challenge.environment, 'SANDBOX');
       assert.strictEqual(challenge.blockchain, blockchain);
       assert.strictEqual(
         normalizeAddress(challenge.address),
@@ -64,18 +65,18 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         signature,
         challenge: challenge.challenge
       });
-      assert.strictEqual(registered.environment, 'sandbox');
+      assert.strictEqual(registered.environment, 'SANDBOX');
       assert.strictEqual(registered.wallet.blockchain, blockchain);
       assert.strictEqual(
         normalizeAddress(registered.wallet.address),
         normalizeAddress(address)
       );
       const stored = await client.rails.listWallets(id);
-      assert.strictEqual(stored.environment, 'sandbox');
+      assert.strictEqual(stored.environment, 'SANDBOX');
       assert(
         stored.wallets.some(
           item =>
-            item.type === 'external' &&
+            item.type === 'EXTERNAL' &&
             item.blockchain === blockchain &&
             item.address === registered.wallet.address
         ),
@@ -93,21 +94,21 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
       const verified = await client.rails.verifyBankAccount(id, {
         iban: process.env.NASH_NFR_IBAN || 'DE29100100100987654321'
       });
-      assert.strictEqual(verified.environment, 'sandbox');
+      assert.strictEqual(verified.environment, 'SANDBOX');
       assert.strictEqual(
         verified.status,
-        'approved',
+        'APPROVED',
         `Sandbox IBAN verification needs attention: ${verified.status}`
       );
-      assert.strictEqual(verified.paymentMethod.status, 'approved');
+      assert.strictEqual(verified.paymentMethod.status, 'APPROVED');
       assert(verified.paymentMethod.id, 'Approved payment method has no ID');
       const listed = await client.rails.listPaymentMethods(id);
-      assert.strictEqual(listed.environment, 'sandbox');
+      assert.strictEqual(listed.environment, 'SANDBOX');
       const stored = listed.paymentMethods.find(
         item => item.id === verified.paymentMethod.id
       );
       assert(stored, 'Approved payout account is missing from payment methods');
-      assert.strictEqual(stored.status, 'approved');
+      assert.strictEqual(stored.status, 'APPROVED');
       assert.strictEqual(stored.type, verified.paymentMethod.type);
       return stored;
     }
@@ -115,7 +116,7 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
 
   const quoteIds = [];
   const failures = [];
-  for (const type of ['buy', 'sell']) {
+  for (const type of ['BUY', 'SELL']) {
     await step(`${type} order reaches completed`, async () => {
       const created = await client.rails.createQuote(id, {
         type,
@@ -123,14 +124,13 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         cryptoAsset: 'eth',
         fiatAsset: 'eur',
         walletAddress: wallet.address,
-        ...(type === 'buy'
-          ? { fiatAmount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00' }
-          : {
-              cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.1',
-              transferMethod: 'deposit'
-            })
+        ...(await quoteAmounts(client, type, {
+          symbol: 'eth',
+          blockchain: wallet.blockchain
+        })),
+        ...(type === 'SELL' ? { transferMethod: 'DEPOSIT' } : {})
       });
-      assert.strictEqual(created.environment, 'sandbox');
+      assert.strictEqual(created.environment, 'SANDBOX');
       const quote = created.quote;
       assert(quote.id, 'Created quote has no ID');
       assert(
@@ -148,23 +148,23 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
       );
       assert.strictEqual(
         quote.transferMethod,
-        type === 'sell' ? 'deposit' : null
+        type === 'SELL' ? 'DEPOSIT' : null
       );
       assert.strictEqual(quote.permitTransferDigest, null);
-      assert.strictEqual(quote.status, 'pending_user_confirmation');
+      assert.strictEqual(quote.status, 'PENDING_USER_CONFIRMATION');
       assert(
         Date.parse(quote.confirmUntil) > Date.now(),
         'Quote confirmation deadline has passed'
       );
       const confirmed =
-        type === 'buy'
+        type === 'BUY'
           ? await client.rails.confirmBuy(id, quote.id, {})
           : await client.rails.confirmSell(id, quote.id, {
               paymentMethodId: paymentMethod.id
             });
-      assert.strictEqual(confirmed.environment, 'sandbox');
+      assert.strictEqual(confirmed.environment, 'SANDBOX');
       checkConfirmed(confirmed.quote, quote, wallet.address);
-      if (type === 'buy') {
+      if (type === 'BUY') {
         const instructions = confirmed.quote.bankDepositInstructions;
         assert(instructions, 'Buy has no bank deposit instructions');
         assert(instructions.recipientName, 'Buy has no bank recipient');
@@ -187,7 +187,7 @@ async function fiatRamp({ client, customer, partner, e2eSetupUrl, step }) {
         );
       }
       const current = await client.rails.getQuote(id, quote.id);
-      assert.strictEqual(current.environment, 'sandbox');
+      assert.strictEqual(current.environment, 'SANDBOX');
       checkConfirmed(current.quote, quote, wallet.address);
       await markPaid(e2eSetupUrl, partner.id, id, quote.id);
       await waitForCompleted(client, id, quote, {

@@ -22,10 +22,11 @@ const {
   normalizeAddress,
   checkConfirmed,
   markPaid,
+  quoteAmounts,
   waitForCompleted
 } = require('./support/fiat-ramp-helpers');
 
-const BLOCKCHAIN = 'eth';
+const BLOCKCHAIN = 'ETH';
 const required = name => {
   assert(process.env[name], `Set ${name}`);
   return process.env[name];
@@ -46,18 +47,18 @@ async function partnerOrders(
   // Only a sell needs a payout account; a buy must not depend on it.
   const verifyPayout = async () => {
     const existing = await client.rails.listPaymentMethods(null);
-    assert.strictEqual(existing.environment, 'sandbox');
+    assert.strictEqual(existing.environment, 'SANDBOX');
     const approved = existing.paymentMethods.find(
-      item => item.type === 'external_bank_account' && item.status === 'approved'
+      item => item.type === 'EXTERNAL_BANK_ACCOUNT' && item.status === 'APPROVED'
     );
     if (approved) return approved;
     const verified = await client.rails.verifyBankAccount(null, {
       iban: process.env.NASH_NFR_IBAN || 'DE29100100100987654321'
     });
-    assert.strictEqual(verified.environment, 'sandbox');
+    assert.strictEqual(verified.environment, 'SANDBOX');
     assert.strictEqual(
       verified.status,
-      'approved',
+      'APPROVED',
       `Sandbox IBAN verification needs attention: ${verified.status}`
     );
     const listed = await client.rails.listPaymentMethods(null);
@@ -65,13 +66,13 @@ async function partnerOrders(
       item => item.id === verified.paymentMethod.id
     );
     assert(stored, 'Approved payout account is missing from payment methods');
-    assert.strictEqual(stored.status, 'approved');
+    assert.strictEqual(stored.status, 'APPROVED');
     return stored;
   };
 
   const quoteIds = [];
   const failures = [];
-  for (const type of ['buy', 'sell']) {
+  for (const type of ['BUY', 'SELL']) {
     await step(
       `${label}: partner ${type} order reaches completed`,
       async () => {
@@ -81,14 +82,13 @@ async function partnerOrders(
           cryptoAsset: 'eth',
           fiatAsset: 'eur',
           walletAddress: wallet.address,
-          ...(type === 'buy'
-            ? { fiatAmount: process.env.NASH_NFR_BUY_FIAT_AMOUNT || '100.00' }
-            : {
-                cryptoAmount: process.env.NASH_NFR_SELL_CRYPTO_AMOUNT || '0.1',
-                transferMethod: 'deposit'
-              })
+          ...(await quoteAmounts(client, type, {
+            symbol: 'eth',
+            blockchain: wallet.blockchain
+          })),
+          ...(type === 'SELL' ? { transferMethod: 'DEPOSIT' } : {})
         });
-        assert.strictEqual(created.environment, 'sandbox');
+        assert.strictEqual(created.environment, 'SANDBOX');
         const quote = created.quote;
         assert(quote.id, 'Created quote has no ID');
         assert(!quoteIds.includes(quote.id), 'Quotes must be distinct');
@@ -100,17 +100,17 @@ async function partnerOrders(
           normalizeAddress(quote.walletAddress),
           normalizeAddress(wallet.address)
         );
-        assert.strictEqual(quote.status, 'pending_user_confirmation');
+        assert.strictEqual(quote.status, 'PENDING_USER_CONFIRMATION');
 
         const confirmed =
-          type === 'buy'
+          type === 'BUY'
             ? await client.rails.confirmBuy(null, quote.id, {})
             : await client.rails.confirmSell(null, quote.id, {
                 paymentMethodId: (await verifyPayout()).id
               });
-        assert.strictEqual(confirmed.environment, 'sandbox');
+        assert.strictEqual(confirmed.environment, 'SANDBOX');
         checkConfirmed(confirmed.quote, quote, wallet.address);
-        if (type === 'buy') {
+        if (type === 'BUY') {
           assert(
             confirmed.quote.bankDepositInstructions &&
               confirmed.quote.bankDepositInstructions.referenceCode,
@@ -188,15 +188,15 @@ async function run() {
     }
     await nextSigningSecond();
     const partner = await client.rails.getPartner();
-    assert.strictEqual(partner.environment, 'sandbox');
+    assert.strictEqual(partner.environment, 'SANDBOX');
     assert(partner.id, 'Partner ID is missing');
     const ctx = { client, partner, e2eSetupUrl, step };
 
     const nashWallet = await step('discover partner Nash wallet', async () => {
       const listed = await client.rails.listWallets(null);
-      assert.strictEqual(listed.environment, 'sandbox');
+      assert.strictEqual(listed.environment, 'SANDBOX');
       const found = listed.wallets.find(
-        item => item.type === 'nash' && item.blockchain === BLOCKCHAIN
+        item => item.type === 'NASH' && item.blockchain === BLOCKCHAIN
       );
       assert(found, `Partner has no Nash ${BLOCKCHAIN} wallet`);
       return found;
@@ -217,7 +217,7 @@ async function run() {
             blockchain: BLOCKCHAIN,
             address
           });
-          assert.strictEqual(challenge.environment, 'sandbox');
+          assert.strictEqual(challenge.environment, 'SANDBOX');
           assert.strictEqual(challenge.blockchain, BLOCKCHAIN);
           assert.strictEqual(
             normalizeAddress(challenge.address),
@@ -233,17 +233,17 @@ async function run() {
               version: SignTypedDataVersion.V4
             })
           });
-          assert.strictEqual(registered.environment, 'sandbox');
+          assert.strictEqual(registered.environment, 'SANDBOX');
           assert.strictEqual(registered.wallet.blockchain, BLOCKCHAIN);
           assert.strictEqual(
             normalizeAddress(registered.wallet.address),
             normalizeAddress(address)
           );
           const listed = await client.rails.listWallets(null);
-          assert.strictEqual(listed.environment, 'sandbox');
+          assert.strictEqual(listed.environment, 'SANDBOX');
           const stored = listed.wallets.find(
             item =>
-              item.type === 'external' &&
+              item.type === 'EXTERNAL' &&
               item.blockchain === BLOCKCHAIN &&
               item.address === registered.wallet.address
           );
