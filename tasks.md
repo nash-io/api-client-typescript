@@ -128,9 +128,9 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 10. Docs
 
-- [ ] 10.1 `README.md` (about line 128): change "Send exactly one of `fiatAmount` and `cryptoAmount` as a decimal string" to the quantity-object shapes, and update the `transferMethod` values. Grep the README for the other renamed fields and lowercase enum examples.
-- [ ] 10.2 `openspec/specs/nash-rails-api/spec.md`: update the route table (the dh-pool path, remove subscription deliveries, add `/asset-rates`) and the monetary-input requirement (quantity objects, not `{unit, amount, scale}` and not bare strings).
-- [ ] 10.3 `CHANGELOG.md`: list the breaking type and method changes: enum casing, money objects, removed `listSubscriptionDeliveries`, `RailsCurrency`, `RailsMonetaryAmount`, and `RailsQuoteBlockchain`, and renamed response keys.
+- [x] 10.1 `README.md` (about line 128): change "Send exactly one of `fiatAmount` and `cryptoAmount` as a decimal string" to the quantity-object shapes, and update the `transferMethod` values. Grep the README for the other renamed fields and lowercase enum examples.
+- [x] 10.2 `openspec/specs/nash-rails-api/spec.md`: update the route table (the dh-pool path, remove subscription deliveries, add `/asset-rates`) and the monetary-input requirement (quantity objects, not `{unit, amount, scale}` and not bare strings).
+- [x] 10.3 `CHANGELOG.md`: list the breaking type and method changes: enum casing, money objects, removed `listSubscriptionDeliveries`, `RailsCurrency`, `RailsMonetaryAmount`, and `RailsQuoteBlockchain`, and renamed response keys.
 
 ## 11. Gates
 

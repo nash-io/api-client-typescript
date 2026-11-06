@@ -44,13 +44,13 @@ The SDK SHALL expose a named public function for each operation in the supported
 | Webhooks | POST | `/webhooks/subscriptions` |
 | Webhooks | DELETE | `/webhooks/subscriptions/{subscription_id}` |
 | Webhooks | POST | `/webhooks/subscriptions/{subscription_id}/rotate` |
-| Webhooks | GET | `/webhooks/subscriptions/{subscription_id}/deliveries` |
 | Webhooks | GET | `/webhooks/deliveries` |
 | API keys | GET | `/api-keys` |
 | API keys | GET | `/api-keys/{api_key_id}` |
 | API keys | DELETE | `/api-keys/{api_key_id}` |
+| Fiat ramp | GET | `/asset-rates` |
 | Signing | GET | `/transactions/blockchain-fees` |
-| Signing | POST | `/transactions/signatures/dh-pool` |
+| Signing | POST | `/transactions/dh-pool` |
 | Signing | POST | `/transactions/prepare` |
 | Signing | POST | `/transactions/iterate` |
 | Signing | POST | `/transactions/cancel` |
@@ -92,11 +92,11 @@ The SDK SHALL support a Rails API base URL independent of the exchange GraphQL h
 
 ### Requirement: Typed inputs and complete backend responses
 
-Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. Monetary inputs (`amount`, `cryptoAmount`, `fiatAmount`, `annualIntendedVolume`, `giftAmount`, `grossAnnualIncome`) SHALL be decimal strings; the SDK SHALL reject numeric money inputs rather than converting them through JavaScript floating-point values. A structured `{unit, amount, scale}` object nested in a request SHALL be accepted only when its `amount` is a string. All monetary responses SHALL expose numeric wire amounts as exact strings, preserving raw asset-precision integers and fixed-point scale fields without precision loss. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata, except for converting numeric money representations to strings. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
+Public operation inputs and outputs SHALL represent the documented required and optional fields, nullable fields, enumerations, pagination cursors, environment metadata, and one-time returned webhook signing secrets. Monetary inputs `cryptoAmount`, `fiatAmount`, `annualIntendedVolume`, `giftAmount` and `grossAnnualIncome` SHALL be quantity objects (`{amount, currency}` for fiat, `{amount, blockchain, assetHash}` for crypto) whose `amount` is a decimal string; the SDK SHALL reject strings, numbers and numeric amounts rather than converting them through JavaScript floating-point values. Enumerations SHALL use the server's UPPERCASE values. All monetary responses SHALL expose numeric wire amounts as exact strings, preserving raw asset-precision integers and fixed-point scale fields without precision loss. The SDK SHALL preserve documented wire-field names and response envelopes rather than unwrap or discard metadata, except for converting numeric money representations to strings. Open-ended object fields in the source contract SHALL remain expressible without inventing mandatory fields. Low-level MPC signing operation inputs SHALL retain their documented payload signatures separately from HTTP authentication signatures.
 
 #### Scenario: Exact monetary representation
 
-- **WHEN** a quote/order response contains a numeric fiat/crypto amount or a fixed-point currency object, or a consumer submits a quote/source-of-funds amount
+- **WHEN** a quote/order response contains a numeric `amount` inside a fiat/crypto quantity object, or a consumer submits a quote/source-of-funds amount
 - **THEN** the SDK exposes or accepts the exact amount as a string, leaves its documented asset scale intact, and never rounds through a JavaScript number
 
 #### Scenario: Paginated results and one-time secrets
