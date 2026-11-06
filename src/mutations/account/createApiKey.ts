@@ -5,8 +5,14 @@ export const CREATE_APIKEY_MUTATION = gql`
     $name: String!
     $password: String!
     $twoFa: String
+    $requestPublicKey: Base16!
   ) {
-    createApiKey(name: $name, password: $password, twoFa: $twoFa) {
+    createApiKey(
+      name: $name
+      password: $password
+      twoFa: $twoFa
+      requestPublicKey: $requestPublicKey
+    ) {
       token
       secrets {
         encryptedSecretKey
@@ -21,6 +27,7 @@ export interface CreateApiKeyArgs {
   password: string
   name: string
   twoFa?: string
+  requestPublicKey: string
 }
 
 export interface AccountSecrets {
