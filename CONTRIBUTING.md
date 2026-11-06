@@ -47,3 +47,7 @@ yarn doc   # writes docs/ (gitignored) and legacy redirect pages
 ```
 
 Open `docs/index.html` to preview. Broken `{@link}`s and other validation warnings fail the build. Every push builds the site; `v*` release tags publish `docs/` to the existing `gh-pages` branch. A local preview is not evidence that a release deployment succeeded.
+
+## Rails client layout
+
+The public `RailsClient` facade (`src/client/rails/client.ts`) preserves the flat `client.rails.*` API. Customers, compliance, wallets, orders, and webhooks are independent domain clients sharing the `RailsBaseClient` transport; no domain inherits from another, and each receives the same configuration, headers, and live credential getter.
