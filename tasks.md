@@ -12,10 +12,10 @@ Read-only sandbox probes made with `.env` credentials on 2026-11-06 confirmed th
 
 The two route inventories have the same size (44 operations each) but differ in two operations each:
 
-| Client only (remove/fix) | Spec only (add) |
-| --- | --- |
-| `POST /transactions/signatures/dh-pool` | `POST /transactions/dh-pool` |
-| `GET /webhooks/subscriptions/{subscription_id}/deliveries` | `GET /asset-rates` |
+| Client only (remove/fix)                                   | Spec only (add)              |
+| ---------------------------------------------------------- | ---------------------------- |
+| `POST /transactions/signatures/dh-pool`                    | `POST /transactions/dh-pool` |
+| `GET /webhooks/subscriptions/{subscription_id}/deliveries` | `GET /asset-rates`           |
 
 Before deleting or renaming any exported symbol, run `xd://lsp` references on it. Each removal below is a clean cutover: no aliases and no deprecated re-exports.
 
@@ -71,11 +71,13 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 ## 6. Transport money handling (`src/client/rails/base.ts`)
 
 - [x] 6.1 Rewrite `validateMoneyInputs`:
+
   - The keys `cryptoAmount`, `fiatAmount`, `annualIntendedVolume`, `giftAmount`, and `grossAnnualIncome` must be objects with a string `amount`. Reject strings and numbers.
   - The bare key `amount` must remain a string.
   - Keep the recursion and the operation gate (`createQuote`, `createDryQuote`, `submitSourceOfFunds`).
 
   Without this change, the SDK throws on every valid quote request.
+
 - [x] 6.2 `parseRailsResponse`: drop `cryptoAmount` and `fiatAmount` from the key regex, because they are now objects. Keep `amount` and the fee keys.
 
 ## 7. Blockchain-transaction types (`src/types/rails/blockchain_transactions.ts`) and `signPayload`
@@ -134,6 +136,6 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 11. Gates
 
-- [ ] 11.1 Run `yarn build`, `yarn test:lint`, `yarn test:unit`, and `yarn cov:check`.
-- [ ] 11.2 Re-diff the `RAILS_ROUTES` method/path set against the live `openapi.json`. The two sets must be equal.
-- [ ] 11.3 Live gate (sandbox, `.env`): run `yarn integration:rails`, then run `rails-kyc.js` separately, because it is not in that script. Record any failures caused by sandbox funding or simulation endpoints separately from SDK failures.
+- [x] 11.1 Run `yarn build`, `yarn test:lint`, `yarn test:unit`, and `yarn cov:check`.
+- [x] 11.2 Re-diff the `RAILS_ROUTES` method/path set against the live `openapi.json`. The two sets must be equal.
+- [x] 11.3 Live gate (sandbox, `.env`): run `yarn integration:rails`, then run `rails-kyc.js` separately, because it is not in that script. Record any failures caused by sandbox funding or simulation endpoints separately from SDK failures.
