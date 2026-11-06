@@ -1,7 +1,8 @@
 import {
-  RailsCurrency,
+  RailsCryptoQuantity,
+  RailsCryptoQuantityInput,
   RailsEnvironment,
-  RailsMonetaryAmount,
+  RailsFiatQuantity,
   RailsRate
 } from './common'
 
@@ -94,10 +95,10 @@ export interface RailsQuote {
   transferMethod: 'deposit' | 'permit' | null
   permitTransferDigest: string | null
   fiatAsset: string | null
-  fiatAmount: string | null
+  fiatAmount: RailsFiatQuantity
   cryptoAsset: string | null
-  cryptoAmount: string | null
-  rate: string | null
+  cryptoAmount: RailsCryptoQuantity
+  rate: RailsRate
   confirmUntil: string | null
   reconfirmUntil: string | null
   transferUntil: string | null
@@ -111,8 +112,8 @@ export type RailsQuoteRequest = {
   fiatAsset: string
   /** Verified external wallet bound immutably when the quote is created. */
   walletAddress: string
-  cryptoAmount?: RailsMonetaryAmount
-  fiatAmount?: RailsMonetaryAmount
+  cryptoAmount?: RailsCryptoQuantityInput
+  fiatAmount?: RailsFiatQuantity
   uniqueKey?: string
 } & (
   | { type: 'buy'; transferMethod?: never }
@@ -126,13 +127,13 @@ export interface RailsQuoteResponse {
 
 export interface RailsQuoteEstimationResponse {
   environment: RailsEnvironment
-  side: 'buy' | 'sell'
-  fixedValue: 'base' | 'target'
-  base: RailsCurrency | null
-  target: RailsCurrency | null
-  targetAfterSettlement: RailsCurrency | null
-  settlementNetworkFee: RailsCurrency | null
-  rateAmount: string | null
+  type: 'buy' | 'sell'
+  fixedValue: 'FIAT' | 'CRYPTO'
+  fiatAmount: RailsFiatQuantity
+  cryptoAmount: RailsCryptoQuantity
+  cryptoAmountAfterSettlement: RailsCryptoQuantity | null
+  settlementNetworkFee: RailsCryptoQuantity
+  rate: RailsRate
 }
 
 export interface RailsHistoryOrder {

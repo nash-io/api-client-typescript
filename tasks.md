@@ -30,10 +30,10 @@ Before deleting or renaming any exported symbol, run `xd://lsp` references on it
 
 ## 2. Shared types (`src/types/rails/common.ts`)
 
-- [ ] 2.1 `RailsEnvironment = 'SANDBOX' | 'PRODUCTION'`.
-- [ ] 2.2 Add the money shapes: `RailsFiatQuantity { amount: string; currency: string }`, `RailsCryptoQuantityInput { amount: string; assetHash: string; blockchain: string }`, `RailsCryptoQuantity extends RailsCryptoQuantityInput { blockchainPrecision: number; symbol: string }`, and `RailsRate { amount: string; currencyA: string; currencyB: string }`.
-- [ ] 2.3 Delete `RailsCurrency` (`{unit, amount, scale}`) and `RailsMonetaryAmount`. Migrate every import.
-- [ ] 2.4 Update `RailsPartner`:
+- [x] 2.1 `RailsEnvironment = 'SANDBOX' | 'PRODUCTION'`.
+- [x] 2.2 Add the money shapes: `RailsFiatQuantity { amount: string; currency: string }`, `RailsCryptoQuantityInput { amount: string; assetHash: string; blockchain: string }`, `RailsCryptoQuantity extends RailsCryptoQuantityInput { blockchainPrecision: number; symbol: string }`, and `RailsRate { amount: string; currencyA: string; currencyB: string }`.
+- [x] 2.3 Delete `RailsCurrency` (`{unit, amount, scale}`) and `RailsMonetaryAmount`. Migrate every import.
+- [x] 2.4 Update `RailsPartner`:
   - `kybStatus: 'NOT_APPLIED' | 'PENDING_KYC' | 'APPROVED'`.
   - Add `limits: { monthlyRequests: number; requestsPerMinute: number; tier: 'STARTER' | 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE' }`.
   - Add `usage: { month: string; requests: number; fiatRamp: { buyVolume; sellVolume; totalVolume: RailsFiatQuantity; completedOrders: number } }`.
@@ -66,7 +66,7 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 5. Compliance money
 
-- [ ] 5.1 In `RailsSourceOfFunds`, type `annualIntendedVolume`, `giftAmount`, and `grossAnnualIncome` as `RailsFiatQuantity`. Keep the nested `sourceOfFunds?` because the spec description allows answers "at the top level or under `sourceOfFunds`".
+- [x] 5.1 In `RailsSourceOfFunds`, type `annualIntendedVolume`, `giftAmount`, and `grossAnnualIncome` as `RailsFiatQuantity`. Keep the nested `sourceOfFunds?` because the spec description allows answers "at the top level or under `sourceOfFunds`".
 
 ## 6. Transport money handling (`src/client/rails/base.ts`)
 
