@@ -49,6 +49,7 @@ import {
   RailsReconfirmQuoteResponse,
   RailsRegisterWalletRequest,
   RailsRegisterWalletResponse,
+  RailsBlockchain,
   RailsMpcSignedPayloadRequest,
   RailsRequestOptions,
   RailsRotateWebhookSubscriptionResponse,
@@ -104,12 +105,15 @@ export class RailsClient extends RailsBaseClient {
       assetData: {},
       marketData: {},
       fillPoolFn: async ({ blockchain, client_dh_publics }) => {
-        const response = await this.fillDhPool({ blockchain, dhPublics: client_dh_publics })
-        if (!Array.isArray(response.dhFillPool) ||
-            !response.dhFillPool.every(item => typeof item === 'string')) {
+        const response = await this.fillDhPool({
+          blockchain: blockchain as RailsBlockchain,
+          dhPublics: client_dh_publics
+        })
+        if (!Array.isArray(response.serverPublics) ||
+            !response.serverPublics.every(item => typeof item === 'string')) {
           throw new Error('Invalid Rails DH pool response: expected string public keys.')
         }
-        return response.dhFillPool as string[]
+        return response.serverPublics
       }
     })
     return {

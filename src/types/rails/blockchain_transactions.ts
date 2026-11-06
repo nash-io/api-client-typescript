@@ -1,4 +1,5 @@
-import { RailsEnvironment } from './common'
+import { RailsCryptoQuantityInput, RailsEnvironment } from './common'
+import { RailsBlockchain } from './wallets'
 
 export interface RailsMpcPayloadSignature {
   publicKey: string
@@ -12,16 +13,16 @@ export interface RailsMpcSignedPayloadRequest {
 
 export interface RailsDhPoolRequest {
   dhPublics: string[]
-  blockchain: string
+  blockchain: RailsBlockchain
 }
 
 export interface RailsDhPoolResponse {
   environment: RailsEnvironment
-  dhFillPool: Array<unknown>
+  serverPublics: string[]
 }
 
 export interface RailsBlockchainFees {
-  blockchain: string
+  blockchain: RailsBlockchain
   index: number
   baseFeePerGas?: string | null
   maxFeePerGasHigh?: string | null
@@ -30,29 +31,49 @@ export interface RailsBlockchainFees {
   maxPriorityFeePerGasHigh?: string | null
   maxPriorityFeePerGasLow?: string | null
   maxPriorityFeePerGasMedium?: string | null
-  priceHigh?: string | null
-  priceLow?: string | null
-  priceMedium?: string | null
+  priceHigh: string
+  priceLow: string
+  priceMedium: string
 }
 
 export interface RailsGetBlockchainFeesResponse {
   environment: RailsEnvironment
-  getBlockchainFees: RailsBlockchainFees
+  blockchainFees: RailsBlockchainFees
+}
+
+export interface RailsTransactionElement {
+  blockchain: RailsBlockchain
+  elementType: string
+  payload: string
+  payloadHash: string
+  payloadHashFunction: string
+  signatureFunction: string
 }
 
 export interface RailsPrepareTransactionResponse {
   environment: RailsEnvironment
-  prepareTransaction: Record<string, unknown>
+  preparedTransaction: {
+    reference: string
+    transaction: {
+      transactionFee: RailsCryptoQuantityInput
+      transactionNonce?: number | null
+      transactionSpecific?: Record<string, unknown>
+    }
+    transactionElements: RailsTransactionElement[]
+  }
 }
 
 export interface RailsIterateTransactionResponse {
   environment: RailsEnvironment
-  iterateTransaction: Record<string, unknown>
+  iteratedTransaction: {
+    transactionElements: RailsTransactionElement[]
+    transactionHash?: string | null
+  }
 }
 
 export interface RailsCancelTransactionResponse {
   environment: RailsEnvironment
-  cancelTransaction: string
+  cancelled: boolean
 }
 
 export type RailsFillDhPoolRequest = RailsDhPoolRequest

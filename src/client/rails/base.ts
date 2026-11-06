@@ -2,6 +2,7 @@ import AbortController from 'abort-controller'
 import fetch from 'node-fetch'
 import { authenticatedHeaders, RequestCredentials } from '../requestSigning'
 import { RailsApiError } from '../railsError'
+import { RailsBlockchain } from '../../types/rails'
 import { EnvironmentConfig } from '../environments'
 import {
   RailsCancelTransactionRequest,
@@ -243,7 +244,7 @@ export class RailsBaseClient {
     return this.request('prepareTransaction', { body, options })
   }
 
-  getBlockchainFees(blockchain: string): Promise<RailsGetBlockchainFeesResponse> {
+  getBlockchainFees(blockchain: RailsBlockchain): Promise<RailsGetBlockchainFeesResponse> {
     return this.request('getBlockchainFees', { query: { blockchain } })
   }
 

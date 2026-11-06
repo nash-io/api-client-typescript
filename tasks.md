@@ -80,12 +80,12 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 7. Blockchain-transaction types (`src/types/rails/blockchain_transactions.ts`) and `signPayload`
 
-- [ ] 7.1 `RailsDhPoolRequest.blockchain: RailsBlockchain`. Replace `RailsDhPoolResponse.dhFillPool` with `serverPublics: string[]`. In `RailsClient.signPayload` (`client.ts`), the `fillPoolFn` must read `response.serverPublics`; keep the string-array guard.
-- [ ] 7.2 `RailsGetBlockchainFeesResponse`: rename `getBlockchainFees` to `blockchainFees`. Make `blockchain: RailsBlockchain` and `priceLow`, `priceMedium`, and `priceHigh` required strings, which the regex already stringifies. Leave the other fee fields optional and nullable. Change `getBlockchainFees(blockchain: RailsBlockchain)`.
-- [ ] 7.3 Add `RailsTransactionElement { blockchain; elementType; payload; payloadHash; payloadHashFunction; signatureFunction }`, using camelCase as the server now does.
+- [x] 7.1 `RailsDhPoolRequest.blockchain: RailsBlockchain`. Replace `RailsDhPoolResponse.dhFillPool` with `serverPublics: string[]`. In `RailsClient.signPayload` (`client.ts`), the `fillPoolFn` must read `response.serverPublics`; keep the string-array guard.
+- [x] 7.2 `RailsGetBlockchainFeesResponse`: rename `getBlockchainFees` to `blockchainFees`. Make `blockchain: RailsBlockchain` and `priceLow`, `priceMedium`, and `priceHigh` required strings, which the regex already stringifies. Leave the other fee fields optional and nullable. Change `getBlockchainFees(blockchain: RailsBlockchain)`.
+- [x] 7.3 Add `RailsTransactionElement { blockchain; elementType; payload; payloadHash; payloadHashFunction; signatureFunction }`, using camelCase as the server now does.
   - `RailsPrepareTransactionResponse = { environment; preparedTransaction: { reference: string; transaction: { transactionFee: RailsCryptoQuantityInput; transactionNonce?: number | null; transactionSpecific?: Record<string, unknown> }; transactionElements: RailsTransactionElement[] } }`.
   - `RailsIterateTransactionResponse = { environment; iteratedTransaction: { transactionElements: RailsTransactionElement[]; transactionHash?: string | null } }`.
-- [ ] 7.4 `RailsCancelTransactionResponse = { environment; cancelled: boolean }`.
+- [x] 7.4 `RailsCancelTransactionResponse = { environment; cancelled: boolean }`.
 
 ## 8. Unit tests (`src/client/httpAuthentication.spec.ts`)
 
