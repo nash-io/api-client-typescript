@@ -21,7 +21,7 @@ yarn add @neon-exchange/api-client-typescript
 ## Getting started
 
 To get started you need to create an API key. You can find instructions on how to do so further down in this Readme.
-Remember, API Keys contain sensitive infomation, if you are using version control be careful not to store the key in the repository.
+Remember, API Keys contain sensitive information, if you are using version control be careful not to store the key in the repository.
 
 ## API Compatibility
 
@@ -87,7 +87,7 @@ import {
 } from '@neon-exchange/api-client-typescript';
 
 const client = new Client({
-  ...EnvironmentConfiguration.dev1,
+  ...EnvironmentConfiguration.sandbox,
   railsApiUrl: 'https://rails.sandbox.nash.io/api/v1'
 });
 
@@ -123,7 +123,7 @@ Rails API keys need the scopes required by each operation. `getOpenApi()` is pub
 
 Account operations (wallet challenge and registration, bank-account verification, payment methods, quotes and their lifecycle) act for exactly one account. Pass the customer id to act for that customer (`nash-customer-id`), or `null` to act as the partner itself (`nash-act-as: partner`); the header is part of the signed request and cannot be supplied through `RailsRequestOptions.headers`.
 
-For document uploads, call `submitComplianceDocuments(customerId, requestId, documents)` with `Buffer` data, filenames, and optional MIME types. The SDK buffers the multipart body to sign its exact bytes and SHA-256 digest. State-changing calls accept `RailsRequestOptions.idempotencyKey`, forwarded as `Idempotency-Key`; reusing the same key for the same request replays the prior result, while changing request data may be rejected by the backend. Monetary inputs and wire amounts are decimal strings, not JavaScript numbers. `RailsApiError` exposes HTTP `status`, stable `code`, `backendMessage`, and sanitized `details`; its `.message` does not echo arbitrary backend text.
+For document uploads, call `submitComplianceDocuments(customerId, requestId, documents)` with `Buffer` data, filenames, and optional MIME types. The SDK buffers the multipart body to sign its exact bytes and SHA-256 digest. State-changing calls accept `RailsRequestOptions.idempotencyKey`, forwarded as `Idempotency-Key`; reusing the same key for the same request replays the prior result, while changing request data may be rejected by the backend. Money is sent and returned as quantity objects whose `amount` is a decimal string (`{ amount, currency }` for fiat, `{ amount, blockchain, assetHash }` for crypto), never JavaScript numbers; the SDK rejects bare strings, numbers and numeric amounts before sending, and returns large integers as exact strings. Response and request enums use the server's UPPERCASE values (`SANDBOX`, `COMPLETED`, `TIER_1`, `ETH`), except webhook subscription requests, which take dotted lowercase event names (`quote.created`) while responses report `QUOTE_CREATED`. List methods take `cursor` and `limit` (1–20) and return `nextCursor`; pass it back as `cursor` until it is `null`. `RailsApiError` exposes HTTP `status`, stable `code`, optional `reason`, `backendMessage`, and sanitized `details`; its `.message` does not echo arbitrary backend text.
 
 Fiat-ramp `createQuote` and `createDryQuote` requests require `walletAddress`: the customer's verified external wallet on the requested blockchain. Creation binds this wallet immutably as the buy destination or sell origin. Send exactly one of `fiatAmount` (`{ amount: '100.00', currency: 'eur' }`) and `cryptoAmount` (`{ amount: '0.1', blockchain: 'ETH', assetHash }`, with `assetHash` from `getAssetRates()`); each `amount` is a decimal string. Enums are UPPERCASE: `type: 'BUY' | 'SELL'`, `blockchain: 'ETH'`. Sell requests optionally select `transferMethod: 'DEPOSIT' | 'PERMIT'` (default `DEPOSIT`); buys must omit `transferMethod`. Confirm a buy with `confirmBuy(customerId, quoteId, {})`, and a deposit sell with `confirmSell(customerId, quoteId, { paymentMethodId })`. Neither confirmation accepts `walletAddress` or the obsolete request field `settlementAddress`.
 
@@ -131,7 +131,7 @@ Quote responses expose the bound `walletAddress`, `transferMethod`, and nullable
 
 ### Rails integration tests
 
-Primary command — builds the SDK and runs the Rails smoke, fiat-ramp, signed-sell, and flow scripts sequentially, stopping on the first failure:
+Primary command — builds the SDK and runs the Rails smoke, fiat-ramp, signed-sell, and flow scripts sequentially, stopping on the first failure (`rails-kyc.js` is not included; run it separately):
 
 ```sh
 yarn integration:rails
