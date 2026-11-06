@@ -12,6 +12,7 @@ import {
   RailsListOrdersFilters,
   RailsListOrdersResponse,
   RailsListQuotesFilters,
+  RailsGetAssetRatesResponse,
   RailsListQuotesResponse,
   RailsRecalculateQuoteResponse,
   RailsReconfirmQuoteResponse,
@@ -119,5 +120,9 @@ export class OrdersClient extends RailsBaseClient {
 
   listOrders(filters?: RailsListOrdersFilters): Promise<RailsListOrdersResponse> {
     return this.request('listOrders', { query: filters })
+  }
+
+  getAssetRates(): Promise<RailsGetAssetRatesResponse> {
+    return this.request('getAssetRates')
   }
 }

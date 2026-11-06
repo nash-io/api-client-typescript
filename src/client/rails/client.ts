@@ -32,6 +32,8 @@ import {
   RailsGetQuoteResponse,
   RailsInitiateCustomerKycResponse,
   RailsListBlockchainsResponse,
+  RailsGetAssetRatesResponse,
+  RailsListPaymentMethodsFilters,
   RailsListWalletsResponse,
   RailsListCustomersFilters,
   RailsListCustomersResponse,
@@ -40,7 +42,6 @@ import {
   RailsListPaymentMethodsResponse,
   RailsListQuotesFilters,
   RailsListQuotesResponse,
-  RailsListSubscriptionDeliveriesResponse,
   RailsListWebhookDeliveriesFilters,
   RailsListWebhookDeliveriesResponse,
   RailsListWebhookSubscriptionsResponse,
@@ -233,9 +234,10 @@ export class RailsClient extends RailsBaseClient {
   }
 
   listPaymentMethods(
-    customerId: string | null
+    customerId: string | null,
+    filters?: RailsListPaymentMethodsFilters
   ): Promise<RailsListPaymentMethodsResponse> {
-    return this.wallets.listPaymentMethods(customerId)
+    return this.wallets.listPaymentMethods(customerId, filters)
   }
 
   listQuotes(
@@ -314,6 +316,10 @@ export class RailsClient extends RailsBaseClient {
     return this.orders.listOrders(filters)
   }
 
+  getAssetRates(): Promise<RailsGetAssetRatesResponse> {
+    return this.orders.getAssetRates()
+  }
+
   listWebhookSubscriptions(): Promise<RailsListWebhookSubscriptionsResponse> {
     return this.webhooks.listWebhookSubscriptions()
   }
@@ -337,12 +343,6 @@ export class RailsClient extends RailsBaseClient {
     options?: RailsRequestOptions
   ): Promise<RailsRotateWebhookSubscriptionResponse> {
     return this.webhooks.rotateWebhookSecret(subscriptionId, options)
-  }
-
-  listSubscriptionDeliveries(
-    subscriptionId: string
-  ): Promise<RailsListSubscriptionDeliveriesResponse> {
-    return this.webhooks.listSubscriptionDeliveries(subscriptionId)
   }
 
   listWebhookDeliveries(

@@ -26,3 +26,9 @@ export interface RailsCurrency {
 export type RailsMonetaryAmount = string
 
 export type RailsGetPartnerResponse = RailsPartner
+
+export interface RailsRate {
+  amount: string
+  currencyA: string
+  currencyB: string
+}

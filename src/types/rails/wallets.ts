@@ -139,3 +139,8 @@ export type RailsListWalletsResponse = RailsAccountWalletsResponse
 export type RailsVerifyBankAccountRequest = RailsIbanVerificationRequest
 export type RailsVerifyBankAccountResponse = RailsIbanVerificationResponse
 export type RailsListPaymentMethodsResponse = RailsPaymentMethodsResponse
+
+export interface RailsListPaymentMethodsFilters {
+  cursor?: string
+  limit?: number
+}

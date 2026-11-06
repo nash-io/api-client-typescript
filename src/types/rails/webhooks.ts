@@ -71,11 +71,6 @@ export interface RailsWebhookDelivery {
   lastResponseStatus?: number
 }
 
-export interface RailsWebhookDeliveriesResponse {
-  environment: RailsEnvironment
-  deliveries: RailsWebhookDelivery[]
-}
-
 export interface RailsWebhookDeliveryPage {
   environment: RailsEnvironment
   deliveries: RailsWebhookDelivery[]
@@ -93,5 +88,4 @@ export type RailsCreateWebhookSubscriptionRequest = RailsWebhookSubscriptionCrea
 export type RailsCreateWebhookSubscriptionResponse = RailsIssuedWebhookSubscriptionResponse
 export type RailsCancelWebhookSubscriptionResponse = RailsWebhookSubscriptionResponse
 export type RailsRotateWebhookSubscriptionResponse = RailsIssuedWebhookSubscriptionResponse
-export type RailsListSubscriptionDeliveriesResponse = RailsWebhookDeliveriesResponse
 export type RailsListWebhookDeliveriesResponse = RailsWebhookDeliveryPage

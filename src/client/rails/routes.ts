@@ -55,6 +55,7 @@ export const RAILS_ROUTES = {
   recalculateQuote: { method: 'POST', path: '/quotes/{quote_id}/recalculate' },
   reconfirmQuote: { method: 'POST', path: '/quotes/{quote_id}/reconfirm' },
   listOrders: { method: 'GET', path: '/orders' },
+  getAssetRates: { method: 'GET', path: '/asset-rates' },
   listWebhookSubscriptions: { method: 'GET', path: '/webhooks/subscriptions' },
   createWebhookSubscription: {
     method: 'POST',
@@ -68,16 +69,12 @@ export const RAILS_ROUTES = {
     method: 'POST',
     path: '/webhooks/subscriptions/{subscription_id}/rotate'
   },
-  listSubscriptionDeliveries: {
-    method: 'GET',
-    path: '/webhooks/subscriptions/{subscription_id}/deliveries'
-  },
   listWebhookDeliveries: { method: 'GET', path: '/webhooks/deliveries' },
   listApiKeys: { method: 'GET', path: '/api-keys' },
   getApiKey: { method: 'GET', path: '/api-keys/{api_key_id}' },
   revokeApiKey: { method: 'DELETE', path: '/api-keys/{api_key_id}' },
   getBlockchainFees: { method: 'GET', path: '/transactions/blockchain-fees' },
-  fillDhPool: { method: 'POST', path: '/transactions/signatures/dh-pool' },
+  fillDhPool: { method: 'POST', path: '/transactions/dh-pool' },
   prepareTransaction: { method: 'POST', path: '/transactions/prepare' },
   iterateTransaction: { method: 'POST', path: '/transactions/iterate' },
   cancelTransaction: { method: 'POST', path: '/transactions/cancel' }

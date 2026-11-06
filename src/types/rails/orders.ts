@@ -1,7 +1,8 @@
 import {
   RailsCurrency,
   RailsEnvironment,
-  RailsMonetaryAmount
+  RailsMonetaryAmount,
+  RailsRate
 } from './common'
 
 export type RailsQuoteBlockchain =
@@ -201,3 +202,26 @@ export type RailsConfirmSellResponse = RailsQuoteResponse
 export type RailsRecalculateQuoteResponse = RailsQuoteResponse
 export type RailsReconfirmQuoteResponse = RailsQuoteResponse
 export type RailsListOrdersResponse = RailsOrderPage
+
+export type RailsAssetSideStatus = 'AVAILABLE' | 'DISABLED_HIDDEN' | 'UNDER_MAINTENANCE'
+
+export interface RailsAssetRateSide {
+  price: RailsRate
+  priceAfterFee: RailsRate
+  status: RailsAssetSideStatus
+}
+
+export interface RailsAssetRate {
+  assetHash: string
+  blockchain: RailsQuoteBlockchain
+  blockchainPrecision: number
+  name: string
+  symbol: string
+  buy: RailsAssetRateSide
+  sell: RailsAssetRateSide
+}
+
+export interface RailsGetAssetRatesResponse {
+  environment: RailsEnvironment
+  rates: RailsAssetRate[]
+}

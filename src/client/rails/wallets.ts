@@ -3,6 +3,7 @@ import {
   RailsCreateWalletChallengeResponse,
   RailsListBlockchainsResponse,
   RailsListWalletsResponse,
+  RailsListPaymentMethodsFilters,
   RailsListPaymentMethodsResponse,
   RailsRegisterWalletRequest,
   RailsRegisterWalletResponse,
@@ -46,8 +47,9 @@ export class WalletsClient extends RailsBaseClient {
   }
 
   listPaymentMethods(
-    customerId: string | null
+    customerId: string | null,
+    filters?: RailsListPaymentMethodsFilters
   ): Promise<RailsListPaymentMethodsResponse> {
-    return this.request('listPaymentMethods', { customerId })
+    return this.request('listPaymentMethods', { customerId, query: filters })
   }
 }

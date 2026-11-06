@@ -2,7 +2,6 @@ import {
   RailsCancelWebhookSubscriptionResponse,
   RailsCreateWebhookSubscriptionRequest,
   RailsCreateWebhookSubscriptionResponse,
-  RailsListSubscriptionDeliveriesResponse,
   RailsListWebhookDeliveriesFilters,
   RailsListWebhookDeliveriesResponse,
   RailsListWebhookSubscriptionsResponse,
@@ -40,14 +39,6 @@ export class WebhooksClient extends RailsBaseClient {
     return this.request('rotateWebhookSecret', {
       segments: { subscription_id: subscriptionId },
       options
-    })
-  }
-
-  listSubscriptionDeliveries(
-    subscriptionId: string
-  ): Promise<RailsListSubscriptionDeliveriesResponse> {
-    return this.request('listSubscriptionDeliveries', {
-      segments: { subscription_id: subscriptionId }
     })
   }
 
