@@ -70,13 +70,13 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 6. Transport money handling (`src/client/rails/base.ts`)
 
-- [ ] 6.1 Rewrite `validateMoneyInputs`:
+- [x] 6.1 Rewrite `validateMoneyInputs`:
   - The keys `cryptoAmount`, `fiatAmount`, `annualIntendedVolume`, `giftAmount`, and `grossAnnualIncome` must be objects with a string `amount`. Reject strings and numbers.
   - The bare key `amount` must remain a string.
   - Keep the recursion and the operation gate (`createQuote`, `createDryQuote`, `submitSourceOfFunds`).
 
   Without this change, the SDK throws on every valid quote request.
-- [ ] 6.2 `parseRailsResponse`: drop `cryptoAmount` and `fiatAmount` from the key regex, because they are now objects. Keep `amount` and the fee keys.
+- [x] 6.2 `parseRailsResponse`: drop `cryptoAmount` and `fiatAmount` from the key regex, because they are now objects. Keep `amount` and the fee keys.
 
 ## 7. Blockchain-transaction types (`src/types/rails/blockchain_transactions.ts`) and `signPayload`
 

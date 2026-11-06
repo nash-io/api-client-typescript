@@ -141,16 +141,16 @@ function validateMoneyInputs(value: unknown): void {
   }
   Object.keys(value).forEach(key => {
     const field = value[key]
-    const structured =
-      /^(annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
-      isRecord(field) &&
-      typeof field.amount === 'string'
     if (
-      /^(amount|cryptoAmount|fiatAmount|annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
+      /^(cryptoAmount|fiatAmount|annualIntendedVolume|giftAmount|grossAnnualIncome)$/.test(key) &&
       field !== undefined &&
-      typeof field !== 'string' &&
-      !structured
+      !(isRecord(field) && typeof field.amount === 'string')
     ) {
+      throw new Error(
+        `Rails monetary input '${key}' must be a quantity object with a decimal string amount.`
+      )
+    }
+    if (key === 'amount' && field !== undefined && typeof field !== 'string') {
       throw new Error(`Rails monetary input '${key}' must be a decimal string.`)
     }
     validateMoneyInputs(field)
@@ -161,7 +161,7 @@ function parseRailsResponse(text: string, operation: RailsOperationName): unknow
   const exactMoney = operation === 'getOpenApi'
     ? text
     : text.replace(
-        /("(?:amount|cryptoAmount|fiatAmount|price(?:Low|Medium|High)|baseFeePerGas|maxFeePerGas(?:Low|Medium|High)|maxPriorityFeePerGas(?:Low|Medium|High))"\s*:\s*)(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)(?=\s*[,}\]])/g,
+        /("(?:amount|price(?:Low|Medium|High)|baseFeePerGas|maxFeePerGas(?:Low|Medium|High)|maxPriorityFeePerGas(?:Low|Medium|High))"\s*:\s*)(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)(?=\s*[,}\]])/g,
         '$1"$2"'
       )
   return JSON.parse(exactMoney) as unknown
