@@ -89,15 +89,15 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 8. Unit tests (`src/client/httpAuthentication.spec.ts`)
 
-- [ ] 8.1 Blockchain-fees test (about lines 285-300): use a `blockchainFees` fixture key and change the assertions to `result.blockchainFees.*`.
-- [ ] 8.2 Dry-quote and exact-money test (about lines 315-360):
+- [x] 8.1 Blockchain-fees test (about lines 285-300): use a `blockchainFees` fixture key and change the assertions to `result.blockchainFees.*`.
+- [x] 8.2 Dry-quote and exact-money test (about lines 315-360):
   - Send `fiatAmount: { amount: '100.00', currency: 'eur' }` and uppercase enums.
   - Assert the new estimate fields, replacing the `base`/`target` checks.
   - Use the getQuote fixture `{"quote":{"fiatAmount":{"amount":9007199254740993,"currency":"eur"}}}` and expect `quote.quote.fiatAmount.amount === '9007199254740993'`.
   - The rejection cases are `fiatAmount: { amount: 0.1, currency: 'eur' }` and the legacy `fiatAmount: '100.00'`.
-- [ ] 8.3 Source-of-funds test (about lines 362-373): replace `{ unit, amount, scale }` with `{ amount, currency }`. A string `grossAnnualIncome` must now reject.
-- [ ] 8.4 Selector test: add `getAssetRates()`, which sends neither selector, and `listPaymentMethods(null, { limit: 1 })`, whose signed path must include `?limit=1`, to the existing selector assertions.
-- [ ] 8.5 Grep the remaining specs for `listSubscriptionDeliveries`, `dhFillPool`, `expireAt`, and lowercase `'sandbox'` fixtures, and update them.
+- [x] 8.3 Source-of-funds test (about lines 362-373): replace `{ unit, amount, scale }` with `{ amount, currency }`. A string `grossAnnualIncome` must now reject.
+- [x] 8.4 Selector test: add `getAssetRates()`, which sends neither selector, and `listPaymentMethods(null, { limit: 1 })`, whose signed path must include `?limit=1`, to the existing selector assertions.
+- [x] 8.5 Grep the remaining specs for `listSubscriptionDeliveries`, `dhFillPool`, `expireAt`, and lowercase `'sandbox'` fixtures, and update them.
 
 ## 9. Integration tests (`integration-tests/rails/`)
 

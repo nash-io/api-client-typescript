@@ -10,6 +10,7 @@ import {
 import { Client } from './client'
 import { RailsApiError } from './rails'
 import { authenticatedHeaders, decodeApiSecret, signRequest } from './requestSigning'
+import { RailsFiatQuantity } from '../types/rails'
 
 jest.mock('node-fetch', () => ({ __esModule: true, default: jest.fn() }))
 jest.mock('@neon-exchange/nash-protocol', () => ({
@@ -192,6 +193,18 @@ it('signs the acting account: partner selector or customer id, never both', asyn
   expect(customerRequest.headers['nash-act-as']).toBeUndefined()
   expect(customerRequest.headers['nash-customer-id']).toBe('customer')
   expect(verify(customerUrl, customerRequest)).toBe(true)
+  send.mockClear()
+  await sdk.rails.listPaymentMethods(null, { limit: 1 })
+  const [pagedUrl, pagedRequest] = calls()[0]
+  expect(new URL(pagedUrl).pathname + new URL(pagedUrl).search).toBe('/api/v1/payment-methods?limit=1')
+  expect(verify(pagedUrl, pagedRequest)).toBe(true)
+  send.mockClear()
+  await sdk.rails.getAssetRates()
+  const [ratesUrl, ratesRequest] = calls()[0]
+  expect(new URL(ratesUrl).pathname).toBe('/api/v1/asset-rates')
+  expect(ratesRequest.headers['nash-act-as']).toBeUndefined()
+  expect(ratesRequest.headers['nash-customer-id']).toBeUndefined()
+  expect(verify(ratesUrl, ratesRequest)).toBe(true)
 })
 
 it('signs every transaction route as the partner, including DH pool registration', async () => {
@@ -285,7 +298,7 @@ it('signs blockchain fees as partner with the query and keeps fee integers exact
     status: 200,
     ok: true,
     text: async () =>
-      '{"environment":"sandbox","getBlockchainFees":{"blockchain":"ETH","index":7,"priceMedium":9007199254740993,"priceLow":null}}'
+      '{"environment":"SANDBOX","blockchainFees":{"blockchain":"ETH","index":7,"priceMedium":9007199254740993,"priceLow":null}}'
   }))
   const result = await sdk.rails.getBlockchainFees('ETH')
   const [url, request] = calls()[0]
@@ -294,9 +307,9 @@ it('signs blockchain fees as partner with the query and keeps fee integers exact
   expect(request.body).toBeUndefined()
   expect(request.headers['nash-act-as']).toBe('partner')
   expect(verify(url, request)).toBe(true)
-  expect(result.getBlockchainFees.priceMedium).toBe('9007199254740993')
-  expect(result.getBlockchainFees.priceLow).toBeNull()
-  expect(result.getBlockchainFees.index).toBe(7)
+  expect(result.blockchainFees.priceMedium).toBe('9007199254740993')
+  expect(result.blockchainFees.priceLow).toBeNull()
+  expect(result.blockchainFees.index).toBe(7)
 })
 
 it('exposes the backend error reason', async () => {
@@ -310,65 +323,64 @@ it('exposes the backend error reason', async () => {
   await expect(sdk.rails.getPartner()).rejects.toMatchObject({ status: 422, code: 'invalid_request', reason: 'quote_expired' })
 })
 
-it('retains large monetary integers as strings and rejects numeric money inputs', async () => {
+it('retains large monetary integers as strings and rejects non-quantity money inputs', async () => {
   const sdk = client()
   await sdk.login({ apiKey: 'registered', secret: encode(secret) })
   send.mockImplementationOnce(async () => ({
     status: 200,
     ok: true,
     text: async () =>
-      '{"base":{"unit":"eur","amount":9007199254740993,"scale":2},"target":{"unit":"eth","amount":100000001,"scale":8}}'
+      '{"fiatAmount":{"currency":"eur","amount":9007199254740993},"cryptoAmount":{"amount":100000001,"symbol":"eth"}}'
   }))
   const estimate = await sdk.rails.createDryQuote('customer', {
-    type: 'buy',
-    blockchain: 'eth',
+    type: 'BUY',
+    blockchain: 'ETH',
     cryptoAsset: 'eth',
     fiatAsset: 'eur',
-    fiatAmount: '100.00',
+    fiatAmount: { amount: '100.00', currency: 'eur' },
     walletAddress: '0x1234'
   })
-  if (estimate.base === null || estimate.target === null) {
-    throw new Error('dry quote currency values are missing')
-  }
-  expect(estimate.base.amount).toBe('9007199254740993')
-  expect(estimate.target.amount).toBe('100000001')
+  expect(estimate.fiatAmount.amount).toBe('9007199254740993')
+  expect(estimate.cryptoAmount.amount).toBe('100000001')
   send.mockImplementationOnce(async () => ({
     status: 200,
     ok: true,
     text: async () =>
-      '{"quote":{"fiatAmount":9007199254740993,"cryptoAmount":100000001}}'
+      '{"quote":{"fiatAmount":{"amount":9007199254740993,"currency":"eur"}}}'
   }))
   const quote = await sdk.rails.getQuote('customer', 'quote')
-  expect(quote.quote.fiatAmount).toBe('9007199254740993')
-  expect(quote.quote.cryptoAmount).toBe('100000001')
+  expect(quote.quote.fiatAmount.amount).toBe('9007199254740993')
   const uncheckedRails = sdk.rails as unknown as {
     createQuote(customerId: string, body: unknown): Promise<unknown>
   }
-  await expect(uncheckedRails.createQuote('customer', {
-    type: 'buy',
-    blockchain: 'eth',
+  const base = {
+    type: 'BUY',
+    blockchain: 'ETH',
     cryptoAsset: 'eth',
     fiatAsset: 'eur',
-    walletAddress: '0x1234',
-    fiatAmount: 0.1
-  })).rejects.toThrow('must be a decimal string')
+    walletAddress: '0x1234'
+  }
   send.mockClear()
+  for (const fiatAmount of ['100.00', { amount: 0.1, currency: 'eur' }]) {
+    await expect(uncheckedRails.createQuote('customer', { ...base, fiatAmount }))
+      .rejects.toThrow('must be a quantity object with a decimal string amount')
+  }
   await expect(sdk.rails.submitSourceOfFunds('customer', {
-    grossAnnualIncome: 50000 as unknown as string
-  })).rejects.toThrow('must be a decimal string')
+    grossAnnualIncome: 50000 as unknown as RailsFiatQuantity
+  })).rejects.toThrow('must be a quantity object with a decimal string amount')
   expect(send).not.toHaveBeenCalled()
 })
 
-it('accepts structured source-of-funds currencies only with a string amount', async () => {
+it('sends structured source-of-funds quantities, top-level or nested', async () => {
   const sdk = client()
   await sdk.login({ apiKey: 'registered', secret: encode(secret) })
   send.mockClear()
-  const income = { unit: 'eur', amount: '200000', scale: 2 }
+  const income = { amount: '200000', currency: 'eur' }
   await sdk.rails.submitSourceOfFunds('customer', { grossAnnualIncome: income, sourceOfFunds: { giftAmount: income } })
   expect(JSON.parse(calls()[0][1].body as string)).toEqual({ grossAnnualIncome: income, sourceOfFunds: { giftAmount: income } })
   await expect(sdk.rails.submitSourceOfFunds('customer', {
-    annualIntendedVolume: { unit: 'eur', amount: 200000 as unknown as string, scale: 2 }
-  })).rejects.toThrow('must be a decimal string')
+    annualIntendedVolume: { amount: 200000 as unknown as string, currency: 'eur' }
+  })).rejects.toThrow('must be a quantity object with a decimal string amount')
   expect(send).toHaveBeenCalledTimes(1)
 })
 
