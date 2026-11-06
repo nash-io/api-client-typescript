@@ -51,18 +51,18 @@ Convert every response and request enum to the UPPERCASE values in the OpenAPI d
 
 ## 4. Quotes, orders, payment methods (shape changes)
 
-- [ ] 4.1 `RailsQuote`:
+- [x] 4.1 `RailsQuote`:
   - Set `fiatAmount: RailsFiatQuantity`, `cryptoAmount: RailsCryptoQuantity`, and `rate: RailsRate`. These fields are no longer strings.
   - Add `kind: 'QUOTE'`, `createdAt: string`, and `completedAt: string | null`.
   - Keep `bankDepositInstructions` and `cryptoDepositInstructions` as `| null`, because the live API returned null.
-- [ ] 4.2 `RailsHistoryOrder`: add `kind: 'ORDER'` and drop `type?: never`. `kind` is now the discriminator.
-- [ ] 4.3 In `RailsQuoteHistoryResponse`, rename `cursor` to `nextCursor`.
-- [ ] 4.4 `RailsQuoteRequest`: change `fiatAmount` to `RailsFiatQuantity` and `cryptoAmount` to `RailsCryptoQuantityInput`. Keep the buy/sell `transferMethod` union, with uppercase values.
-- [ ] 4.5 Replace `RailsQuoteEstimationResponse` with `{ environment; type: 'BUY' | 'SELL'; fixedValue: 'FIAT' | 'CRYPTO'; fiatAmount: RailsFiatQuantity; cryptoAmount: RailsCryptoQuantity; cryptoAmountAfterSettlement: RailsCryptoQuantity | null; settlementNetworkFee: RailsCryptoQuantity; rate: RailsRate }`. This removes `side`, `base`, `target`, `targetAfterSettlement`, and `rateAmount`. `cryptoAmountAfterSettlement` is `| null` because the spec documents it as null for sells.
-- [ ] 4.6 `RailsOrder`: set `fiatAmount?: RailsFiatQuantity` and `cryptoAmount?: RailsCryptoQuantity`.
-- [ ] 4.7 `RailsPaymentMethod`: replace `iban` with `last4: string | null`.
-- [ ] 4.8 `RailsPaymentMethodsResponse`: replace `metadata` with `nextCursor: string | null`.
-- [ ] 4.9 Add `expiresAt: string` to `RailsWalletChallengeResponse`.
+- [x] 4.2 `RailsHistoryOrder`: add `kind: 'ORDER'` and drop `type?: never`. `kind` is now the discriminator.
+- [x] 4.3 In `RailsQuoteHistoryResponse`, rename `cursor` to `nextCursor`.
+- [x] 4.4 `RailsQuoteRequest`: change `fiatAmount` to `RailsFiatQuantity` and `cryptoAmount` to `RailsCryptoQuantityInput`. Keep the buy/sell `transferMethod` union, with uppercase values.
+- [x] 4.5 Replace `RailsQuoteEstimationResponse` with `{ environment; type: 'BUY' | 'SELL'; fixedValue: 'FIAT' | 'CRYPTO'; fiatAmount: RailsFiatQuantity; cryptoAmount: RailsCryptoQuantity; cryptoAmountAfterSettlement: RailsCryptoQuantity | null; settlementNetworkFee: RailsCryptoQuantity; rate: RailsRate }`. This removes `side`, `base`, `target`, `targetAfterSettlement`, and `rateAmount`. `cryptoAmountAfterSettlement` is `| null` because the spec documents it as null for sells.
+- [x] 4.6 `RailsOrder`: set `fiatAmount?: RailsFiatQuantity` and `cryptoAmount?: RailsCryptoQuantity`.
+- [x] 4.7 `RailsPaymentMethod`: replace `iban` with `last4: string | null`.
+- [x] 4.8 `RailsPaymentMethodsResponse`: replace `metadata` with `nextCursor: string | null`.
+- [x] 4.9 Add `expiresAt: string` to `RailsWalletChallengeResponse`.
 
 ## 5. Compliance money
 

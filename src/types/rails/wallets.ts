@@ -54,6 +54,7 @@ export interface RailsWalletChallengeResponse {
   blockchain: RailsBlockchain
   address: string
   challenge: string
+  expiresAt: string
 }
 
 export interface RailsWalletRegistrationRequest {
@@ -93,7 +94,7 @@ export interface RailsIbanVerificationRequest {
 export interface RailsPaymentMethod {
   id: string
   type: RailsPaymentMethodType | null
-  iban: string | null
+  last4: string | null
   currency: string | null
   nameVerified: boolean | null
   status: RailsPaymentMethodStatus | null
@@ -127,7 +128,7 @@ export interface RailsPaymentMethodSummary {
 
 export interface RailsPaymentMethodsResponse {
   environment: RailsEnvironment
-  metadata?: Record<string, unknown> | null
+  nextCursor: string | null
   paymentMethods: RailsPaymentMethodSummary[]
 }
 export type RailsListBlockchainsResponse = RailsBlockchains

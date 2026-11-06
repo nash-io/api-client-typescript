@@ -81,6 +81,9 @@ export interface RailsQuote {
   walletAddress: string | null
   transferMethod: 'DEPOSIT' | 'PERMIT' | null
   permitTransferDigest: string | null
+  kind: 'QUOTE'
+  createdAt: string
+  completedAt: string | null
   fiatAsset: string | null
   fiatAmount: RailsFiatQuantity
   cryptoAsset: string | null
@@ -127,13 +130,13 @@ export interface RailsHistoryOrder {
   id: string
   status: RailsHistoryOrderStatus
   createdAt: string
-  type?: never
+  kind: 'ORDER'
 }
 
 export interface RailsQuoteHistoryResponse {
   environment: RailsEnvironment
   quotes: Array<RailsQuote | RailsHistoryOrder>
-  cursor: string | null
+  nextCursor: string | null
 }
 
 export interface RailsQuoteConfirmationRequest {
@@ -148,9 +151,9 @@ export interface RailsOrder {
   createdAt: string
   blockchain?: RailsBlockchain
   completedAt?: string
-  cryptoAmount?: string
+  cryptoAmount?: RailsCryptoQuantity
   cryptoAsset?: string
-  fiatAmount?: string
+  fiatAmount?: RailsFiatQuantity
   fiatAsset?: string
   settlementAddress?: string
   type?: 'BUY' | 'SELL'
