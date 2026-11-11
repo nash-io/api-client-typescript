@@ -7,27 +7,25 @@ on:
     tags:
       - v*
 
+permissions:
+  contents: write
+
 jobs:
   deploy_pages:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
-        node-version: '14'
+        node-version: '24'
+    - run: npm install --global yarn@1.22.22 --force
     - run: yarn install --frozen-lockfile
-    - run: yarn doc
+    - name: Build and validate documentation
+      run: yarn doc
 
-    # start: temporary fix for broken link on nash.io/developers
-    - run: mkdir docs/docs
-    - run: echo "<a href='https://nash-io.github.io/api-client-typescript/'>Please visit https://nash-io.github.io/api-client-typescript/</a>" > docs/docs/index.html
-    # end: temporary fix
-
-    - run: touch docs/.nojekyll
-    - name: Deploy docs 🚀
-      uses: JamesIves/github-pages-deploy-action@releases/v3
+    - name: Deploy docs
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        BRANCH: gh-pages # The branch the action should deploy to.
-        FOLDER: docs # The folder the action should deploy.
+        branch: gh-pages
+        folder: docs

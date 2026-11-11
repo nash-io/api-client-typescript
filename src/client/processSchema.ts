@@ -48,8 +48,10 @@ import { SIGN_STATES_MUTATION } from '../mutations/stateSyncing/signStatesMutati
 import { COMPLETE_PAYLOAD_SIGNATURE } from '../mutations/mpc/completeSignature'
 import { COMPLETE_BTC_TRANSACTION_SIGNATURES } from '../mutations/mpc/completeBTCTransacitonSignatures'
 import { SEND_BLOCKCHAIN_RAW_TRANSACTION } from '../mutations/blockchain/sendBlockchainRawTransaction'
+import { CREATE_APIKEY_MUTATION } from '../mutations/account/createApiKey'
 
 const queries = {
+  CREATE_APIKEY_MUTATION,
   LIST_ACCOUNT_TRADES,
   GET_ACCOUNT_ADDRESS,
   LIST_ACCOUNT_BALANCES,
