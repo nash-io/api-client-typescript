@@ -18,6 +18,7 @@ const Nash = require('../../build/main');
 const { decodeApiSecret } = require('../../build/main/client/requestSigning');
 const getClientArgs = require('./support/client-args');
 const railsOnly = require('./support/rails-only');
+const formatError = require('./support/format-error');
 
 const required = name => {
   if (!process.env[name]) throw new Error(`Set ${name}`);
@@ -30,7 +31,13 @@ async function run() {
   let createdKeyId;
 
   const step = async (name, fn) => {
-    const result = await fn();
+    let result;
+    try {
+      result = await fn();
+    } catch (e) {
+      if (e && typeof e === 'object') e.step = name;
+      throw e;
+    }
     console.log(`${name}: PASS`);
     return result;
   };
@@ -164,14 +171,6 @@ async function run() {
 }
 
 run().catch(error => {
-  console.error(
-    error instanceof Nash.RailsApiError
-      ? `Rails HTTP ${error.status} (${error.code || 'no code'}): ${
-          error.message
-        }`
-      : `Rails flows failed: ${
-          error instanceof Error ? error.stack : String(error)
-        }`
-  );
+  console.error(formatError('Rails flows', error));
   process.exitCode = 1;
 });
